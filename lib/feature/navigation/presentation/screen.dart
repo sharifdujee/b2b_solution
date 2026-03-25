@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../../core/utils/local_assets/icon_path.dart';
 import '../../home/presentation/screen/home_screen.dart';
 import '../../message/presentation/screen/message_screen.dart';
 import '../../profile/presentation/screen/profile_screen.dart';
@@ -92,60 +93,68 @@ class CustomBottomNavBar extends ConsumerWidget {
             BottomNavigationBarItem(
               icon: Container(
                   margin: EdgeInsets.only(bottom: 4.w),
-                  child: SvgPicture.asset(IconPath.home)
+                  child: SvgPicture.asset(IconPath.homeNav)
                 ///Icon(Icons.home_outlined, size: 24),
               ),
               activeIcon: Container(
+                padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
+                decoration: BoxDecoration(
+                    color: Color(0xFFFFC220),
+                    borderRadius: BorderRadius.circular(40.r)
+                ),
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.activeHome),
+                child: SvgPicture.asset(IconPath.homeNav,color: Colors.white,),
               ),
               label: 'Home',
             ),
             BottomNavigationBarItem(
               icon: Container(
                   margin: EdgeInsets.only(bottom: 4.w),
-                  child: SvgPicture.asset(IconPath.discovery)
+                  child: SvgPicture.asset(IconPath.pingNav)
                 ///Icon(Icons.home_outlined, size: 24),
               ),
               activeIcon: Container(
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.activeDiscovery),
+                padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
+                decoration: BoxDecoration(
+                  color: Color(0xFFFFC220),
+                  borderRadius: BorderRadius.circular(40.r)
+                ),
+                child: SvgPicture.asset(IconPath.pingNav, color: Colors.white,),
               ),
-              label: 'Discovery',
+              label: 'Ping',
             ),
             BottomNavigationBarItem(
               icon: Container(
                   margin: EdgeInsets.only(bottom: 4.w),
-                  child: SvgPicture.asset(IconPath.event)
+                  child: SvgPicture.asset(IconPath.messageNav)
                 ///Icon(Icons.home_outlined, size: 24),
               ),
               activeIcon: Container(
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.activeEvent),
+                padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
+                decoration: BoxDecoration(
+                    color: Color(0xFFFFC220),
+                    borderRadius: BorderRadius.circular(40.r)
+                ),
+                child: SvgPicture.asset(IconPath.messageNav,color: Colors.white,),
               ),
-              label: 'Event',
+              label: 'Message        ',
             ),
             BottomNavigationBarItem(
               icon: Container(
                   margin: EdgeInsets.only(bottom: 4.w),
-                  child: SvgPicture.asset(IconPath.message)
+                  child: SvgPicture.asset(IconPath.profileNav)
                 ///Icon(Icons.home_outlined, size: 24),
               ),
               activeIcon: Container(
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.activeMessage),
-              ),
-              label: 'Message',
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                  margin: EdgeInsets.only(bottom: 4.w),
-                  child: SvgPicture.asset(IconPath.profile)
-                ///Icon(Icons.home_outlined, size: 24),
-              ),
-              activeIcon: Container(
-                margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.activeProfile),
+                padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
+                decoration: BoxDecoration(
+                    color: Color(0xFFFFC220),
+                    borderRadius: BorderRadius.circular(40.r)
+                ),
+                child: SvgPicture.asset(IconPath.pingNav,color: Colors.white,),
               ),
               label: 'Profile',
             ),
