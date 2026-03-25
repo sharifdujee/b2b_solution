@@ -13,5 +13,8 @@ class IconPath {
   static const arrowLeft = "$_basePath/arrow-left-02.png";
   static const googleIcon = "$_basePath/google_icon.png";
 
+  static const galleryAdd = "$_basePath/gallery_add.png";
+
+
 
 }
