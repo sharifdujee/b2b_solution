@@ -1,5 +1,6 @@
 
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/signup_state_model.dart';
 
@@ -35,17 +36,31 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     state = state.copyWith(yearsOfOperation: yearsOfOperation, clearError: true);
   }
 
-  void updateBusinessImage(String businessImage) {
-    state = state.copyWith(businessImage: businessImage, clearError: true);
+  final ImagePicker _picker = ImagePicker();
+  Future<void> _pickImage(ImageSource source, String type) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+      );
+
+      if (pickedFile != null) {
+        if (type == 'business') {
+          state = state.copyWith(businessImage: pickedFile.path, clearError: true);
+        } else if (type == 'profile') {
+          state = state.copyWith(profileImage: pickedFile.path, clearError: true);
+        } else if (type == 'license') {
+          state = state.copyWith(businessLicenseImage: pickedFile.path, clearError: true);
+        }
+      }
+    } catch (e) {
+      state = state.copyWith(errorMessage: "Failed to pick image");
+    }
   }
 
-  void updateProfileImage(String profileImage) {
-    state = state.copyWith(profileImage: profileImage, clearError: true);
-  }
-
-  void updateBusinessLicenseImage(String businessLicenseImage) {
-    state = state.copyWith(businessLicenseImage: businessLicenseImage, clearError: true);
-  }
+  // Public methods that now accept the Source
+  Future<void> pickBusinessImage(ImageSource source) => _pickImage(source, 'business');
+  Future<void> pickProfileImage(ImageSource source) => _pickImage(source, 'profile');
+  Future<void> pickLicenseImage(ImageSource source) => _pickImage(source, 'license');
 
   void updatePassword(String password) {
     state = state.copyWith(password: password, clearError: true);
