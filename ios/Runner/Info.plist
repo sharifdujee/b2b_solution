@@ -23,6 +23,9 @@
     <!-- location -->
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to show nearby services.</string>
+    <!-- camera permission -->
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs access to your camera to take profile pictures.</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
