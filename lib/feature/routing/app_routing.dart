@@ -1,6 +1,10 @@
+import 'package:b2b_solution/feature/authentication/presentation/signup_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../authentication/presentation/location_access_screen.dart';
+import '../authentication/presentation/login_screen.dart';
+import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../splash/presentation/splash_screen.dart';
 import '../splash/provider/splash_provider.dart';
@@ -37,8 +41,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/nav',
-        builder: (context, state) => const SplashScreen(), // ✅ real navbar
+        builder: (context, state) => const NavBar(), // ✅ real navbar
       ),
+
+
+      GoRoute(path: "/locationAccessScreen", builder: (context, state)=> LocationAccessScreen()),
+      GoRoute(path: '/loginScreen', builder: (context, state) => LoginScreen()),
+      GoRoute(path: '/signupScreen', builder: (context, state) => SignupScreen()),
+
     ],
   );
 });

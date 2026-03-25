@@ -12,8 +12,9 @@ import '../design_system/app_color.dart';
 
 
 class CustomTextFormField extends StatelessWidget {
-  final TextEditingController controller;
+  final TextEditingController? controller;
   final String hintText;
+  final Color? textColor;
   final Widget? suffixIcon;
   final String? prefixIconPath;
   final Widget? prefixIcon;
@@ -36,8 +37,9 @@ class CustomTextFormField extends StatelessWidget {
 
   const CustomTextFormField({
     super.key,
-    required this.controller,
+    this.controller,
     required this.hintText,
+    this.textColor,
     this.suffixIcon,
     this.prefixIconPath,
     this.prefixIcon,
@@ -76,7 +78,7 @@ class CustomTextFormField extends StatelessWidget {
       style: GoogleFonts.poppins(
         fontSize: 16.sp,
         fontWeight: FontWeight.w400,
-        color: isDarkMode ? AppColor.white : AppColor.primaryDarker,
+        color: textColor ?? (isDarkMode ? AppColor.white : AppColor.primaryDarker),
       ),
       decoration: InputDecoration(
         filled: true,
