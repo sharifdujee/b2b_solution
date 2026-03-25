@@ -156,11 +156,11 @@ class _SwipeButtonState extends State<SwipeButton> {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       double maxWidth = constraints.maxWidth;
-      double buttonSize = 54.0;
+      double buttonSize = 54.0.h;
       double maxDrag = maxWidth - buttonSize - 10; // 10 for padding
 
       return Container(
-        height: 70.h,
+        height: 60.h,
         padding: EdgeInsets.symmetric(vertical: 3.w),
         width: double.infinity,
         decoration: BoxDecoration(
