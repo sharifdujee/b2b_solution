@@ -182,7 +182,7 @@ class SignupScreen extends ConsumerWidget{
               SizedBox(height: 12.h,),
               CustomImagePickerCard(
                 title: "Profile image",
-                imagePath: state.businessImage,
+                imagePath: state.profileImage, // <--- Using businessImage here too!
                 onPickImage: () {
                   _showImageSourceSheet(context, (source) {
                     ref.read(signupProvider.notifier).pickProfileImage(source);
@@ -199,8 +199,8 @@ class SignupScreen extends ConsumerWidget{
               ),
               SizedBox(height: 12.h,),
               CustomImagePickerCard(
-                title: "Upload business license",
-                imagePath: state.businessImage,
+                title: "business license",
+                imagePath: state.businessLicenseImage, // <--- Using businessImage here too!
                 onPickImage: () {
                   _showImageSourceSheet(context, (source) {
                     ref.read(signupProvider.notifier).pickLicenseImage(source);
@@ -252,11 +252,14 @@ class SignupScreen extends ConsumerWidget{
                 borderRadius: 12.r,
                 suffixIcon: IconButton(
                   onPressed: () => controller.toggleConfirmPasswordVisibility(),
-                  icon: Icon(
-                    state.obscurePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: AppColor.grey300,
+                  icon: IconButton(
+                    onPressed: () => controller.toggleConfirmPasswordVisibility(),
+                    icon: Icon(
+                      state.obscureConfirmPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: AppColor.grey300,
+                    ),
                   ),
                 ),
               ),
