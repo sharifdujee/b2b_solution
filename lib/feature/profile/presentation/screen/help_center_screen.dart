@@ -18,8 +18,8 @@ class HelpCenterScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColor.white,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
