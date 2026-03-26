@@ -39,6 +39,7 @@ class HelpCenterScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              Divider(thickness: 0.5,),
 
               SizedBox(height: 24.h),
               CustomText(
@@ -50,8 +51,7 @@ class HelpCenterScreen extends ConsumerWidget {
 
               SizedBox(height: 16.h),
 
-              // --- FAQ List ---
-              Expanded( // FIXED: Added Expanded to prevent layout overflow
+              Expanded(
                 child: faqState.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
@@ -71,51 +71,70 @@ class HelpCenterScreen extends ConsumerWidget {
   }
 
   Widget _buildFaqItem(BuildContext context, WidgetRef ref, dynamic faq) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Theme(
-          // Removes the default splash/highlight from ListTile to match the clean design
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            onTap: () => ref.read(faqProvider.notifier).toggleFaq(faq.id),
-            title: CustomText(
-              text: faq.question,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B), // Slate 800
-            ),
-            trailing: Icon(
-              faq.isExpanded
-                  ? Icons.remove_circle_outline
-                  : Icons.add_circle_outline,
-              color: const Color(0xFF64748B), // Slate 500
-              size: 24.sp,
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: GestureDetector(
+        onTap: () => ref.read(faqProvider.notifier).toggleFaq(faq.id),
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: AppColor.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(
+              color: const Color(0xFFF3F4F6), // Slate 200 (Matches the design)
+              width: 1,
             ),
           ),
-        ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Question Row ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: CustomText(
+                      text: faq.question,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black, // Slate 800
+                    ),
+                  ),
+                  Icon(
+                    faq.isExpanded
+                        ? Icons.remove_circle_outline
+                        : Icons.add_circle_outline,
+                    color: faq.isExpanded? AppColor.grey400 : AppColor.black,
+                    size: 24.sp,
+                  ),
+                ],
+              ),
 
-        // Animated expansion for a smoother feel
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: faq.isExpanded
-              ? Padding(
-            padding: EdgeInsets.only(bottom: 16.h),
-            child: CustomText(
-              text: faq.answer,
-              fontSize: 14.sp,
-              color: const Color(0xFF64748B),
-              fontWeight: FontWeight.w400,
-              height: 1.5, // Better readability
-            ),
-          )
-              : const SizedBox.shrink(),
+              AnimatedCrossFade(
+                firstChild: const SizedBox(width: double.infinity),
+                secondChild: Column(
+                  children: [
+                    SizedBox(height: 12.h),
+                    const Divider(color: Color(0xFFF1F5F9)),
+                    SizedBox(height: 12.h),
+                    CustomText(
+                      text: faq.answer,
+                      fontSize: 14.sp,
+                      color: AppColor.grey600,
+                      fontWeight: FontWeight.w400,
+                      height: 1.5,
+                    ),
+                  ],
+                ),
+                crossFadeState: faq.isExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 300),
+              ),
+            ],
+          ),
         ),
-
-        const Divider(thickness: 1),
-      ],
+      ),
     );
   }
 }
