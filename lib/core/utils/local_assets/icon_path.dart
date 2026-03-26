@@ -33,6 +33,9 @@ class IconPath {
   static const minusCircle = "$_basePath/minus-circle.png";
   static const plusCircle = "$_basePath/plus-circle.png";
 
+  /// add by ios
+   static const String confirmation = "$_basePath/confirmation.png";
+
 
 
 

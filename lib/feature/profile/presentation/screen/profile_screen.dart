@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:b2b_solution/core/design_system/app_color.dart';
+import 'package:b2b_solution/core/gloabal/custom_dialog.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
@@ -145,9 +146,25 @@ class ProfileScreen extends ConsumerWidget {
                       icon: IconPath.deleteAccount,
                       title: "Delete Account",
                       color: Colors.red,
+                      onTap: (){
+                        showCustomDialog(context, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
+                          context.pop();
+                        },
+                            message: "Do you want to Delete Account?", isDoubleButton: true, secondButtonText: 'Delete', onSecondPressed: (){
+                              context.push('/login');
+                            });
+                      },
                     ),
                     _buildDivider(),
                     _buildListTile(
+                      onTap: (){
+                        showCustomDialog(context, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
+                          context.pop();
+                        },
+                        message: "Do you want to log out ?", isDoubleButton: true, secondButtonText: 'log out', onSecondPressed: (){
+                          context.push('/login');
+                            });
+                      },
                       icon: IconPath.logout,
                       title: "Logout",
                       color: Colors.red,
