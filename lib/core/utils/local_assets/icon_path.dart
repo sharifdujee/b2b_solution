@@ -17,6 +17,22 @@ class IconPath {
 
   static const shield = "$_basePath/shield.png";
 
+  static const avatarEdit = "$_basePath/avatar_edit.png";
+  static const userEdit = "$_basePath/user-edit-01.png";
+  static const lockPassword = "$_basePath/lock-password.png";
+  static const helpCenter = "$_basePath/mentoring.png";
+  static const termsOfService = "$_basePath/customer-support.png";
+  static const privacyPolicy = "$_basePath/policy.png";
+  static const deleteAccount = "$_basePath/delete-02.png";
+  static const logout = "$_basePath/la_sign-out-alt.png";
+
+  static const camera = "$_basePath/camera.png";
+
+
+
+
+
+
 
 
 

@@ -152,18 +152,23 @@ class ProfileScreen extends ConsumerWidget {
     Color? color,
     bool showArrow = true,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? Colors.black, size: 22.sp),
-      title: CustomText(
-        text: title,
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w500,
-        color: color ?? Colors.black,
+    return GestureDetector(
+      child: Container(
+        padding: EdgeInsets.all(16.r),
+        child: Row(
+          children: [
+            Icon(icon, color: color ?? Colors.black, size: 22.sp),
+            CustomText(
+              text: title,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w500,
+              color: color ?? Colors.black,
+            ),
+            Spacer(),
+            Icon( showArrow ? Icons.arrow_forward_ios : null, size: 14.sp, color: Colors.grey)
+          ],
+        ),
       ),
-      trailing: showArrow
-          ? Icon(Icons.arrow_forward_ios, size: 14.sp, color: Colors.grey)
-          : null,
-      onTap: () {},
     );
   }
 
