@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/design_system/app_color.dart';
-import '../../../core/gloabal/custom_text_form_field.dart';
-import '../../../core/utils/local_assets/icon_path.dart';
+import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../../../core/utils/local_assets/icon_path.dart';
 
 class ResetPassword extends ConsumerWidget{
   const ResetPassword({super.key});

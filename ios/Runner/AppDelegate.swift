@@ -11,7 +11,7 @@ import GoogleMaps
   ) -> Bool {
 
     // 1. Provide Google Maps API key (must be before plugin registration)
-    GMSServices.provideAPIKey("AIzaSyDCp_EGIWaoVYOeML3Kl8YiPN1az3hV9WA")
+    GMSServices.provideAPIKey("AIzaSyBHvQ7YumTdhJXzDi_COkhuSpb88akm8Tk")
 
     // 2. Register all generated plugins (including google_maps_flutter)
     GeneratedPluginRegistrant.register(with: self)

@@ -1,16 +1,17 @@
  import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
+import 'package:b2b_solution/feature/authentication/presentation/widgets/custom_image_picker_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/design_system/app_color.dart';
-import '../../../core/gloabal/custom_text.dart';
-import '../../../core/gloabal/custom_text_form_field.dart';
-import '../provider/signup_provider.dart';
-import '../widgets/custom_image_picker_card.dart';
+import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
+import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../provider/signup_provider.dart';
+
 
 class SignupScreen extends ConsumerWidget{
   const SignupScreen({super.key});

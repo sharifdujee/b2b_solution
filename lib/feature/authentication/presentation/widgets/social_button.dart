@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/design_system/app_color.dart';
-import '../../../core/gloabal/custom_text.dart';
+
+import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
+
 
 class SocialLoginButton extends StatelessWidget {
   final String text;
