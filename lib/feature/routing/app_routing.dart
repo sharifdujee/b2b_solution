@@ -13,6 +13,7 @@ import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../profile/presentation/screen/change_password_screen.dart';
 import '../profile/presentation/screen/edit_profile_screen.dart';
+import '../profile/presentation/screen/help_center_screen.dart';
 import '../splash/presentation/splash_screen.dart';
 import '../splash/provider/splash_provider.dart';
 
@@ -66,6 +67,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/signupVerificationCodeScreen", builder: (context, state)=> SignupVerificationCodeScreen()),
       GoRoute(path: "/editProfile",builder: (context, state)=> EditProfile()),
       GoRoute(path: "/changePasswordScreen", builder: (context, state)=> ChangePasswordScreen()),
+      GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),
+
 
     ],
   );

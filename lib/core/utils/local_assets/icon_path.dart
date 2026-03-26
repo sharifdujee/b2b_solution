@@ -30,10 +30,8 @@ class IconPath {
 
   static const camera = "$_basePath/camera.png";
 
-
-
-
-
+  static const minusCircle = "$_basePath/minus-circle.png";
+  static const plusCircle = "$_basePath/plus-circle.png";
 
 
 

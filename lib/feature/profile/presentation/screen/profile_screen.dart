@@ -128,7 +128,9 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.helpCenter, title: "Help Center"
+                        icon: IconPath.helpCenter, title: "Help Center",
+                        onTap: ()=> context.push("/helpCenterScreen")
+
                     ),
                     _buildDivider(),
                     _buildListTile(
