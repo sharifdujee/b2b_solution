@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../provider/location_provider.dart';
+import '../../provider/location_provider.dart';
 
 class LocationAccessScreen extends ConsumerWidget {
   const LocationAccessScreen({super.key});
