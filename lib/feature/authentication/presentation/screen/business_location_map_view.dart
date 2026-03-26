@@ -2,6 +2,7 @@ import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
@@ -232,18 +233,10 @@ class _BusinessLocationMapViewState
                       onPressed: locationState.selectedLocation == null
                           ? null
                           : () {
-                              final latLng = locationState.cameraPosition;
-                              // Navigate to next screen passing lat/lng
-                              Navigator.of(context).pushNamed(
-                                '/next-screen', // replace with your route
-                                arguments: {
-                                  'lat': latLng.latitude,
-                                  'lng': latLng.longitude,
-                                  'address':
-                                      '${locationState.selectedLocation!.mainText}, '
-                                      '${locationState.selectedLocation!.secondaryText}',
-                                },
-                              );
+
+
+                        context.push('/nav');
+
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.primary,
