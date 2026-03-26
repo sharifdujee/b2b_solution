@@ -43,7 +43,5 @@ class ResetPasswordStateModel {
       obscureConfirmPassword: obscureConfirmPassword ?? this.obscureConfirmPassword,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
-
   }
-
 }
