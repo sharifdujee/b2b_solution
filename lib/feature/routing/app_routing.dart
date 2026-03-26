@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../authentication/presentation/screen/location_access_screen.dart';
 import '../authentication/presentation/screen/login_screen.dart';
 import '../authentication/presentation/screen/reset_password.dart';
+import '../authentication/presentation/screen/reset_verification_code_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../splash/presentation/splash_screen.dart';
@@ -52,6 +53,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/signupScreen', builder: (context, state) => SignupScreen()),
 
       GoRoute(path: '/resetPassword', builder: (context, state) => ResetPassword()),
+      GoRoute(path: '/resetVerificationCodeScreen', builder: (context, state) => ResetVerificationCodeScreen()),
 
 
       GoRoute(path: '/businessLocation', builder: (context, state) => BusinessLocationMapView()),
