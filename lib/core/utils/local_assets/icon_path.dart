@@ -26,6 +26,8 @@ class IconPath {
   static const deleteAccount = "$_basePath/delete-02.png";
   static const logout = "$_basePath/la_sign-out-alt.png";
 
+  static const arrowRight = "$_basePath/arrow-right.png";
+
   static const camera = "$_basePath/camera.png";
 
 
