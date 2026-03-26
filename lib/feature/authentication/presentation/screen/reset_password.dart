@@ -5,20 +5,22 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design_system/app_color.dart';
+
 import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../provider/reset_password_provider.dart';
 
 
 class ResetPassword extends ConsumerWidget {
+import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../../../core/utils/local_assets/icon_path.dart';
+
+class ResetPassword extends ConsumerWidget{
+
   const ResetPassword({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(ResetPasswordProvider);
-    final controller = ref.read(ResetPasswordProvider.notifier);
-
     return Scaffold(
-      backgroundColor: AppColor.white,
       body: SingleChildScrollView(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 20.w),
