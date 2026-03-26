@@ -153,7 +153,7 @@ class ProfileScreen extends ConsumerWidget {
                       title: "Delete Account",
                       color: Colors.red,
                       onTap: (){
-                        showCustomDialog(context, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
+                        showCustomDialog(context, backgroundContainer: false,button1Color: Colors.white, button2Color: AppColor.secondary, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
                           context.pop();
                         },
                             message: "Do you want to Delete Account?", isDoubleButton: true, secondButtonText: 'Delete', onSecondPressed: (){
@@ -164,7 +164,7 @@ class ProfileScreen extends ConsumerWidget {
                     _buildDivider(),
                     _buildListTile(
                       onTap: (){
-                        showCustomDialog(context, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
+                        showCustomDialog(context, backgroundContainer: false,button1Color: Colors.white, button2Color: AppColor.secondary, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
                           context.pop();
                         },
                         message: "Do you want to log out ?", isDoubleButton: true, secondButtonText: 'log out', onSecondPressed: (){

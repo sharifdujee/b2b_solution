@@ -16,6 +16,9 @@ void showCustomDialog(
       void Function()? onPressed,
       void Function()? onSecondPressed,
       bool isDoubleButton = false,
+      Color? button1Color,
+      Color? button2Color,
+      bool backgroundContainer = true,
     }) {
   final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -49,7 +52,7 @@ void showCustomDialog(
             mainAxisSize: MainAxisSize.min,
             children: [
               // FIXED STACK LOGIC
-              Stack(
+              backgroundContainer? Stack(
                 alignment: Alignment.center,
                 children: [
                   buildRipple(
@@ -66,7 +69,9 @@ void showCustomDialog(
                   ),
                   Image.asset(imagePath, height: 58.7.h, width: 58.7.w),
                 ],
-              ),
+              )
+                  :
+              Image.asset(imagePath, height: 58.7.h, width: 58.7.w),
 
               SizedBox(height: 20.h),
 
@@ -97,8 +102,16 @@ void showCustomDialog(
                   Expanded(
                     child: CustomButton(
                       isOutlined: true,
+                      // If button1Color is null, use transparent or a default grey/outline color
+                      backgroundColor: button1Color ?? Colors.transparent,
                       textColor: AppColor.primary,
-
+                      borderGradient: LinearGradient(
+                        colors: [
+                          AppColor.primary,
+                          AppColor.primary,
+                        ],
+                      ),
+                      borderRadius: 16.r,
                       text: buttonText,
                       onPressed: onPressed ?? () => Navigator.pop(context),
                     ),
@@ -106,7 +119,16 @@ void showCustomDialog(
                   SizedBox(width: 10.w),
                   Expanded(
                     child: CustomButton(
+                      // If button2Color is null, use your theme's primary color
+                      backgroundColor: button2Color ?? AppColor.primary,
                       textColor: Colors.white,
+                      borderRadius: 16.r,
+                      borderGradient: LinearGradient(
+                        colors: [
+                          AppColor.primary,
+                          AppColor.primary,
+                        ],
+                      ),
                       text: secondButtonText ?? 'Cancel',
                       onPressed: onSecondPressed ?? () => Navigator.pop(context),
                     ),
@@ -115,7 +137,8 @@ void showCustomDialog(
               )
                   : CustomButton(
                 text: buttonText,
-                backgroundColor: AppColor.primary,
+                // Apply the color here too if you want the single button to be dynamic
+                backgroundColor: button1Color ?? AppColor.primary,
                 borderRadius: 20.r,
                 textColor: AppColor.black,
                 onPressed: onPressed ?? () => Navigator.pop(context),
