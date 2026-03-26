@@ -68,7 +68,7 @@ class ResetPasswordNotifier extends StateNotifier<ResetPasswordStateModel> {
     }
   }
 
-  Future<void> verifyOtp() async {
+  Future<void> verifyOtp(pin) async {
     if (state.verificationCode.length != 4) {
       state = state.copyWith(errorMessage: 'Please enter a 4-digit code');
       return;

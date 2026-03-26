@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../../core/design_system/app_color.dart';
 import '../../../core/utils/local_assets/icon_path.dart';
 import '../../home/presentation/screen/home_screen.dart';
 import '../../message/presentation/screen/message_screen.dart';
@@ -103,7 +104,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(40.r)
                 ),
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.homeNav,color: Colors.white,),
+                child: SvgPicture.asset(IconPath.homeNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
               ),
               label: 'Home',
             ),
@@ -120,7 +121,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                   color: Color(0xFFFFC220),
                   borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.pingNav, color: Colors.white,),
+                child: SvgPicture.asset(IconPath.pingNav, colorFilter: ColorFilter.linearToSrgbGamma(),),
               ),
               label: 'Ping',
             ),
@@ -137,7 +138,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     color: Color(0xFFFFC220),
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.messageNav,color: Colors.white,),
+                child: SvgPicture.asset(IconPath.messageNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
               ),
               label: 'Message        ',
             ),
@@ -151,10 +152,10 @@ class CustomBottomNavBar extends ConsumerWidget {
                 margin: EdgeInsets.only(bottom: 4.w),
                 padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 16.w),
                 decoration: BoxDecoration(
-                    color: Color(0xFFFFC220),
+                    color: AppColor.primary,
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.pingNav,color: Colors.white,),
+                child: SvgPicture.asset(IconPath.pingNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
               ),
               label: 'Profile',
             ),

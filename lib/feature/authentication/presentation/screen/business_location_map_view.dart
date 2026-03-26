@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../provider/business_location_provider.dart';
+import '../../provider/signup_provider.dart';
 import '../widgets/location_search_bar.dart';
 import '../widgets/suggestion_list.dart';
 
@@ -233,11 +234,20 @@ class _BusinessLocationMapViewState
                       onPressed: locationState.selectedLocation == null
                           ? null
                           : () {
+                        // Capture the coordinates from the map's current state
+                        final lat = locationState.cameraPosition.latitude;
+                        final lng = locationState.cameraPosition.longitude;
+                        final address = locationState.selectedLocation!.mainText;
 
+                        // Update your Signup Notifier
+                        ref.read(signupProvider.notifier).updateLocation(
+                            lat: lat,
+                            lng: lng,
+                            address: address
+                        );
 
-                        context.push('/nav');
-
-                            },
+                        context.push('/signupVerificationCodeScreen');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.primary,
                         disabledBackgroundColor: AppColor.primary.withValues(alpha:
@@ -252,7 +262,7 @@ class _BusinessLocationMapViewState
                         text: 'Confirm Location',
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
-                        color: AppColor.white,
+                        color: AppColor.black,
                       ),
                     ),
                   ),
