@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
+import '../../provider/reset_password_provider.dart';
 
 
 
@@ -17,7 +18,7 @@ class ResetPassword extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(resetPasswordProvider);
+
     final controller = ref.read(resetPasswordProvider.notifier);
 
     return Scaffold(
