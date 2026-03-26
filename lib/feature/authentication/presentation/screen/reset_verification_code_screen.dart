@@ -161,7 +161,7 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                 child: state.canResend
                     ? GestureDetector(
                   onTap: () {
-                    otpNotifier.resendOtp();
+                    controller.sendOtp();
                   },
                   child: CustomText(
                     text: "Resend Code",
