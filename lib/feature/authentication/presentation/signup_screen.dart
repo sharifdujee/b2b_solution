@@ -3,6 +3,7 @@ import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/design_system/app_color.dart';
@@ -271,7 +272,7 @@ class SignupScreen extends ConsumerWidget{
                 text: "Sign Up",
                 textColor: Colors.black,
                 onPressed: (){
-                  print("Sign Up Tapped");
+                  context.push('/businessLocation');
                 },
               ),
 
