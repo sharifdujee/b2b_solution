@@ -28,7 +28,10 @@ class SignupScreen extends ConsumerWidget{
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 48.h,),
-              Image.asset(IconPath.arrowLeft, height:24.h, width: 24.h,),
+              GestureDetector(
+                  child: Image.asset(IconPath.arrowLeft, height:24.h, width: 24.h,),
+                onTap: ()=> context.pop()
+              ),
 
               SizedBox(height: 16.h,),
               CustomText(
@@ -209,7 +212,7 @@ class SignupScreen extends ConsumerWidget{
                 },
               ),
 
-
+              SizedBox(height: 16.h,),
               CustomText(
                 text: "Password",
                 fontSize: 16.sp,
@@ -224,7 +227,7 @@ class SignupScreen extends ConsumerWidget{
                 hintTextColor: AppColor.grey400,
                 borderRadius: 12.r,
                 textColor: Colors.black,
-
+                obscureText: state.obscurePassword,
                 suffixIcon: IconButton(
                   onPressed: () => controller.toggleVisibility(),
                   icon: Icon(
@@ -236,6 +239,7 @@ class SignupScreen extends ConsumerWidget{
                 ),
               ),
 
+              SizedBox(height: 16.h,),
               CustomText(
                 text: "Confirm Password",
                 fontSize: 16.sp,
@@ -251,6 +255,7 @@ class SignupScreen extends ConsumerWidget{
                 textColor: Colors.black,
 
                 borderRadius: 12.r,
+                obscureText: state.obscureConfirmPassword,
                 suffixIcon: IconButton(
                   onPressed: () => controller.toggleConfirmPasswordVisibility(),
                   icon: IconButton(
@@ -289,7 +294,7 @@ class SignupScreen extends ConsumerWidget{
                   SizedBox(width: 8.w,),
                   GestureDetector(
                     onTap: (){
-
+                      context.push("/loginScreen");
                     },
                     child: CustomText(
                       text: "Sign in",
