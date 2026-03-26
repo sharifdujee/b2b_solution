@@ -3,7 +3,7 @@ import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:b2b_solution/core/gloabal/custom_text_form_field.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
-import 'package:b2b_solution/feature/authentication/provider/login_notifier.dart';
+import 'package:b2b_solution/feature/authentication/provider/login_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

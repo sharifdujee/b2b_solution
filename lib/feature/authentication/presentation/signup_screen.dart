@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/design_system/app_color.dart';
 import '../../../core/gloabal/custom_text.dart';
 import '../../../core/gloabal/custom_text_form_field.dart';
-import '../provider/signup_notifier.dart';
+import '../provider/signup_provider.dart';
 import '../widgets/custom_image_picker_card.dart';
 
 class SignupScreen extends ConsumerWidget{

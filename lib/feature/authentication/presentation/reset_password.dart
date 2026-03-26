@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/design_system/app_color.dart';
+import '../../../core/gloabal/custom_text_form_field.dart';
 import '../../../core/utils/local_assets/icon_path.dart';
 
 class ResetPassword extends ConsumerWidget{
@@ -40,6 +41,15 @@ class ResetPassword extends ConsumerWidget{
                 fontSize: 14.sp,
                 color: AppColor.grey400,
               ),
+
+              SizedBox(height: 24.h,),
+              CustomText(
+                text: "Email Address",
+                fontSize: 16.sp,
+                color: AppColor.black,
+              ),
+
+              SizedBox(height: 12.h,),
 
 
             ],
