@@ -1,6 +1,6 @@
  import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
-import 'package:b2b_solution/feature/authentication/presentation/widgets/custom_image_picker_card.dart';
+import 'package:b2b_solution/core/gloabal/custom_image_picker_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

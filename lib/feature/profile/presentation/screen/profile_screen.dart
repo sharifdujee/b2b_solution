@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:b2b_solution/core/design_system/app_color.dart';
+import 'package:b2b_solution/core/gloabal/custom_dialog.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
+import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../provider/profile_provider.dart';
@@ -31,7 +34,7 @@ class ProfileScreen extends ConsumerWidget {
                 color: AppColor.black,
               ),
               SizedBox(height: 8.h),
-              const Divider(),
+              _buildDivider(),
               SizedBox(height: 24.h),
 
               // --- PROFILE HEADER SECTION ---
@@ -44,10 +47,10 @@ class ProfileScreen extends ConsumerWidget {
                           padding: EdgeInsets.all(4.r),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColor.primary, width: 2),
+                            //border: Border.all(color: AppColor.primary, width: 2),
                           ),
                           child: CircleAvatar(
-                            radius: 60.r,
+                            radius: 70.r,
                             backgroundColor: Colors.grey[200],
                             backgroundImage: (profileState.profileImage != null &&
                                 profileState.profileImage!.isNotEmpty)
@@ -55,7 +58,7 @@ class ProfileScreen extends ConsumerWidget {
                                 : null,
                             child: (profileState.profileImage == null ||
                                 profileState.profileImage!.isEmpty)
-                                ? Icon(Icons.person, size: 50.r, color: Colors.grey)
+                                ? Icon(Icons.person, size: 120.r, color: Colors.grey)
                                 : null,
                           ),
                         ),
@@ -70,67 +73,105 @@ class ProfileScreen extends ConsumerWidget {
                             child: Container(
                               padding: EdgeInsets.all(8.r),
                               decoration: BoxDecoration(
-                                color: AppColor.primary,
+                                color: Color(0xFFE27932),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Colors.white, width: 2),
                               ),
-                              child: Icon(Icons.edit_outlined,
-                                  color: Colors.white, size: 18.sp),
+                              child: Image.asset(IconPath.avatarEdit,height: 12.h,width: 12.h,)
                             ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
                     CustomText(
                       text: profileState.name ?? "Joe's Cafe",
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColor.black,
                     ),
+                    SizedBox(height: 12.h),
                     CustomText(
                       text: profileState.position ?? "Foreman",
                       fontSize: 14.sp,
-                      color: AppColor.grey400,
+                      color: AppColor.grey300,
+                      fontWeight: FontWeight.w400,
                     ),
                   ],
                 ),
               ),
 
-              SizedBox(height: 32.h),
+              SizedBox(height: 13.h),
 
               // --- MENU ITEMS CARD ---
               Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: Color(0xFF828282).withValues(alpha: 0.14),
+                      blurRadius: 16,
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    _buildListTile(icon: Icons.person_outline, title: "Account Management"),
-                    _buildDivider(),
-                    _buildListTile(icon: Icons.lock_outline, title: "Change Password"),
-                    _buildDivider(),
-                    _buildListTile(icon: Icons.help_outline, title: "Help Center"),
-                    _buildDivider(),
-                    //_buildListTile(icon: Icons.description_outline, title: "Terms of Service"),
-                    _buildDivider(),
-                    //_buildListTile(icon: Icons.privacy_tip_outline, title: "Privacy Policy"),
-                    _buildDivider(),
                     _buildListTile(
-                      icon: Icons.delete_outline,
-                      title: "Delete Account",
-                      color: Colors.red,
+                        icon: IconPath.userEdit, title: "Account Management",
+                      onTap: ()=> context.push("/editProfile")
                     ),
                     _buildDivider(),
                     _buildListTile(
-                      icon: Icons.logout,
+                        icon: IconPath.lockPassword, title: "Change Password",
+                      onTap: ()=> context.push("/changePasswordScreen")
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                        icon: IconPath.helpCenter, title: "Help Center",
+                        onTap: ()=> context.push("/helpCenterScreen")
+
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                        icon: IconPath.termsOfService, title: "Terms of Service",
+                      onTap: (){
+                          context.push('/terms');
+                      }
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                        icon: IconPath.privacyPolicy, title: "Privacy Policy",
+                        onTap: (){
+                          context.push('/privacyPolicy');
+                        }
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: IconPath.deleteAccount,
+                      title: "Delete Account",
+                      color: Colors.red,
+                      onTap: (){
+                        showCustomDialog(context, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
+                          context.pop();
+                        },
+                            message: "Do you want to Delete Account?", isDoubleButton: true, secondButtonText: 'Delete', onSecondPressed: (){
+                              context.push('/login');
+                            });
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      onTap: (){
+                        showCustomDialog(context, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
+                          context.pop();
+                        },
+                        message: "Do you want to log out ?", isDoubleButton: true, secondButtonText: 'log out', onSecondPressed: (){
+                          context.push('/login');
+                            });
+                      },
+                      icon: IconPath.logout,
                       title: "Logout",
                       color: Colors.red,
                       showArrow: false,
@@ -147,17 +188,20 @@ class ProfileScreen extends ConsumerWidget {
 
   // Helper for List Items
   Widget _buildListTile({
-    required IconData icon,
+    required String icon,
     required String title,
     Color? color,
+    VoidCallback? onTap,
     bool showArrow = true,
   }) {
     return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16.r),
+        padding: EdgeInsets.symmetric(vertical: 16..h),
         child: Row(
           children: [
-            Icon(icon, color: color ?? Colors.black, size: 22.sp),
+            Image.asset(icon, height: 24.h, width: 24.w, color: color,),
+            SizedBox(width: 8.w,),
             CustomText(
               text: title,
               fontSize: 16.sp,
@@ -165,14 +209,15 @@ class ProfileScreen extends ConsumerWidget {
               color: color ?? Colors.black,
             ),
             Spacer(),
-            Icon( showArrow ? Icons.arrow_forward_ios : null, size: 14.sp, color: Colors.grey)
+            showArrow?
+            Image.asset(IconPath.arrowRight,height: 24.h,width: 24.w, color: AppColor.grey400,) : SizedBox.shrink(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDivider() => Divider(height: 1, color: Colors.grey.shade100, indent: 20, endIndent: 20);
+  Widget _buildDivider() => Divider(height: 1, color: Color(0xFFEDEEF4));
 
   void _showImageSourceSheet(BuildContext context, Function(ImageSource) onSourceSelected) {
     showModalBottomSheet(
