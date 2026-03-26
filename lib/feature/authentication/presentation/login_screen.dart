@@ -110,6 +110,7 @@ class LoginScreen extends ConsumerWidget{
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: (){
+                    context.push('/resetPassword');
                   },
                   child: CustomText(
                     text: "Forgot Password?",
