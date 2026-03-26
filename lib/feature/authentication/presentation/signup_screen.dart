@@ -277,7 +277,7 @@ class SignupScreen extends ConsumerWidget{
                 text: "Sign Up",
                 textColor: Colors.black,
                 onPressed: (){
-                  print("Sign Up Tapped");
+                  context.push('/businessLocation');
                 },
               ),
 

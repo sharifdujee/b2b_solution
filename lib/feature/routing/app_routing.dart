@@ -1,3 +1,4 @@
+import 'package:b2b_solution/feature/authentication/presentation/business_location_map_view.dart';
 import 'package:b2b_solution/feature/authentication/presentation/signup_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +50,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/locationAccessScreen", builder: (context, state)=> LocationAccessScreen()),
       GoRoute(path: '/loginScreen', builder: (context, state) => LoginScreen()),
       GoRoute(path: '/signupScreen', builder: (context, state) => SignupScreen()),
+
       GoRoute(path: '/resetPassword', builder: (context, state) => ResetPassword()),
+
+
+      GoRoute(path: '/businessLocation', builder: (context, state) => BusinessLocationMapView()),
 
 
     ],
