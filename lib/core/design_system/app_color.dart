@@ -57,6 +57,7 @@ class AppColor {
  ///add by Lisan
   static const Color primary = Color(0xFFFDC329);
   static const Color secondary = Color(0xFF23774E);
+  static const Color error = Color(0xFFFF0000);
 
 ///end add by Lisan
 
