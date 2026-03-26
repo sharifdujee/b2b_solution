@@ -135,11 +135,17 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.termsOfService, title: "Terms of Service"
+                        icon: IconPath.termsOfService, title: "Terms of Service",
+                      onTap: (){
+                          context.push('/terms');
+                      }
                     ),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.privacyPolicy, title: "Privacy Policy"
+                        icon: IconPath.privacyPolicy, title: "Privacy Policy",
+                        onTap: (){
+                          context.push('/privacyPolicy');
+                        }
                     ),
                     _buildDivider(),
                     _buildListTile(

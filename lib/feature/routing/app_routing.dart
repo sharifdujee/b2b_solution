@@ -1,5 +1,7 @@
 import 'package:b2b_solution/feature/authentication/presentation/screen/business_location_map_view.dart';
 import 'package:b2b_solution/feature/authentication/presentation/screen/signup_screen.dart';
+import 'package:b2b_solution/feature/profile/presentation/screen/privacy_policy.dart';
+import 'package:b2b_solution/feature/profile/presentation/screen/terms_conditions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -68,6 +70,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/editProfile",builder: (context, state)=> EditProfile()),
       GoRoute(path: "/changePasswordScreen", builder: (context, state)=> ChangePasswordScreen()),
       GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),
+      GoRoute(path: "/privacyPolicy", builder: (context, state)=> PrivacyPolicy()),
+      GoRoute(path: "/terms", builder: (context, state)=> TermsConditions()),
 
 
     ],
