@@ -15,6 +15,10 @@ class IconPath {
 
   static const galleryAdd = "$_basePath/gallery_add.png";
 
+  static const shield = "$_basePath/shield.png";
+
+
+
 
 
 }

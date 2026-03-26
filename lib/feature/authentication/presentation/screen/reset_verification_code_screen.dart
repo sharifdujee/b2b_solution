@@ -118,8 +118,8 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                 ),
               ),
 
-              if(state.errorMessage != null)
-                SizedBox(height: 16.h,),
+              if (state.errorMessage != null) ...[
+                SizedBox(height: 16.h),
                 Center(
                   child: Container(
                     padding: EdgeInsets.symmetric(
@@ -139,18 +139,30 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              ],
+
+              SizedBox(height: 24.h),
 
               CustomButton(
-                text: "Verify",
+                text: state.isLoading ? "Verifying..." : "Verify",
+                backgroundColor: AppColor.primary,
+                textColor: AppColor.black,
+                borderRadius: 16.r,
+                // If loading, onPressed is null (disables button)
+                // If not loading, it executes the verification logic
                 onPressed: state.isLoading
                     ? null
-                    : () {
-                  showCustomDialog(context, imagePath: IconPath.success, title: "Account  verified Successfully", buttonText: "Done",
-                      onPressed: (){
-                        context.pop();
-                      }
-                  );
+                    : () async {
+                  // 1. Call the controller to verify
+                  await controller.verifyOtp(state.verificationCode);
 
+                  // 2. Check if verification was successful (no error message)
+                  if (state.errorMessage == null && state.verificationCode == "1234") {
+                    // 3. Navigate to the NEXT screen (e.g., Create New Password)
+                    if (context.mounted) {
+                      context.push("/createNewPasswordScreen"); // Update this to your actual route
+                    }
+                  }
                 },
               ),
 
@@ -177,15 +189,25 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                       text: "Re-send code in ",
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
-                      color: AppColor.textBody,
+                      color: AppColor.grey400,
                     ),
                     CustomText(
-                      text: otpNotifier.formattedTimer,
-                      color: AppColor.primary,
+                      text: state.timer.toString(),
+                      color: AppColor.secondary,
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                     ),
                   ],
+                ),
+              ),
+              SizedBox(height: 12.h,), 
+              Center(
+                child: CustomText(
+                  text: "Can't find the email? Check your spam folder.",
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14.sp,
+                  color: AppColor.grey400,
+                  textAlign: TextAlign.center,
                 ),
               ),
 

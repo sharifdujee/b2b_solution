@@ -3,10 +3,12 @@ import 'package:b2b_solution/feature/authentication/presentation/screen/signup_s
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../authentication/presentation/screen/create_new_password_screen.dart';
 import '../authentication/presentation/screen/location_access_screen.dart';
 import '../authentication/presentation/screen/login_screen.dart';
 import '../authentication/presentation/screen/reset_password.dart';
 import '../authentication/presentation/screen/reset_verification_code_screen.dart';
+import '../authentication/presentation/screen/signup_verification_code_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../splash/presentation/splash_screen.dart';
@@ -57,7 +59,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
 
       GoRoute(path: '/businessLocation', builder: (context, state) => BusinessLocationMapView()),
+      GoRoute(path: "/createNewPasswordScreen", builder: (context, state)=> CreateNewPasswordScreen()),
 
+      GoRoute(path: "/signupVerificationCodeScreen", builder: (context, state)=> SignupVerificationCodeScreen()),
 
     ],
   );
