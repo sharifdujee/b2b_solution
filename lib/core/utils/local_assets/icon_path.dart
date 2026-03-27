@@ -46,6 +46,7 @@ class IconPath {
 
   /// add by ios
    static const String confirmation = "$_basePath/confirmation.png";
+   static const String notification = "$_basePath/notification.svg";
 
 
 

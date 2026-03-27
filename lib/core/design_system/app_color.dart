@@ -53,6 +53,7 @@ class AppColor {
  static const Color grey700 = Color(0xFF1F2937);
  static const Color grey800 = Color(0xFF383A42);
  static const Color grey900 = Color(0xFF25272C);
+ static const Color welcomeColor = Color(0xFF6B7280);
 
  ///add by Lisan
   static const Color primary = Color(0xFFFDC329);
