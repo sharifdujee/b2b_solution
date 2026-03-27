@@ -3,6 +3,7 @@ import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../provider/ping_provider.dart';
 import '../widgets/ping_filter_bar.dart';
@@ -31,7 +32,7 @@ class PingScreen extends ConsumerWidget {
                       fontWeight: FontWeight.bold
                   ),
                   const Spacer(),
-                  _buildCreatePingButton(),
+                  _buildCreatePingButton(context),
                 ],
               ),
             ),
@@ -71,10 +72,10 @@ class PingScreen extends ConsumerWidget {
   }
 
   /// Create Ping Button consistent with screenshot
-  Widget _buildCreatePingButton() {
+  Widget _buildCreatePingButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Handle create ping action
+        context.push('/createPingScreen');
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
