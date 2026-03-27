@@ -13,6 +13,8 @@ import '../authentication/presentation/screen/reset_verification_code_screen.dar
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
+import '../ping/model/ping_model.dart';
+import '../ping/presentation/screen/ping_details.dart';
 import '../profile/presentation/screen/change_password_screen.dart';
 import '../profile/presentation/screen/edit_profile_screen.dart';
 import '../profile/presentation/screen/help_center_screen.dart';
@@ -72,6 +74,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),
       GoRoute(path: "/privacyPolicy", builder: (context, state)=> PrivacyPolicy()),
       GoRoute(path: "/terms", builder: (context, state)=> TermsConditions()),
+
+      GoRoute(
+        path: '/pingDetails',
+        name: 'pingDetails',
+        builder: (context, state) {
+          // Retrieve the PingModel from the extra parameter
+          final ping = state.extra as PingModel;
+          return PingDetails(ping: ping);
+        },
+      ),
 
 
     ],

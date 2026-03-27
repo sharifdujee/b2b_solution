@@ -33,8 +33,20 @@ class IconPath {
   static const minusCircle = "$_basePath/minus-circle.png";
   static const plusCircle = "$_basePath/plus-circle.png";
 
+  static const location05 = "$_basePath/location-05.png";
+
+  static const vegetarianFood = "$_basePath/vegetarian-food.png";
+  static const package = "$_basePath/package.png";
+  static const unit = "$_basePath/unit.png";
+  static const timer02 = "$_basePath/timer-02.png";
+  static const locationUser = "$_basePath/location-user-03.png";
+  static const notebook = "$_basePath/notebook-02.png";
+  static const agreement = "$_basePath/agreement-02.png";
+
+
   /// add by ios
    static const String confirmation = "$_basePath/confirmation.png";
+
 
 
 

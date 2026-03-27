@@ -3,7 +3,6 @@
 
 
 
-import 'package:b2b_solution/feature/ping/model/presentation/screen/ping_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -14,6 +13,7 @@ import '../../../core/design_system/app_color.dart';
 import '../../../core/utils/local_assets/icon_path.dart';
 import '../../home/presentation/screen/home_screen.dart';
 import '../../message/presentation/screen/message_screen.dart';
+import '../../ping/presentation/screen/ping_screen.dart';
 import '../../profile/presentation/screen/profile_screen.dart';
 
 
@@ -155,7 +155,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     color: AppColor.primary,
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.pingNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.profileNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
               ),
               label: 'Profile',
             ),
