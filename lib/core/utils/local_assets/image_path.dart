@@ -4,5 +4,7 @@ class ImagePath {
 
   static const onboardTopBG = "$_basePath/onboard_top_bg.png";
   static const onboardTopFG = "$_basePath/onboard_top_fg.png";
+  static const burgersLogo ="$_basePath/burgers_logo.png";
+  static const coffeeLogo ="$_basePath/coffee_logo.png";
 
 }

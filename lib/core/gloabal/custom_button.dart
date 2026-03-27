@@ -24,6 +24,9 @@ class CustomButton extends StatefulWidget {
   final double borderWidth;
   final double borderRadius;
   final bool isOutlined;
+  final double? horizontalPadding;
+  final double? verticalPadding;
+
 
   /// Shape & size
   final double height;
@@ -51,6 +54,8 @@ class CustomButton extends StatefulWidget {
     this.isCircle = false,
     this.suffixIcon,
     this.image,
+    this.horizontalPadding,
+    this.verticalPadding,
   });
 
   @override
@@ -194,7 +199,10 @@ class _CustomButtonState extends State<CustomButton>
               ),
             )
                 : Padding(
-              padding: EdgeInsets.all(widget.borderWidth),
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.horizontalPadding ?? 0.w,
+                vertical: widget.verticalPadding ?? 0.h,
+              ),
               child: Container(
                 alignment: Alignment.center,
                 child: buttonContent,

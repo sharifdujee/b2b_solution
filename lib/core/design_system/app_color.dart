@@ -60,6 +60,16 @@ class AppColor {
   static const Color error = Color(0xFFFF0000);
   static const Color magentaSoft = Color(0xFFFEF3C6);
 
+  static const Color emergencyBadge = Color(0xFFFFF8F9);
+  static const Color moderateBadge = Color(0xFFFAF6EA);
+  static Color generalBadge = Color(0xFF2196F3).withValues(alpha: 0.1);
+
+  static const Color emergencyBadgeText = Color(0xFFE94560);
+  static const Color moderateBadgeText = Color(0xFFFDC329);
+  static const Color generalBadgeText = Color(0xFF2196F3);
+
+
+
 ///end add by Lisan
 
 
