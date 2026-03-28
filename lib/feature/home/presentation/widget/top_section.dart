@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
@@ -40,21 +41,24 @@ class TopSection extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100.r),
-              border: Border.all(
-                width: 1.w,
-                color: AppColor.black.withValues(alpha: 0.16),
+          GestureDetector(
+            onTap: ()=>context.push('/notificationScreen') ,
+            child: Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100.r),
+                border: Border.all(
+                  width: 1.w,
+                  color: AppColor.black.withValues(alpha: 0.16),
+                ),
+                color: AppColor.white,
               ),
-              color: AppColor.white,
-            ),
-            child: SvgPicture.asset(
-              IconPath.notification,
-              fit: BoxFit.cover,
-              height: 24.h,
-              width: 24.w,
+              child: SvgPicture.asset(
+                IconPath.notification,
+                fit: BoxFit.cover,
+                height: 24.h,
+                width: 24.w,
+              ),
             ),
           ),
         ],

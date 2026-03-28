@@ -1,3 +1,4 @@
+import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:b2b_solution/feature/home/presentation/widget/quick_action_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,11 +15,11 @@ class QuickActions extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          QuickActionItem(label: "Map View", icon: Icons.map_rounded, onTap: (){
+          QuickActionItem(label: "Map View", icon: IconPath.map, onTap: (){
             context.push('/mapView');
           },),
-          QuickActionItem(label: "My Collections", icon: Icons.bookmark_rounded),
-          QuickActionItem(label: "Vendors", icon: Icons.store_rounded),
+          //QuickActionItem(label: "My Collections", icon: Icons.bookmark_rounded),
+          //QuickActionItem(label: "Vendors", icon: Icons.store_rounded),
         ],
       ),
     );
