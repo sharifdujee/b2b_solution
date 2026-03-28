@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -41,17 +42,20 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                     SizedBox(width: 107.w,),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(100.r),
-                          border: Border.all(
-                              width: 1.w,
-                              color: AppColor.black.withValues(alpha: 0.16)
-                          ),
-                          color: AppColor.white
+                    GestureDetector(
+                      onTap: ()=> context.push("/notificationScreen"),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100.r),
+                            border: Border.all(
+                                width: 1.w,
+                                color: AppColor.black.withValues(alpha: 0.16)
+                            ),
+                            color: AppColor.white
+                        ),
+                        child: SvgPicture.asset(IconPath.notification, fit: BoxFit.cover,height: 24.h,width: 24.w,),
                       ),
-                      child: SvgPicture.asset(IconPath.notification, fit: BoxFit.cover,height: 24.h,width: 24.w,),
                     )
                   ],
                 ),
