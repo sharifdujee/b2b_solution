@@ -1,5 +1,6 @@
 import 'package:b2b_solution/feature/authentication/presentation/screen/business_location_map_view.dart';
 import 'package:b2b_solution/feature/authentication/presentation/screen/signup_screen.dart';
+import 'package:b2b_solution/feature/home/presentation/screen/map_view_screen.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/privacy_policy.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/terms_conditions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,6 +77,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),
       GoRoute(path: "/privacyPolicy", builder: (context, state)=> PrivacyPolicy()),
       GoRoute(path: "/terms", builder: (context, state)=> TermsConditions()),
+      GoRoute(path: "/mapView", builder: (context, state)=> MapViewScreen()),
 
       GoRoute(
         path: '/pingDetails',
@@ -88,6 +90,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
       GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen())
+
 
 
     ],
