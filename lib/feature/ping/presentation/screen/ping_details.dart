@@ -254,14 +254,42 @@ class PingDetails extends ConsumerWidget{
 
 
               SizedBox(height: 42.h,),
-              CustomButton(
-                  text: "Accept Ping",
-                  textColor: AppColor.black,
-                  backgroundColor: AppColor.primary,
-                  borderRadius: 16.r,
-                  onPressed: (){
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                        text: "Decline Ping",
+                        isOutlined: true,
+                        textColor: AppColor.emergencyBadgeText,
+                        backgroundColor: AppColor.white,
+                        borderGradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            AppColor.emergencyBadgeText,
+                            AppColor.emergencyBadgeText,
+                          ]
+                        ),
+                        borderWidth: 1,
+                        borderRadius: 16.r,
+                        onPressed: (){
 
-                  }
+                        }
+                    ),
+                  ),
+                  SizedBox(width: 16.w,),
+                  Expanded(
+                    child: CustomButton(
+                        text: "Accept Ping",
+                        textColor: AppColor.black,
+                        backgroundColor: AppColor.primary,
+                        borderRadius: 16.r,
+                        onPressed: (){
+
+                        }
+                    ),
+                  ),
+                ],
               ),
         
             ],

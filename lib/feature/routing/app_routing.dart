@@ -22,6 +22,7 @@ import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
 import '../ping/presentation/screen/create_ping_screen.dart';
 import '../ping/presentation/screen/ping_details.dart';
+import '../ping/presentation/screen/ping_screen.dart';
 import '../profile/presentation/screen/change_password_screen.dart';
 import '../profile/presentation/screen/edit_profile_screen.dart';
 import '../profile/presentation/screen/help_center_screen.dart';
@@ -98,6 +99,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/myConnectionScreen", builder: (context, state) => MyConnectionScreen()),
 
       GoRoute(path: "/vendorsScreen", builder: (context, state) => const VendorsScreen()),
+
+      GoRoute(path: "/pingScreen" ,builder: (context, state) => const PingScreen()),
 
 
       GoRoute(

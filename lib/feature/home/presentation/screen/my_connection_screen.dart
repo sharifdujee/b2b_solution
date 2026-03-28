@@ -52,7 +52,7 @@ class MyConnectionScreen extends ConsumerWidget{
                   padding: EdgeInsets.all(12.r),
                   child: SvgPicture.asset(IconPath.search, height: 20.h, width: 20.w),
                 ),
-                hintText: "Search for a location...",
+                hintText: "Search",
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
                 borderRadius: 50.r,

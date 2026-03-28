@@ -135,21 +135,36 @@ class CreatePingScreen extends ConsumerWidget{
 
 
               SizedBox(height: 16.h,),
-              CustomSelectField<String>(
-                label: "Notes",
-                hintText: "Select note",
-                value: state.notes,
-                items: const [
-                    "Urgent! Out of cups!",
-                    "Emergency! Delivery Needed!",
-                    "Urgent! Out of Oli",
-
-                  ],
-                itemLabelBuilder: (val) => val,
-                showSearchBar: true,
-                showActionButtons: false,
-                onChanged: (val) => controller.updateNotes(val),
+              CustomText(
+                text: "Note",
+                fontSize: 16.sp,
+                color: AppColor.black,
               ),
+              SizedBox(height: 12.h,),
+              CustomTextFormField(
+                onChanged: (value) {
+                    controller.updateNotes(value);
+                },
+                hintText: "Write a note",
+                hintTextColor: AppColor.grey400,
+                textColor: AppColor.black,
+                borderRadius: 12.r,
+              ),
+              // CustomSelectField<String>(
+              //   label: "Notes",
+              //   hintText: "Select note",
+              //   value: state.notes,
+              //   items: const [
+              //       "Urgent! Out of cups!",
+              //       "Emergency! Delivery Needed!",
+              //       "Urgent! Out of Oli",
+              //
+              //     ],
+              //   itemLabelBuilder: (val) => val,
+              //   showSearchBar: true,
+              //   showActionButtons: false,
+              //   onChanged: (val) => controller.updateNotes(val),
+              // ),
 
 
 
@@ -167,17 +182,17 @@ class CreatePingScreen extends ConsumerWidget{
                 onChanged: (newRadius) => controller.updateRadius(newRadius),
               ),
 
-              SizedBox(height: 16.h,),
-              CustomSelectField<String>(
-                label: "Choose Connection (Optional)",
-                hintText: "Choose Connection (Optional)",
-                isMultiSelect: true,
-                showSearchBar: true,
-                initialSelectedItems: state.chooseConnection ?? [],
-                items: const ["Public", "Private", "Friends", "B2B Gold"],
-                itemLabelBuilder: (val) => val,
-                onChanged: (list) => controller.updateConnection(list),
-              ),
+              // SizedBox(height: 16.h,),
+              // CustomSelectField<String>(
+              //   label: "Choose Connection (Optional)",
+              //   hintText: "Choose Connection (Optional)",
+              //   isMultiSelect: true,
+              //   showSearchBar: true,
+              //   initialSelectedItems: state.chooseConnection ?? [],
+              //   items: const ["Public", "Private", "Friends", "B2B Gold"],
+              //   itemLabelBuilder: (val) => val,
+              //   onChanged: (list) => controller.updateConnection(list),
+              // ),
 
 
               SizedBox(height: 16.h,),

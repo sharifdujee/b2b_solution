@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/design_system/app_color.dart';
 import '../../../core/utils/local_assets/icon_path.dart';
@@ -53,6 +54,26 @@ class NavBar extends ConsumerWidget {
 
 class CustomBottomNavBar extends ConsumerWidget {
   const CustomBottomNavBar({super.key});
+
+  void changeIndex(int index, BuildContext context, WidgetRef ref) {
+    ref.read(selectedIndexProvider.notifier).state = index;
+    switch (index) {
+      case 0:
+        context.push('/nav');
+        break;
+      case 1:
+        context.push('/pingScreen');
+        break;
+        case 2:
+        context.push('/messageScreen');
+        break;
+        case 3:
+        context.push('/profileScreen');
+        break;
+      default:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
