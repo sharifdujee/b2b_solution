@@ -43,6 +43,8 @@ class IconPath {
   static const notebook = "$_basePath/notebook-02.png";
   static const agreement = "$_basePath/agreement-02.png";
 
+  static const userGroup = "";
+
 
   /// add by ios
    static const String confirmation = "$_basePath/confirmation.png";

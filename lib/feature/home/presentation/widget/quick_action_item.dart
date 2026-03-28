@@ -6,7 +6,7 @@ import '../../../../core/design_system/app_color.dart';
 
 class QuickActionItem extends ConsumerWidget {
   final String label;
-  final IconData icon;
+  final String icon;
   final VoidCallback? onTap;
 
   const QuickActionItem({super.key, required this.label, required this.icon, this.onTap});
@@ -28,7 +28,8 @@ class QuickActionItem extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Icon(icon, color: AppColor.white, size: 24.sp),
+              Image.asset(icon,color: AppColor.white,height: 24.h, width: 24.w,),
+              //Icon(icon, color: AppColor.white, size: 24.sp),
               SizedBox(height: 6.h),
               Text(
                 label,
