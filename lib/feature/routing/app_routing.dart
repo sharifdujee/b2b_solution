@@ -12,6 +12,7 @@ import '../authentication/presentation/screen/login_screen.dart';
 import '../authentication/presentation/screen/reset_password.dart';
 import '../authentication/presentation/screen/reset_verification_code_screen.dart';
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
+import '../home/presentation/screen/notification_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
@@ -87,6 +88,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
+
+      GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen())
 
 
 
