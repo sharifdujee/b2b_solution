@@ -1,3 +1,6 @@
+import 'package:b2b_solution/feature/home/presentation/widget/top_section.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
+import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../data/place_location.dart';
 import '../../provider/filter_provider.dart';
 import '../widget/filter_bottom_sheet.dart';
@@ -73,15 +78,58 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final markers = ref.watch(mapMarkersProvider);
 
     return Scaffold(
       backgroundColor: AppColor.white,
-      body: Stack(
+      body: Column(
         children: [
-          // ── MAP ──────────────────────────────────────
-          Positioned.fill(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 48.h),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.w,)),
+                  ),
+                  SizedBox(width: 10.w),
+                  CustomText(
+                    text: "Map View",
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w600,
+                  )
+                ],
+              ),
+              SizedBox(height: 12.h),
+
+              TopSection(),
+              SizedBox(height: 12.h),
+              MapSearchSection(
+                controller: _searchController,
+                focusNode: _searchFocus,
+                onChanged: _onSearchChanged,
+                onFilterTap: _openFilterSheet,
+                onClear: () {
+                  _searchController.clear();
+                  ref.read(searchQueryProvider.notifier).state = '';
+                  setState(() => _showSuggestions = false);
+                },
+              ),
+            ],
+          ),
+
+          if (_showSuggestions)
+            SuggestionList(onSelect: _selectSuggestion),
+
+          SizedBox(height: 8.h),
+
+          Expanded(
             child: GoogleMap(
               initialCameraPosition: const CameraPosition(
                 target: _dhaka,
@@ -91,27 +139,9 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
               onMapCreated: (c) => _mapController = c,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
-            ),
-          ),
-
-          SafeArea(
-            child: Column(
-              children: [
-                SizedBox(height: 12.h),
-                MapSearchSection(
-                  controller: _searchController,
-                  focusNode: _searchFocus,
-                  onChanged: _onSearchChanged,
-                  onFilterTap: _openFilterSheet,
-                  onClear: () {
-                    _searchController.clear();
-                    ref.read(searchQueryProvider.notifier).state = '';
-                    setState(() => _showSuggestions = false);
-                  },
-                ),
-                if (_showSuggestions)
-                  SuggestionList(onSelect: _selectSuggestion),
-              ],
+              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{
+                Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+              },
             ),
           ),
         ],

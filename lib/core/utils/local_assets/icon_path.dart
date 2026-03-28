@@ -43,7 +43,18 @@ class IconPath {
   static const notebook = "$_basePath/notebook-02.png";
   static const agreement = "$_basePath/agreement-02.png";
 
-  static const userGroup = "";
+  static const userGroup = "$_basePath/user-group.png";
+  static const store = "$_basePath/store-04.png";
+
+  static const search = "$_basePath/Search.svg";
+  static const filter = "$_basePath/filter-horizontal.png";
+
+  static const restaurantIcon = "$_basePath/restaurant-01.png";
+  static const phoneCall ="$_basePath/call-02.png";
+  static const mail = "$_basePath/mail-01.png";
+  static const chat = "$_basePath/bubble-chat.png";
+
+
 
 
   /// add by ios

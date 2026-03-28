@@ -42,7 +42,7 @@ class TopSection extends StatelessWidget {
           ),
           const Spacer(),
           GestureDetector(
-            onTap: ()=>context.push('/notificationScreen') ,
+            onTap: ()=>context.push('/notificationScreen')  ,
             child: Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(

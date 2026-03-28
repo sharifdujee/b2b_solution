@@ -12,7 +12,11 @@ import '../authentication/presentation/screen/login_screen.dart';
 import '../authentication/presentation/screen/reset_password.dart';
 import '../authentication/presentation/screen/reset_verification_code_screen.dart';
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
+import '../home/model/my_connection_state_model.dart';
+import '../home/presentation/screen/business_card_details_screen.dart';
+import '../home/presentation/screen/my_connection_screen.dart';
 import '../home/presentation/screen/notification_screen.dart';
+import '../home/presentation/screen/vendors_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
@@ -89,10 +93,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
-      GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen())
+      GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen()),
+
+      GoRoute(path: "/myConnectionScreen", builder: (context, state) => MyConnectionScreen()),
+
+      GoRoute(path: "/vendorsScreen", builder: (context, state) => const VendorsScreen()),
 
 
-
+      GoRoute(
+        path: '/businessCardScreen',
+        builder: (context, state) {
+          final connection = state.extra as MyConnectionStateModel;
+          return BusinessCardScreen(connection: connection);
+        },
+      ),
     ],
   );
 });
