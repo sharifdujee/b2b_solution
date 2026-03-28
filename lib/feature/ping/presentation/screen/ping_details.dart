@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/gloabal/priority_badge.dart';
 import '../../model/ping_model.dart';
@@ -28,11 +29,13 @@ class PingDetails extends ConsumerWidget{
             children: [
               Row(
                 children: [
-                  Image.asset(IconPath.arrowLeft, height: 24.h,width: 24.w,),
+                  GestureDetector(
+                    onTap: ()=> context.pop(),
+                      child: Image.asset(IconPath.arrowLeft, height: 24.h,width: 24.w,)),
                   SizedBox(width: 8.w,),
                   CustomText(
                     fontWeight: FontWeight.w500,
-                    fontSize: 24.sp,
+                    fontSize: 20.sp,
                     text: "Ping Details",
                   ),
                 ],
@@ -250,6 +253,7 @@ class PingDetails extends ConsumerWidget{
               ),
 
 
+              SizedBox(height: 42.h,),
               CustomButton(
                   text: "Accept Ping",
                   textColor: AppColor.black,
@@ -258,7 +262,7 @@ class PingDetails extends ConsumerWidget{
                   onPressed: (){
 
                   }
-              )
+              ),
         
             ],
           ),

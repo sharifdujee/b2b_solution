@@ -14,6 +14,7 @@ import '../authentication/presentation/screen/signup_verification_code_screen.da
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
+import '../ping/presentation/screen/create_ping_screen.dart';
 import '../ping/presentation/screen/ping_details.dart';
 import '../profile/presentation/screen/change_password_screen.dart';
 import '../profile/presentation/screen/edit_profile_screen.dart';
@@ -77,13 +78,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       GoRoute(
         path: '/pingDetails',
-        name: 'pingDetails',
         builder: (context, state) {
           // Retrieve the PingModel from the extra parameter
           final ping = state.extra as PingModel;
           return PingDetails(ping: ping);
         },
       ),
+      GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
 
     ],

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../model/ping_model.dart';
+import '../../provider/ping_provider.dart';
 
 class PingCard extends StatelessWidget {
   final PingModel ping;
@@ -104,24 +105,25 @@ class PingCard extends StatelessWidget {
 
             SizedBox(height: 16.h),
 
-            // Button
-            CustomButton(
-              text: "Details",
-              height: 44.h,
-              textStyle: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
+            if (ping.category != PingFilter.accepted)...[
+              CustomButton(
+                text: "Details",
+                height: 44.h,
+                textStyle: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+                borderRadius: 10.r,
+                backgroundColor: AppColor.primary,
+                textColor: AppColor.black,
+                onPressed: () {
+                  context.push(
+                    '/pingDetails',
+                    extra: ping,
+                  );
+                },
               ),
-              borderRadius: 10.r,
-              backgroundColor: AppColor.primary,
-              textColor: AppColor.black,
-              onPressed: () {
-                context.push(
-                  '/pingDetails',
-                  extra: ping,
-                );
-              },
-            ),
+            ]
           ],
         ),
       ),
