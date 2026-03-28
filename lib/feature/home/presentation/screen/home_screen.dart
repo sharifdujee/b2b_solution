@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../widget/map_section.dart';
+import '../widget/quick_action.dart';
+import '../widget/top_section.dart';
+
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
