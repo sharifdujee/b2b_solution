@@ -67,6 +67,12 @@ class AppColor {
   static const Color pingBtnBg = Color(0xFF4CAF50);
   static const Color distance = Color(0xFF9E9E9E);
 
+
+
+  static const accent      = Color(0xFFF5C518);
+
+  static const chipBorder  = Color(0xFFD0D0D0);
+
  ///add by Lisan
   static const Color primary = Color(0xFFFDC329);
   static const Color secondary = Color(0xFF23774E);
