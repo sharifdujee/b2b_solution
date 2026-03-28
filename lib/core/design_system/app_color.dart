@@ -54,6 +54,18 @@ class AppColor {
  static const Color grey800 = Color(0xFF383A42);
  static const Color grey900 = Color(0xFF25272C);
  static const Color welcomeColor = Color(0xFF6B7280);
+ static const Color quickActionColor = Color(0xFF23774E);
+
+     // Green accent
+  static const Color primaryLight = Color(0xFFE8F5E9);
+
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color scaffoldBg = Color(0xFFF8F8F8);
+  static const Color chipBg = Color(0xFFF0F0F0);
+  static const Color tagFood = Color(0xFFE8F5E9);
+  static const Color tagFoodText = Color(0xFF4CAF50);
+  static const Color pingBtnBg = Color(0xFF4CAF50);
+  static const Color distance = Color(0xFF9E9E9E);
 
  ///add by Lisan
   static const Color primary = Color(0xFFFDC329);
