@@ -3,9 +3,13 @@ class IconPath {
   static const String _basePath = "assets/icons";
 
   static const homeNav = "$_basePath/home_icon_nav.svg";
+  static const homeActiveNav = "$_basePath/home_icon_active_nav.svg";
   static const pingNav = "$_basePath/ping_nav.svg";
+  static const pingActiveNav = "$_basePath/ping_active_nav.svg";
   static const messageNav = "$_basePath/message_nav.svg";
+  static const messageActiveNav = "$_basePath/message_active_nav.svg";
   static const profileNav = "$_basePath/profile_nav.svg";
+  static const profileActiveNav = "$_basePath/profile_active_nav.svg";
 
   static const b2bLogo = "$_basePath/b2b_solutions.png";
   static const locationKey = "$_basePath/location_key.png";
@@ -53,7 +57,6 @@ class IconPath {
   static const phoneCall ="$_basePath/call-02.png";
   static const mail = "$_basePath/mail-01.png";
   static const chat = "$_basePath/bubble-chat.png";
-
 
 
 

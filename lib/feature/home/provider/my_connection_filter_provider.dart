@@ -68,3 +68,14 @@ final filteredConnectionsProvider = Provider<List<MyConnectionStateModel>>((ref)
   // Filter the list based on the status property
   return allConnections.where((item) => item.status == activeFilter).toList();
 });
+
+// Add this to your provider file
+final connectionCountsProvider = Provider<Map<ConnectionFilterOption, int>>((ref) {
+  final allConnections = ref.watch(myConnectionListProvider);
+
+  return {
+    ConnectionFilterOption.Connected: allConnections.where((c) => c.status == ConnectionFilterOption.Connected).length,
+    ConnectionFilterOption.Pending: allConnections.where((c) => c.status == ConnectionFilterOption.Pending).length,
+    ConnectionFilterOption.Find: allConnections.length, // Or 0, depending on your logic
+  };
+});

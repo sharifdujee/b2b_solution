@@ -14,13 +14,13 @@ class ChatTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: AppColor.white,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
       child: Row(
         children: [
           // Back
           GestureDetector(
             onTap: () => Navigator.of(context).maybePop(),
-            child: Icon(Icons.arrow_back, size: 22.sp, color: Colors.black87),
+            child: Icon(Icons.arrow_back, size: 20.sp, color: Colors.black87),
           ),
 
           SizedBox(width: 10.w),

@@ -51,7 +51,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
               padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
               child: CustomText(
                 text: 'Message',
-                fontSize: 26.sp,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -63,8 +63,11 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: ConversationSearchBar(notifier: notifier),
             ),
-
-            SizedBox(height: 8.h),
+            SizedBox(height: 24,),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(thickness: 1,color: AppColor.grey50,),
+            ),
 
             // ── Conversation list ────────────────────────────────────────────
             Expanded(
@@ -81,18 +84,26 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final convo = filtered[index];
-                  return ConversationTile(
-                    conversation: convo,
-                    onTap: () {
-                      notifier.markAsRead(convo.id);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProviderScope(
-                            child: ChatScreen(conversationId: convo.id),
-                          ),
-                        ),
-                      );
-                    },
+                  return Column(
+                    children: [
+                      ConversationTile(
+                        conversation: convo,
+                        onTap: () {
+                          notifier.markAsRead(convo.id);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProviderScope(
+                                child: ChatScreen(conversationId: convo.id),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 16.h),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Divider(thickness: 1,color: AppColor.grey50,),
+                      ),                 ],
                   );
                 },
               ),

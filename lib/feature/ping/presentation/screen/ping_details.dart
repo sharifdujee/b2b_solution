@@ -34,7 +34,7 @@ class PingDetails extends ConsumerWidget{
                       child: Image.asset(IconPath.arrowLeft, height: 24.h,width: 24.w,)),
                   SizedBox(width: 8.w,),
                   CustomText(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w700,
                     fontSize: 20.sp,
                     text: "Ping Details",
                   ),

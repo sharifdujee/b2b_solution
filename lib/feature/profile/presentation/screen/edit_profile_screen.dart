@@ -30,17 +30,21 @@ class EditProfile extends ConsumerWidget{
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 48.h,),
-                GestureDetector(
-                    child: Image.asset(IconPath.arrowLeft, height:24.h, width: 24.h,),
-                    onTap: ()=> context.pop()
+                Row(
+                  children: [
+                    GestureDetector(
+                        child: Image.asset(IconPath.arrowLeft, height:24.h, width: 24.h,),
+                        onTap: ()=> context.pop()
+                    ),
+                    SizedBox(width: 12.h,),
+                    CustomText(
+                      text: "Edit Profile",
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ],
                 ),
 
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Edit Profile",
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w600,
-                ),
 
 
                 SizedBox(height: 16.h,),
@@ -230,30 +234,8 @@ class EditProfile extends ConsumerWidget{
                 ),
 
 
-                SizedBox(height: 12.h,),
-                CustomTextFormField(
-                  onChanged: (value) => controller.updateConfirmPassword(value),
-                  hintText: "",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
 
-                  borderRadius: 12.r,
-                  obscureText: state.obscureConfirmPassword,
-                  suffixIcon: IconButton(
-                    onPressed: () => controller.toggleConfirmPasswordVisibility(),
-                    icon: IconButton(
-                      onPressed: () => controller.toggleConfirmPasswordVisibility(),
-                      icon: Icon(
-                        state.obscureConfirmPassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: AppColor.grey300,
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20.h,),
+                SizedBox(height: 24.h,),
                 CustomButton(
                   backgroundColor: AppColor.primary,
                   borderRadius: 16.r,

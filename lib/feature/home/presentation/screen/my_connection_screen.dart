@@ -36,7 +36,7 @@ class MyConnectionScreen extends ConsumerWidget{
                   ),
                   SizedBox(width: 8.w),
                   CustomText(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w700,
                     fontSize: 20.sp,
                     text: "My Connections",
                     color: AppColor.black,
@@ -44,7 +44,7 @@ class MyConnectionScreen extends ConsumerWidget{
                 ]
               ),
 
-              SizedBox(height: 12.h),
+              SizedBox(height: 24.h),
               CustomTextFormField(
                 onChanged: (value) {
                 },

@@ -39,7 +39,7 @@ class _ConversationSearchBarState extends State<ConversationSearchBar> {
       height: 44.h,
       decoration: BoxDecoration(
         color: const Color(0xFFF4F4F4),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(99.r),
       ),
       child: Row(
         children: [

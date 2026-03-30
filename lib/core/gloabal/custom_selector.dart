@@ -42,7 +42,7 @@ class CustomSelectField<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CustomText(text: label, fontSize: 16.sp, fontWeight: FontWeight.w500),
+        CustomText(text: label, fontSize: 16.sp, fontWeight: FontWeight.w600),
         SizedBox(height: 12.h),
         GestureDetector(
           onTap: () => _openSelectDialog(context),

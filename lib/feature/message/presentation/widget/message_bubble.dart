@@ -79,7 +79,7 @@ class MessageBubble extends StatelessWidget {
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     message.text,
@@ -90,21 +90,19 @@ class MessageBubble extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 4.h),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isMe
-                            ? '${_formatTime(message.timestamp)} · ${_statusText(message.status)}'
-                            : _formatTime(message.timestamp),
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: isMe
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : Colors.grey.shade500,
-                        ),
+                  Align(
+                    alignment: isMe? Alignment.centerRight : Alignment.centerLeft,
+                    child: Text(
+                      isMe
+                          ? '${_formatTime(message.timestamp)} · ${_statusText(message.status)}'
+                          : _formatTime(message.timestamp),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: isMe
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.grey.shade500,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),

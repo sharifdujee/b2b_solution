@@ -34,7 +34,7 @@ class BusinessCardScreen extends ConsumerWidget {
                   ),
                   SizedBox(width: 8.w),
                   CustomText(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w700,
                     fontSize: 20.sp,
                     text: "Business Card Details",
                   ),
@@ -79,7 +79,9 @@ class BusinessCardScreen extends ConsumerWidget {
                     ],
                   )
                 ],
-              ),
+              ),SizedBox(height: 8.h,),
+              CustomText(text: connection.address, fontSize: 12.sp, color: AppColor.grey400),
+
 
               SizedBox(height: 16.h),
 

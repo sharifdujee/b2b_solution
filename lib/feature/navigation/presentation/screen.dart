@@ -125,7 +125,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(40.r)
                 ),
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.homeNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.homeActiveNav,),
               ),
               label: 'Home',
             ),
@@ -142,7 +142,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                   color: Color(0xFFFFC220),
                   borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.pingNav, colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.pingActiveNav,),
               ),
               label: 'Ping',
             ),
@@ -159,7 +159,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     color: Color(0xFFFFC220),
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.messageNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.messageActiveNav,),
               ),
               label: 'Message        ',
             ),
@@ -176,7 +176,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     color: AppColor.primary,
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.profileNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.profileActiveNav,),
               ),
               label: 'Profile',
             ),

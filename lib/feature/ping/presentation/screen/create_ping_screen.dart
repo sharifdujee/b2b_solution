@@ -56,7 +56,7 @@ class CreatePingScreen extends ConsumerWidget{
                 text: "Urgency Level",
                 fontSize: 16.sp,
                 color: AppColor.black,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
           
               SizedBox(height: 12.h),
@@ -71,6 +71,7 @@ class CreatePingScreen extends ConsumerWidget{
                 text: "Item Needed",
                 fontSize: 16.sp,
                 color: AppColor.black,
+                fontWeight: FontWeight.w600,
               ),
           
               SizedBox(height: 12.h,),
@@ -88,6 +89,7 @@ class CreatePingScreen extends ConsumerWidget{
                 text: "Quantity",
                 fontSize: 16.sp,
                 color: AppColor.black,
+                fontWeight: FontWeight.w600,
               ),
           
               SizedBox(height: 12.h,),
@@ -139,6 +141,7 @@ class CreatePingScreen extends ConsumerWidget{
                 text: "Note",
                 fontSize: 16.sp,
                 color: AppColor.black,
+                fontWeight: FontWeight.w600,
               ),
               SizedBox(height: 12.h,),
               CustomTextFormField(
@@ -173,7 +176,7 @@ class CreatePingScreen extends ConsumerWidget{
               CustomText(
                 text: "Radius",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: AppColor.black,
               ),
               SizedBox(height: 12.h),

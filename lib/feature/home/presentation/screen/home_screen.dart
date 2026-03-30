@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../../ping/presentation/widgets/ping_card.dart';
 import '../../../ping/provider/ping_provider.dart';
 import '../widget/map_section.dart';
@@ -68,11 +69,18 @@ class HomeScreen extends ConsumerWidget {
                     onTap: () {
                       ref.read(selectedIndexProvider.notifier).state =1;
                     },
-                    child: CustomText(
-                      text: "View All",
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
-                      color: AppColor.primary,
+                    child: Row(
+                      children: [
+                        CustomText(
+                          text: "View All",
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w400,
+                          color: AppColor.primary,
+                        ),
+                        SizedBox(width: 8.w),
+                        Image.asset(IconPath.arrowRight, height: 18.h, width: 18.w,color: AppColor.primary,)
+
+                      ],
                     ),
                   ),
                 ],

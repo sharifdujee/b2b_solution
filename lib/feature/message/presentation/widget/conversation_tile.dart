@@ -1,3 +1,5 @@
+import 'package:b2b_solution/core/design_system/app_color.dart';
+import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -32,7 +34,7 @@ class ConversationTile extends ConsumerWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         child: Row(
           children: [
             // Avatar
@@ -79,40 +81,46 @@ class ConversationTile extends ConsumerWidget {
             SizedBox(width: 8.w),
 
             // Time + badge
+            //Time should be in one lined
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  _formatTime(conversation.lastTime),
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: Colors.grey.shade500,
-                    height: 1.2,
-                  ),
+                CustomText(
+                    text: _formatTime(conversation.lastTime),
+                  fontSize: 11.sp,
+                  color: Colors.grey.shade500,
                 ),
+                // Text(
+                //   _formatTime(conversation.lastTime),
+                //   textAlign: TextAlign.right,
+                //   style: TextStyle(
+                //     fontSize: 11.sp,
+                //     color: Colors.grey.shade500,
+                //     //height: 1.2,
+                //   ),
+                // ),
                 SizedBox(height: 6.h),
                 if (conversation.unreadCount > 0)
                   Container(
                     width: 20.w,
                     height: 20.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3D7A5E), // green accent
-                      borderRadius: BorderRadius.circular(10.r),
+                      color: AppColor.secondary.withValues(alpha: 0.3), // green accent
+                      shape: BoxShape.circle
                     ),
                     child: Center(
                       child: Text(
                         '${conversation.unreadCount}',
                         style: TextStyle(
                           fontSize: 11.sp,
-                          color: Colors.white,
+                          color: AppColor.secondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   )
                 else
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 16.h),
               ],
             ),
           ],

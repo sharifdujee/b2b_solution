@@ -14,6 +14,7 @@ class MyConnectionFilter extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the state from your NotifierProvider
     final activeFilter = ref.watch(connectionFilterProvider);
+    final counts = ref.watch(connectionCountsProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -26,17 +27,20 @@ class MyConnectionFilter extends ConsumerWidget {
           _buildTab(
             ref,
             label: 'Connected',
+            count: counts[ConnectionFilterOption.Connected] ?? 0,
             targetFilter: ConnectionFilterOption.Connected,
             isSelected: activeFilter == ConnectionFilterOption.Connected,
           ),
           _buildTab(
             ref,
             label: 'Pending',
+            count: counts[ConnectionFilterOption.Pending] ?? 0,
             targetFilter: ConnectionFilterOption.Pending,
             isSelected: activeFilter == ConnectionFilterOption.Pending,
           ),
           _buildTab(
             ref,
+            count: counts[ConnectionFilterOption.Find] ?? 0,
             label: 'Find',
             targetFilter: ConnectionFilterOption.Find,
             isSelected: activeFilter == ConnectionFilterOption.Find,
@@ -49,9 +53,13 @@ class MyConnectionFilter extends ConsumerWidget {
   Widget _buildTab(
       WidgetRef ref, {
         required String label,
+        required int? count,
         required ConnectionFilterOption targetFilter,
         required bool isSelected,
       }) {
+
+    final displayText = count != null ? '$label ($count)' : label;
+
     return Expanded(
       child: GestureDetector(
         // Calling the method defined in your Notifier class
@@ -63,7 +71,7 @@ class MyConnectionFilter extends ConsumerWidget {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 14.h),
               child: Text(
-                label,
+                displayText,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15.sp,
