@@ -26,7 +26,7 @@ class ConversationTile extends ConsumerWidget {
     final minute = dt.minute.toString().padLeft(2, '0');
     final period = hour >= 12 ? 'PM' : 'AM';
     final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    return '$displayHour:$minute\n$period';
+    return '$displayHour:$minute $period';
   }
 
   @override
@@ -90,15 +90,7 @@ class ConversationTile extends ConsumerWidget {
                   fontSize: 11.sp,
                   color: Colors.grey.shade500,
                 ),
-                // Text(
-                //   _formatTime(conversation.lastTime),
-                //   textAlign: TextAlign.right,
-                //   style: TextStyle(
-                //     fontSize: 11.sp,
-                //     color: Colors.grey.shade500,
-                //     //height: 1.2,
-                //   ),
-                // ),
+
                 SizedBox(height: 6.h),
                 if (conversation.unreadCount > 0)
                   Container(
