@@ -23,8 +23,12 @@ class ChatInputBar extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFF4F4F4),
-                borderRadius: BorderRadius.circular(24.r),
+                color: AppColor.white,
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                  width: 1.w,
+                ),
+                borderRadius: BorderRadius.circular(99.r),
               ),
               child: TextField(
                 controller: controller,
@@ -58,8 +62,8 @@ class ChatInputBar extends StatelessWidget {
               width: 44.w,
               height: 44.h,
               decoration: BoxDecoration(
-                color: const Color(0xFF2D6A4F),
-                borderRadius: BorderRadius.circular(22.r),
+                color: AppColor.secondary,
+                shape: BoxShape.circle
               ),
               child: Icon(
                 Icons.send_rounded,

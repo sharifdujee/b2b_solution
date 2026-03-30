@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/design_system/app_color.dart';
 import '../../../core/utils/local_assets/icon_path.dart';
@@ -53,6 +54,26 @@ class NavBar extends ConsumerWidget {
 
 class CustomBottomNavBar extends ConsumerWidget {
   const CustomBottomNavBar({super.key});
+
+  void changeIndex(int index, BuildContext context, WidgetRef ref) {
+    ref.read(selectedIndexProvider.notifier).state = index;
+    switch (index) {
+      case 0:
+        context.push('/nav');
+        break;
+      case 1:
+        context.push('/pingScreen');
+        break;
+        case 2:
+        context.push('/messageScreen');
+        break;
+        case 3:
+        context.push('/profileScreen');
+        break;
+      default:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -104,7 +125,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(40.r)
                 ),
                 margin: EdgeInsets.only(bottom: 4.w),
-                child: SvgPicture.asset(IconPath.homeNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.homeActiveNav,),
               ),
               label: 'Home',
             ),
@@ -121,7 +142,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                   color: Color(0xFFFFC220),
                   borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.pingNav, colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.pingActiveNav,),
               ),
               label: 'Ping',
             ),
@@ -138,7 +159,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     color: Color(0xFFFFC220),
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.messageNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.messageActiveNav,),
               ),
               label: 'Message        ',
             ),
@@ -155,7 +176,7 @@ class CustomBottomNavBar extends ConsumerWidget {
                     color: AppColor.primary,
                     borderRadius: BorderRadius.circular(40.r)
                 ),
-                child: SvgPicture.asset(IconPath.profileNav,colorFilter: ColorFilter.linearToSrgbGamma(),),
+                child: SvgPicture.asset(IconPath.profileActiveNav,),
               ),
               label: 'Profile',
             ),

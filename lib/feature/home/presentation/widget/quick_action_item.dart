@@ -8,33 +8,54 @@ class QuickActionItem extends ConsumerWidget {
   final String label;
   final String icon;
   final VoidCallback? onTap;
+  final bool isSelected;
 
-  const QuickActionItem({super.key, required this.label, required this.icon, this.onTap});
+  const QuickActionItem({
+    super.key,
+    required this.label,
+    required this.icon,
+    this.onTap,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Expanded(
       child: GestureDetector(
-        onTap: (){
-          onTap!();
-
-        },
+        onTap: onTap,
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 4.w),
           padding: EdgeInsets.symmetric(vertical: 14.h),
           decoration: BoxDecoration(
-            color: AppColor.quickActionColor,
+            color: isSelected ? AppColor.quickActionColor : AppColor.white,
             borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 2,
+                offset:  Offset(0, 1),
+                color: AppColor.black.withValues(alpha: 0.6)
+              ),
+              BoxShadow(
+                  blurRadius: 8,
+                  offset:  Offset(0, 4),
+                  color: AppColor.black.withValues(alpha: 0.12)
+              )
+            ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(icon,color: AppColor.white,height: 24.h, width: 24.w,),
-              //Icon(icon, color: AppColor.white, size: 24.sp),
+              Image.asset(
+                icon,
+                color: isSelected ? AppColor.white : AppColor.black,
+                height: 24.h,
+                width: 24.w,
+              ),
               SizedBox(height: 6.h),
               Text(
                 label,
                 style: TextStyle(
-                  color: AppColor.white,
+                  color: isSelected ? AppColor.white : AppColor.black,
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w500,
                 ),

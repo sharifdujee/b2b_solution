@@ -105,11 +105,11 @@ class FilterBottomSheet extends ConsumerWidget {
                 foregroundColor: AppColor.black,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r)),
+                    borderRadius: BorderRadius.circular(16.r)),
               ),
               child: Text('Apply',
                   style: TextStyle(
-                      fontSize: 15.sp, fontWeight: FontWeight.w700)),
+                      fontSize: 15.sp, fontWeight: FontWeight.w500)),
             ),
           ),
         ],
@@ -139,21 +139,21 @@ class FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: selected ? AppColor.primary : AppColor.white,
-          borderRadius: BorderRadius.circular(24.r),
+          color: selected ? AppColor.secondary : AppColor.white,
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: selected ? AppColor.primary : AppColor.chipBorder,
+            color: AppColor.primary ,
             width: 1.5,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
-            color: selected ? AppColor.white : AppColor.black,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w400,
+            color: selected ? AppColor.primary : AppColor.black,
           ),
         ),
       ),

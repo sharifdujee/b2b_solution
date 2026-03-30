@@ -37,7 +37,7 @@ class _MyAppState extends ConsumerState<MyApp> {
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
-            brightness: Brightness.dark,
+            brightness: Brightness.light,
             useMaterial3: true,
           ),
         );

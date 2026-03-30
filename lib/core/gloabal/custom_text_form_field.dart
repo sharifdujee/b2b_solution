@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../design_system/app_color.dart';
@@ -34,6 +35,9 @@ class CustomTextFormField extends StatelessWidget {
   final TextStyle? suffixTextStyle;
   final String? Function(String?)? validator;
   final double? borderRadius;
+  final double? prefixIconHeight;
+  final double? prefixIconWidth;
+
 
   const CustomTextFormField({
     super.key,
@@ -59,6 +63,8 @@ class CustomTextFormField extends StatelessWidget {
     this.suffixTextStyle,
     this.validator,
     this.borderRadius,
+    this.prefixIconHeight,
+    this.prefixIconWidth,
   });
 
   @override
@@ -88,10 +94,16 @@ class CustomTextFormField extends StatelessWidget {
             (prefixIconPath != null
                 ? Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Image.asset(
+              child: prefixIconPath!.endsWith('.svg')
+                  ? SvgPicture.asset(
                 prefixIconPath!,
-                height: 24.h,
-                width: 24.w,
+                height: prefixIconHeight ?? 24.h,
+                width: prefixIconWidth?? 24.w,
+              )
+                  : Image.asset(
+                prefixIconPath!,
+                height: prefixIconHeight ?? 24.h,
+                width: prefixIconWidth?? 24.w,
               ),
             )
                 : null),
