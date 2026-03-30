@@ -58,11 +58,14 @@ class PingDetails extends ConsumerWidget{
                     fontWeight: FontWeight.w600,
                     color: AppColor.black,
                   ),
+
                   Spacer(),
                   CustomText(text: "Member Since: ", fontSize: 14.sp, fontWeight: FontWeight.w500, color: AppColor.grey400),
                   CustomText(text: ping.membershipYear.toString(), fontSize: 14.sp, fontWeight: FontWeight.w500,color: AppColor.black,)
                 ],
               ),
+
+              CustomText(text: ping.shopAddress.toString(), fontSize: 14.sp,fontWeight: FontWeight.w500,color: AppColor.grey400,),
         
         
               SizedBox(height: 16.h,),
