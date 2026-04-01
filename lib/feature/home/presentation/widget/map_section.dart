@@ -1,12 +1,15 @@
 import 'dart:async';
 
+import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:b2b_solution/feature/home/presentation/widget/selected_ping_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
 import '../../provider/png_provider.dart';
 import 'map_badge.dart';
 import 'map_icon_button.dart';
@@ -71,6 +74,43 @@ class _MapSectionState extends ConsumerState<MapSection> {
             child: MapBadge(
               label: "${pingState.pings.length} Pings Nearby",
               icon: Icons.location_on_rounded,
+            ),
+          ),
+
+          Positioned(
+            top: 110.h,
+            left: 90.w,
+            child: GestureDetector(
+              onTap: ()=>context.push('/createPingScreen')  ,
+              child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.r),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 10,
+                        color: AppColor.black.withValues(alpha: 0.16),
+                      )
+                    ],
+                    border: Border(
+                      bottom: BorderSide(
+                        width: 4.w,
+                        color: Color(0xFFC07702),
+                      )
+                    ),
+                    color: AppColor.primary,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(IconPath.sosIcon, height: 40.h,),
+                      SizedBox(width: 8.w,),
+                      CustomText(text: "PING (SOS)",
+                        color: AppColor.black,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,),
+                    ],
+                  )
+              ),
             ),
           ),
 

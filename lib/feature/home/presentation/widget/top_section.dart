@@ -41,29 +41,7 @@ class TopSection extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          GestureDetector(
-            onTap: ()=>context.push('/createPingScreen')  ,
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100.r),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 10,
-                    color: AppColor.black.withValues(alpha: 0.16),
-                  )
-                ],
-                border: Border.all(
-                  width: 1.w,
-                  color: AppColor.primary.withValues(alpha: 0.16),
-                ),
-                color: AppColor.primary,
-              ),
-              child: Icon(Icons.add, size: 24.h, color: AppColor.white)
-            ),
-          ),
 
-          SizedBox(width: 8.w,),
           GestureDetector(
             onTap: ()=>context.push('/notificationScreen')  ,
             child: Container(
