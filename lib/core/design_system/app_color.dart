@@ -86,6 +86,7 @@ class AppColor {
   static const Color emergencyBadgeText = Color(0xFFFF0000);
   static const Color moderateBadgeText = Color(0xFFFDC329);
   static const Color generalBadgeText = Color(0xFF2196F3);
+  static const Color bottomBorder = Color(0xFFC07702);
 
 
 

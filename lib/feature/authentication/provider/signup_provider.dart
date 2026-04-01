@@ -12,13 +12,10 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
 
   Timer? _timer;
 
-  // --- Timer Logic ---
 
   void startTimer() {
-    // Reset state to initial timer values
     state = state.copyWith(timer: 60, canResend: false);
 
-    // Cancel any existing timer to avoid memory leaks/multiple instances
     _timer?.cancel();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -99,6 +96,10 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
       businessAddress: address,
     );
   }
+  void changeRole(Role role) {
+    state = state.copyWith(selectRole: role);
+  }
+
 
   void updateLegalName(String legalName) {
     state = state.copyWith(legalName: legalName, clearError: true);

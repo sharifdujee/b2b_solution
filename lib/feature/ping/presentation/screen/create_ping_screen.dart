@@ -185,17 +185,17 @@ class CreatePingScreen extends ConsumerWidget{
                 onChanged: (newRadius) => controller.updateRadius(newRadius),
               ),
 
-              // SizedBox(height: 16.h,),
-              // CustomSelectField<String>(
-              //   label: "Choose Connection (Optional)",
-              //   hintText: "Choose Connection (Optional)",
-              //   isMultiSelect: true,
-              //   showSearchBar: true,
-              //   initialSelectedItems: state.chooseConnection ?? [],
-              //   items: const ["Public", "Private", "Friends", "B2B Gold"],
-              //   itemLabelBuilder: (val) => val,
-              //   onChanged: (list) => controller.updateConnection(list),
-              // ),
+              SizedBox(height: 16.h,),
+              CustomSelectField<String>(
+                label: "Choose Connection",
+                hintText: "Choose Connection",
+                isMultiSelect: true,
+                showSearchBar: true,
+                initialSelectedItems: state.chooseConnection ?? [],
+                items: const ["Public", "Private", "Friends", "B2B Gold"],
+                itemLabelBuilder: (val) => val,
+                onChanged: (list) => controller.updateConnection(list),
+              ),
 
 
               SizedBox(height: 16.h,),
