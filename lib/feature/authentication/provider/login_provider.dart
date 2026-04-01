@@ -1,49 +1,88 @@
+import 'dart:developer';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+
+import '../../../core/service/app_url.dart';
+import '../../../core/service/auth_service.dart';
+import '../../../core/service/network_caller.dart';
 import '../models/login_state_model.dart';
 
-// 1. Extend StateNotifier instead of AutoDisposeNotifier
 class LoginNotifier extends StateNotifier<LoginStateModel> {
+  final Ref ref;
+  LoginNotifier(this.ref) : super(LoginStateModel());
 
-  // 2. Pass the initial state to the super constructor
-  LoginNotifier() : super(LoginStateModel());
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  // 3. Methods remain mostly the same, as 'state' is still used
-  void updateEmail(String email) {
-    state = state.copyWith(email: email, clearError: true);
-  }
+  final RegExp _emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
-  void updatePassword(String password) {
-    state = state.copyWith(password: password, clearError: true);
-  }
+
 
   void toggleVisibility() {
     state = state.copyWith(obscurePassword: !state.obscurePassword);
   }
 
-  Future<void> login() async {
-    if (state.email.isEmpty || state.password.isEmpty) {
-      state = state.copyWith(
-        errorMessage: 'Please fill in all fields',
-      );
-      return;
+  Future<bool> login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+
+    // Validation using controller values
+    if (!_emailRegExp.hasMatch(email)) {
+      state = state.copyWith(errorMessage: 'A valid email is required');
+      return false;
+    }
+    if (password.length < 6) {
+      state = state.copyWith(errorMessage: 'Password is too short');
+      return false;
     }
 
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      state = state.copyWith(isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: "Login failed",
+      final response = await NetworkCaller().postRequest(
+        AppUrl.login,
+        body: {
+          'email': email,
+          'password': password,
+        },
       );
+
+      if (response.isSuccess && response.responseData != null) {
+        final result = response.responseData['result'];
+
+        await AuthService.saveToken(result['accessToken']);
+        await AuthService.saveId(result['userId']);
+        await AuthService.saveStatus(result['isProfileComplete']);
+        await AuthService.saveRole(result['role']);
+
+        log("The token After login : ${AuthService.token}");
+
+
+        state = state.copyWith(isLoading: false);
+        return true;
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: response.errorMessage ?? "Login failed",
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
     }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 }
 
-// 4. Use StateNotifierProvider.autoDispose instead of NotifierProvider
-final loginProvider = StateNotifierProvider.autoDispose<LoginNotifier, LoginStateModel>((ref) {
-  return LoginNotifier();
-});
+final loginProvider = StateNotifierProvider<LoginNotifier, LoginStateModel>(
+  (ref) => LoginNotifier(ref),
+);

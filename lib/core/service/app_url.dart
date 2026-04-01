@@ -6,12 +6,13 @@ class AppUrl {
   /// vps
   ///static const String _baseUrl = "http://206.162.244.144:4009/api/v1";
   ///loal
-  static const String _baseUrl = "http://10.0.30.184:4009/api/v1";
+  static const String _baseUrl = "http://10.0.30.29:6014/api/v1";
 
   /// local socket url
   static const String socketUrl = "ws://10.0.30.184:4009";
 
-  static const String createPendingUser = "$_baseUrl/users/pending";
+  /// auth section
+  static const String createUser = "$_baseUrl/user/create";
   static const String verifyOtp = "$_baseUrl/users/verify-account";
   static const String updateLocation = "$_baseUrl/auth/update/user-location";
   static const String setUpProfile = "$_baseUrl/users/set-profile";

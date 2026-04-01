@@ -1,23 +1,53 @@
-
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
+import '../../../core/service/app_url.dart';
+import '../../../core/service/network_caller.dart';
 import '../models/signup_state_model.dart';
 
 class SignupNotifier extends StateNotifier<SignupStateModel> {
+  final Ref ref;
+  SignupNotifier({required this.ref}) : super(SignupStateModel());
 
-  SignupNotifier() : super(SignupStateModel());
+  // Text Controllers
+  final TextEditingController roleController = TextEditingController();
+  final TextEditingController legalNameController = TextEditingController();
+  final TextEditingController businessNameController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController positionController = TextEditingController();
+  final TextEditingController foodCategoryController = TextEditingController();
+  final TextEditingController yearsOfOperationController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController latitudeController = TextEditingController();
+  final TextEditingController longitudeController = TextEditingController();
 
+
+
+  final NetworkCaller _networkCaller = NetworkCaller();
+  final ImagePicker _picker = ImagePicker();
   Timer? _timer;
 
+  // --- Role Management ---
+  void changeRole(Role role) {
+    state = state.copyWith(selectRole: role);
+    roleController.text = role.name;
+  }
 
+  // --- Timer & OTP ---
   void startTimer() {
     state = state.copyWith(timer: 60, canResend: false);
-
     _timer?.cancel();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.timer > 0) {
         state = state.copyWith(timer: state.timer - 1);
@@ -28,114 +58,23 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     });
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> sendOtp() async {
-    if (state.email.isEmpty) {
-      state = state.copyWith(errorMessage: 'Please enter your email address');
-      return;
-    }
-
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    try {
-      // Simulate API Call
-      await Future.delayed(const Duration(seconds: 2));
-
-      state = state.copyWith(isLoading: false);
-
-      // Start the countdown once the OTP is successfully sent
-      startTimer();
-
-    } catch (e) {
-      state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to send OTP. Please try again.'
-      );
-    }
-  }
-
-  Future<void> verifyOtp(pin) async {
-    if (state.verificationCode.length != 4) {
-      state = state.copyWith(errorMessage: 'Please enter a 4-digit code');
-      return;
-    }
-
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    try {
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (state.verificationCode == "1234") {
-        state = state.copyWith(isLoading: false);
-        _timer?.cancel(); // Stop timer on success
-        // Logic for navigation goes here
-      } else {
-        throw Exception('Invalid verification code');
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Invalid verification code. Please try again.',
-      );
-    }
-  }
   void updateVerificationCode(String code) {
     state = state.copyWith(verificationCode: code, clearError: true);
   }
 
-
+  // --- Location & Details Updates ---
   void updateLocation({required double lat, required double lng, String? address}) {
     state = state.copyWith(
-      latitude: lat,
-      longitude: lng,
+      latitude: lat, // Keep as requested
+      longitude: lng, // Keep as requested
       businessAddress: address,
     );
   }
-  void changeRole(Role role) {
-    state = state.copyWith(selectRole: role);
-  }
 
-
-  void updateLegalName(String legalName) {
-    state = state.copyWith(legalName: legalName, clearError: true);
-  }
-
-  void updateBusinessName(String businessName) {
-    state = state.copyWith(businessName: businessName, clearError: true);
-  }
-
-  void updateName(String name) {
-    state = state.copyWith(name: name, clearError: true);
-  }
-
-  void updateEmail(String email) {
-    state = state.copyWith(email: email, clearError: true);
-  }
-
-  void updatePosition(String position) {
-    state = state.copyWith(position: position, clearError: true);
-  }
-
-  void updateFoodCategory(String foodCategory) {
-    state = state.copyWith(foodCategory: foodCategory, clearError: true);
-  }
-
-  void updateYearsOfOperation(String yearsOfOperation) {
-    state = state.copyWith(yearsOfOperation: yearsOfOperation, clearError: true);
-  }
-
-  final ImagePicker _picker = ImagePicker();
+  // --- Image Picking ---
   Future<void> _pickImage(ImageSource source, String type) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-      );
-
+      final XFile? pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
         if (type == 'business') {
           state = state.copyWith(businessImage: pickedFile.path, clearError: true);
@@ -150,77 +89,112 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     }
   }
 
-  // Public methods that now accept the Source
   Future<void> pickBusinessImage(ImageSource source) => _pickImage(source, 'business');
   Future<void> pickProfileImage(ImageSource source) => _pickImage(source, 'profile');
   Future<void> pickLicenseImage(ImageSource source) => _pickImage(source, 'license');
 
-  void updatePassword(String password) {
-    state = state.copyWith(password: password, clearError: true);
-  }
+  // --- UI Toggles ---
+  void toggleVisibility() => state = state.copyWith(obscurePassword: !state.obscurePassword);
+  void toggleConfirmPasswordVisibility() => state = state.copyWith(obscureConfirmPassword: !state.obscureConfirmPassword);
 
-  void updateConfirmPassword(String confirmPassword) {
-    state = state.copyWith(confirmPassword: confirmPassword, clearError: true);
-  }
-
-  void toggleVisibility() {
-    state = state.copyWith(obscurePassword: !state.obscurePassword);
-  }
-
-  void toggleConfirmPasswordVisibility() {
-    state = state.copyWith(obscureConfirmPassword: !state.obscureConfirmPassword);
-  }
-
-  void toggleIsLoading() {
-    state = state.copyWith(isLoading: !state.isLoading);
-  }
-
+  // --- API Implementation ---
   bool validateForm() {
-    if (state.legalName.isEmpty ||
-        state.businessName.isEmpty ||
-        state.email.isEmpty ||
-        state.password.isEmpty ||
-        state.confirmPassword.isEmpty) {
-      state = state.copyWith(errorMessage: "Please fill in all required fields");
+    final email = emailController.text.trim();
+    if (legalNameController.text.isEmpty || email.isEmpty || passwordController.text.isEmpty) {
+      state = state.copyWith(errorMessage: "Please fill in required fields");
       return false;
     }
-
-    if (!state.email.contains('@')) {
-      state = state.copyWith(errorMessage: "Please enter a valid email");
+    if (!email.contains('@')) {
+      state = state.copyWith(errorMessage: "Invalid email");
       return false;
     }
-
-    if (state.password.length < 6) {
-      state = state.copyWith(errorMessage: "Password must be at least 6 characters");
-      return false;
-    }
-
-    if (state.password != state.confirmPassword) {
+    if (passwordController.text != confirmPasswordController.text) {
       state = state.copyWith(errorMessage: "Passwords do not match");
       return false;
     }
-
-    state = state.copyWith(clearError: true);
     return true;
   }
 
-  Future<void> signup() async {
-    if (!validateForm())return;
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<bool> signup() async {
+    if (!validateForm()) return false;
+
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
     try {
-      await Future.delayed(const Duration(seconds: 2));
+
+
+      Map<String, dynamic> bodyData = {
+        'role': state.selectRole?.name.toUpperCase() ?? '',
+        'legalName': legalNameController.text.trim(),
+        'businessName': businessNameController.text.trim(),
+        'fullName': nameController.text.trim(),
+        'email': emailController.text.trim(),
+        'password': passwordController.text,
+        'position': positionController.text.trim(),
+        'businessCategory': foodCategoryController.text.trim(),
+        'application/json': yearsOfOperationController.text.trim(),
+        'businessLatitude': double.tryParse(latitudeController.text.trim()),
+        'businessLongitude': double.tryParse(longitudeController.text.trim()),
+        'fcmToken': '',
+      };
+      final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
+
+      request.headers.addAll({
+        'Content-Type': 'application/json',
+      });
+      request.fields['bodyData'] = jsonEncode(bodyData);
+
+      if (state.profileImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profileImage',
+          state.profileImage!,
+        ));
+      }
+      if (state.businessImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'businessImage',
+          state.businessImage!,
+        ));
+      }
+
+      var response = await request.send();
+      var responseBody = await http.Response.fromStream(response);
+      log("Response Body: ${responseBody.body}");
+
+
+
       state = state.copyWith(isLoading: false);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        log("Signup success");
+        debugPrint("✅ Success: $responseBody");
+        return true;
+      } else {
+        state = state.copyWith(errorMessage: state.errorMessage ?? "Signup failed");
+        return false;
+      }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: "Signup failed",
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
     }
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    roleController.dispose();
+    legalNameController.dispose();
+    businessNameController.dispose();
+    nameController.dispose();
+    emailController.dispose();
+    positionController.dispose();
+    foodCategoryController.dispose();
+    yearsOfOperationController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 }
 
-
 final signupProvider = StateNotifierProvider.autoDispose<SignupNotifier, SignupStateModel>((ref) {
-  return SignupNotifier();
+  return SignupNotifier(ref: ref);
 });

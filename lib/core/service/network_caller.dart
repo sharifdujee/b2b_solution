@@ -71,6 +71,7 @@ class NetworkCaller {
   }
 
 
+
   Future<ResponseData> putRequest(String endpoint,
       {Map<String, dynamic>? body, String? token}) async {
     AppLoggerHelper.info('PUT Request: $endpoint');

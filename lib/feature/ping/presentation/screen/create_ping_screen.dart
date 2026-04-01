@@ -192,7 +192,7 @@ class CreatePingScreen extends ConsumerWidget{
                 isMultiSelect: true,
                 showSearchBar: true,
                 initialSelectedItems: state.chooseConnection ?? [],
-                items: const ["Public", "Private", "Friends", "B2B Gold"],
+                items: const ["Friends", "B2B Gold","Abc Restaurant"],
                 itemLabelBuilder: (val) => val,
                 onChanged: (list) => controller.updateConnection(list),
               ),
