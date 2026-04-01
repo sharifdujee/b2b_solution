@@ -96,7 +96,7 @@ class LocationAccessScreen extends ConsumerWidget {
                         Marker(
                           markerId: const MarkerId('selected'),
                           position: locationState.selectedPosition,
-                          draggable: true, // drag marker directly
+                          draggable: true,
                           onDragEnd: (LatLng newPosition) {
                             ref
                                 .read(locationProvider.notifier)
@@ -108,7 +108,6 @@ class LocationAccessScreen extends ConsumerWidget {
                         ),
                       },
 
-                      // Enable gestures so user can pan/drag
                       zoomControlsEnabled: false,
                       scrollGesturesEnabled: true,
                       tiltGesturesEnabled: false,
@@ -171,7 +170,6 @@ class LocationAccessScreen extends ConsumerWidget {
                 ),
                 SizedBox(height: 12.h),
 
-                // Live coordinates display
                 if (locationState.isLoaded)
                   CustomText(
                     text:
@@ -237,8 +235,7 @@ class LocationAccessScreen extends ConsumerWidget {
                   textColor: Colors.black,
                   borderRadius: 16.r,
                   onPressed: () {
-                    // Pass selected position forward if needed
-                    context.push('/loginScreen');
+                    context.pushReplacement('/roleSelectionScreen');
                   },
                 ),
                 SizedBox(height: 20.h),

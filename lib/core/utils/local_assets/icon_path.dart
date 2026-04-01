@@ -64,6 +64,8 @@ class IconPath {
    static const String confirmation = "$_basePath/confirmation.png";
    static const String notification = "$_basePath/notification.svg";
    static const String map = "$_basePath/map.png";
+   static const String sosIcon = "$_basePath/sosIcon.png";
+
 
 
 
