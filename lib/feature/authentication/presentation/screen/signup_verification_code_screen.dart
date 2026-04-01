@@ -107,7 +107,10 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                     defaultPinTheme: defaultPinTheme,
                     focusedPinTheme: focusedPinTheme,
                     errorPinTheme: emptyPinTheme,
-                    onChanged: (value) => controller.updateVerificationCode(value),
+                    controller: controller.pinController,
+                    onCompleted: (pin) {
+                      controller.verify(pin);
+                    },
                     pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
                     showCursor: true,
                     cursor: Container(
@@ -149,7 +152,11 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                   backgroundColor: AppColor.primary,
                   textColor: AppColor.black,
                   borderRadius: 16.r,
-                  onPressed: (){
+                  onPressed: () async {
+                    final success = await controller.verify(controller.pinController.text);
+                    if (success){
+                      context.go("/nav");
+                    }
 
                   }
                 ),

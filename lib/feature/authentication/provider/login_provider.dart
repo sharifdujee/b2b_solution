@@ -54,7 +54,7 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
 
         await AuthService.saveToken(result['accessToken']);
         await AuthService.saveId(result['userId']);
-        await AuthService.saveStatus(result['isProfileComplete']);
+        await AuthService.saveProfileSetup(result['isProfileComplete']);
         await AuthService.saveRole(result['role']);
 
         log("The token After login : ${AuthService.token}");

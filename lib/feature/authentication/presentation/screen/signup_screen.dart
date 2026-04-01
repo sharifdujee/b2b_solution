@@ -53,7 +53,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Legal Name",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -70,7 +70,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Business Name",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -87,7 +87,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Your Name",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -105,7 +105,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Email Address",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -124,7 +124,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Position",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -142,7 +142,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Food Category",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -160,7 +160,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Years of Operation",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -178,9 +178,9 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 16.h,),
               CustomText(
-                text: "Food Category",
+                text: "Business Location",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -198,10 +198,10 @@ class SignupScreen extends ConsumerWidget{
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: AppColor.primary, width: 1),
                   ),
-                  child: Expanded(
-                    child: CustomText(
-                      text: "Select Location",
-                    ),
+                  child: CustomText(
+                    text: state.businessAddress ?? "Select Location",
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
 
@@ -211,7 +211,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                     text :"Profile image",
                     fontSize: 16.sp,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black,
               ),
 
@@ -228,18 +228,18 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 16.h,),
               CustomText(
-                text: "Upload business license",
+                text: "Upload business image",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
               SizedBox(height: 12.h,),
               CustomImagePickerCard(
-                title: "business license",
-                imagePath: state.businessLicenseImage,
+                title: "business image",
+                imagePath: state.businessImage,
                 onPickImage: () {
                   _showImageSourceSheet(context, (source) {
-                    ref.read(signupProvider.notifier).pickLicenseImage(source);
+                    ref.read(signupProvider.notifier).pickBusinessImage(source);
                   });
                 },
               ),
@@ -248,7 +248,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Password",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -275,7 +275,7 @@ class SignupScreen extends ConsumerWidget{
               CustomText(
                 text: "Confirm Password",
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
 
@@ -308,8 +308,11 @@ class SignupScreen extends ConsumerWidget{
                 borderRadius: 16.r,
                 text: "Sign Up",
                 textColor: Colors.black,
-                onPressed: (){
-                  context.push('/signupVerificationCodeScreen');
+                onPressed: () async{
+                  final success = await controller.signup();
+                  if(success){
+                    context.push('/signupVerificationCodeScreen');
+                  }
                 },
               ),
 

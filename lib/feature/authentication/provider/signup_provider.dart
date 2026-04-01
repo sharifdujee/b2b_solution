@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:async';
 
 import '../../../core/service/app_url.dart';
+import '../../../core/service/auth_service.dart';
 import '../../../core/service/network_caller.dart';
 import '../models/signup_state_model.dart';
 
@@ -31,20 +31,19 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
+  final TextEditingController businessAddressController = TextEditingController();
 
 
 
-  final NetworkCaller _networkCaller = NetworkCaller();
+
   final ImagePicker _picker = ImagePicker();
   Timer? _timer;
 
-  // --- Role Management ---
   void changeRole(Role role) {
     state = state.copyWith(selectRole: role);
     roleController.text = role.name;
   }
 
-  // --- Timer & OTP ---
   void startTimer() {
     state = state.copyWith(timer: 60, canResend: false);
     _timer?.cancel();
@@ -58,17 +57,60 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     });
   }
 
-  void updateVerificationCode(String code) {
-    state = state.copyWith(verificationCode: code, clearError: true);
+
+  final TextEditingController pinController = TextEditingController();
+
+  Future<bool> verify(String code) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    NetworkCaller networkCaller = NetworkCaller();
+
+    try {
+      final response = await networkCaller.postRequest(
+        AppUrl.userVerifyOtp,
+        body: {
+          'email': emailController.text.trim(),
+          'otp': code,
+        },
+      );
+
+      state = state.copyWith(isLoading: false);
+
+      if (response.isSuccess && response.responseData != null) {
+        final result = response.responseData['result'];
+
+        // Correctly assigning all variables to AuthService
+        await AuthService.saveProfileSetup(result['isProfileComplete'] ?? false);
+        await AuthService.saveId(result['userId'] ?? '');
+        await AuthService.saveToken(result['accessToken'] ?? '');
+        await AuthService.saveRole(result['role'] ?? '');
+
+        await AuthService.saveOtp('');
+
+        return true;
+      } else {
+        state = state.copyWith(
+          errorMessage: response.errorMessage ?? "Verification failed",
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
+    }
   }
 
-  // --- Location & Details Updates ---
   void updateLocation({required double lat, required double lng, String? address}) {
     state = state.copyWith(
-      latitude: lat, // Keep as requested
-      longitude: lng, // Keep as requested
+      latitude: lat,
+      longitude: lng,
       businessAddress: address,
     );
+
+    latitudeController.text = lat.toString();
+    longitudeController.text = lng.toString();
+    if (address != null) {
+      businessAddressController.text = address;
+    }
   }
 
   // --- Image Picking ---
@@ -121,8 +163,6 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-
-
       Map<String, dynamic> bodyData = {
         'role': state.selectRole?.name.toUpperCase() ?? '',
         'legalName': legalNameController.text.trim(),
@@ -131,45 +171,60 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         'email': emailController.text.trim(),
         'password': passwordController.text,
         'position': positionController.text.trim(),
-        'businessCategory': foodCategoryController.text.trim(),
-        'application/json': yearsOfOperationController.text.trim(),
+        'businessCategory': [foodCategoryController.text.trim()],
+        'operationYears': int.tryParse(yearsOfOperationController.text.trim()),
         'businessLatitude': double.tryParse(latitudeController.text.trim()),
         'businessLongitude': double.tryParse(longitudeController.text.trim()),
         'fcmToken': '',
       };
+
       final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
 
-      request.headers.addAll({
-        'Content-Type': 'application/json',
-      });
+      // Note: Do not manually set 'Content-Type' to 'application/json' for Multipart
+      // The boundary is set automatically by the http package.
       request.fields['bodyData'] = jsonEncode(bodyData);
+
+      // Media Type Helper
+      http.MediaType _getMediaType(String path) {
+        final extension = path.split('.').last.toLowerCase();
+        return extension == 'png' ? http.MediaType('image', 'png') : http.MediaType('image', 'jpeg');
+      }
 
       if (state.profileImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'profileImage',
-          state.profileImage!,
+          'profileImage', state.profileImage!,
+          contentType: _getMediaType(state.profileImage!),
         ));
       }
+
       if (state.businessImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'businessImage',
-          state.businessImage!,
+          'businessImage', state.businessImage!,
+          contentType: _getMediaType(state.businessImage!),
         ));
       }
 
-      var response = await request.send();
-      var responseBody = await http.Response.fromStream(response);
-      log("Response Body: ${responseBody.body}");
-
-
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      log("Signup Response: ${response.body}");
 
       state = state.copyWith(isLoading: false);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
-        log("Signup success");
-        debugPrint("✅ Success: $responseBody");
+        final decodedData = jsonDecode(response.body);
+        final result = decodedData['result'];
+
+        // Save initial data from signup response if needed
+        if (result != null) {
+          if (result['otp'] != null) await AuthService.saveOtp(result['otp'].toString());
+          // Save email to token temporarily or use for verification
+          if (result['email'] != null) await AuthService.saveToken(result['email']);
+        }
+
         return true;
       } else {
-        state = state.copyWith(errorMessage: state.errorMessage ?? "Signup failed");
+        final decodedData = jsonDecode(response.body);
+        state = state.copyWith(errorMessage: decodedData['message'] ?? "Signup failed");
         return false;
       }
     } catch (e) {

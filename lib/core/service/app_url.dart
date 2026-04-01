@@ -4,19 +4,23 @@ class AppUrl {
   AppUrl._();
 
   /// vps
-  ///static const String _baseUrl = "http://206.162.244.144:4009/api/v1";
-  ///loal
-  static const String _baseUrl = "http://10.0.30.29:6014/api/v1";
+  static const String _baseUrl = "http://206.162.244.144:6014/api/v1";
+  ///loalal
+
 
   /// local socket url
   static const String socketUrl = "ws://10.0.30.184:4009";
 
   /// auth section
+  /// used by Lisan
   static const String createUser = "$_baseUrl/user/create";
-  static const String verifyOtp = "$_baseUrl/users/verify-account";
+  static const String userVerifyOtp = "$_baseUrl/user/verify";
+  static const String login  = "$_baseUrl/auth/login";
+
+
   static const String updateLocation = "$_baseUrl/auth/update/user-location";
   static const String setUpProfile = "$_baseUrl/users/set-profile";
-  static const String login  = "$_baseUrl/auth/login";
+
   static const String deleteAccount = "$_baseUrl/users/delete-account";
   static const String getMe = "$_baseUrl/users/profile";
   static const String sendOtp = "$_baseUrl/auth/send-otp";
