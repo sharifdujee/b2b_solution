@@ -11,6 +11,7 @@ import '../authentication/presentation/screen/location_access_screen.dart';
 import '../authentication/presentation/screen/login_screen.dart';
 import '../authentication/presentation/screen/reset_password.dart';
 import '../authentication/presentation/screen/reset_verification_code_screen.dart';
+import '../authentication/presentation/screen/role_selection_screen.dart';
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
 import '../home/model/my_connection_state_model.dart';
 import '../home/presentation/screen/business_card_details_screen.dart';
@@ -77,6 +78,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/createNewPasswordScreen", builder: (context, state)=> CreateNewPasswordScreen()),
 
       GoRoute(path: "/signupVerificationCodeScreen", builder: (context, state)=> SignupVerificationCodeScreen()),
+      GoRoute(path: "/roleSelectionScreen", builder: (context, state)=> RoleSelectionScreen()),
+
       GoRoute(path: "/editProfile",builder: (context, state)=> EditProfile()),
       GoRoute(path: "/changePasswordScreen", builder: (context, state)=> ChangePasswordScreen()),
       GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),

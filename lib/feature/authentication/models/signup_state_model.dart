@@ -1,3 +1,9 @@
+enum Role {
+  vendor,
+  user,
+}
+
+
 class SignupStateModel {
   final String legalName;
   final String businessName;
@@ -12,12 +18,12 @@ class SignupStateModel {
   final String businessLicenseImage;
   final String password;
   final String confirmPassword;
+  final Role selectRole;
 
-  // --- Added Location Fields ---
   final double? latitude;
   final double? longitude;
-  final String businessAddress; // Optional: To store the formatted string address
-  // ----------------------------
+  final String businessAddress;
+
 
   final bool isLoading;
   final bool obscurePassword;
@@ -40,8 +46,8 @@ class SignupStateModel {
     this.businessLicenseImage = '',
     this.password = '',
     this.confirmPassword = '',
-    this.latitude, // Default null
-    this.longitude, // Default null
+    this.latitude,
+    this.longitude,
     this.businessAddress = '',
     this.isLoading = false,
     this.obscurePassword = true,
@@ -49,6 +55,7 @@ class SignupStateModel {
     this.errorMessage,
     this.timer = 0,
     this.canResend = false,
+    this.selectRole = Role.user,
   });
 
   SignupStateModel copyWith({
@@ -65,9 +72,9 @@ class SignupStateModel {
     String? businessLicenseImage,
     String? password,
     String? confirmPassword,
-    double? latitude, // Added
-    double? longitude, // Added
-    String? businessAddress, // Added
+    double? latitude,
+    double? longitude,
+    String? businessAddress,
     bool? isLoading,
     bool? obscurePassword,
     bool? obscureConfirmPassword,
@@ -75,6 +82,7 @@ class SignupStateModel {
     int? timer,
     bool? canResend,
     bool clearError = false,
+    Role? selectRole,
   }) {
     return SignupStateModel(
       legalName: legalName ?? this.legalName,
@@ -90,8 +98,8 @@ class SignupStateModel {
       businessLicenseImage: businessLicenseImage ?? this.businessLicenseImage,
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
-      latitude: latitude ?? this.latitude, // Added
-      longitude: longitude ?? this.longitude, // Added
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       businessAddress: businessAddress ?? this.businessAddress, // Added
       isLoading: isLoading ?? this.isLoading,
       obscurePassword: obscurePassword ?? this.obscurePassword,
@@ -99,6 +107,7 @@ class SignupStateModel {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       timer: timer ?? this.timer,
       canResend: canResend ?? this.canResend,
+      selectRole: selectRole ?? this.selectRole,
     );
   }
 }
