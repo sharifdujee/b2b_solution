@@ -157,7 +157,7 @@ class ProfileScreen extends ConsumerWidget {
                           context.pop();
                         },
                             message: "Do you want to Delete Account?", isDoubleButton: true, secondButtonText: 'Delete', onSecondPressed: (){
-                              context.push('/login');
+                              context.push('/loginScreen');
                             });
                       },
                     ),
@@ -168,7 +168,7 @@ class ProfileScreen extends ConsumerWidget {
                           context.pop();
                         },
                         message: "Do you want to log out ?", isDoubleButton: true, secondButtonText: 'log out', onSecondPressed: (){
-                          context.push('/login');
+                          context.push('/loginScreen');
                             });
                       },
                       icon: IconPath.logout,

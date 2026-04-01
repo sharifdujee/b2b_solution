@@ -44,6 +44,7 @@ class EditProfile extends ConsumerWidget{
                     ),
                   ],
                 ),
+                Divider(),
 
 
 
@@ -51,7 +52,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Email Address",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -91,7 +92,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Legal Name",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -108,7 +109,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Business Name",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -126,7 +127,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Your Name",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -145,7 +146,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Position",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -163,7 +164,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Food Category",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -181,7 +182,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Years of Operation",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -200,7 +201,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text :"Profile image",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
 
@@ -219,7 +220,7 @@ class EditProfile extends ConsumerWidget{
                 CustomText(
                   text: "Upload business image",
                   fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
                 SizedBox(height: 12.h,),
