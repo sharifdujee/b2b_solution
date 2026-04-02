@@ -19,13 +19,15 @@ class AppUrl {
   static const String forgetPasswordOtp = "$_baseUrl/auth/send-forgot-otp";
   static const String verifyForgotOtp = "$_baseUrl/auth/verify-forgot-otp";
   static const String resetPassword = "$_baseUrl/auth/reset-password";
+  static const String getMe = "$_baseUrl/auth/me";
+  static const String updateProfile = "$_baseUrl/auth/me/update";
 
 
   static const String updateLocation = "$_baseUrl/auth/update/user-location";
   static const String setUpProfile = "$_baseUrl/users/set-profile";
 
   static const String deleteAccount = "$_baseUrl/users/delete-account";
-  static const String getMe = "$_baseUrl/users/profile";
+
   static const String sendOtp = "$_baseUrl/auth/send-otp";
   static const String otpVerification = "$_baseUrl/auth/verify-otp";
   static const String changePassword = "$_baseUrl/auth/change-password";

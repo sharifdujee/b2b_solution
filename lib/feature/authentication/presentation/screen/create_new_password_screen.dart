@@ -12,7 +12,9 @@ import '../../../../core/gloabal/custom_dialog.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
 
 class CreateNewPasswordScreen extends ConsumerWidget{
-  const CreateNewPasswordScreen({super.key});
+  final String forgetToken;
+
+  const CreateNewPasswordScreen({super.key, required this.forgetToken});
 
   @override
   Widget build(BuildContext context, WidgetRef ref){
@@ -119,7 +121,7 @@ class CreateNewPasswordScreen extends ConsumerWidget{
                       message: "Password changed successfully, you can login again with new password",
                       buttonText: "Log in",
                       onPressed: () async{
-                        final success = await controller.resetPassword();
+                        final success = await controller.resetPassword(forgetToken);
                         if (success){
                           context.push('/loginScreen');
                         }

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
@@ -148,11 +150,22 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                 backgroundColor: AppColor.primary,
                 textColor: AppColor.black,
                 borderRadius: 16.r,
-                onPressed: () async {
-                  if (await controller.verifyOtp(controller.verificationCodeController.text)) {
-                    context.push("/createNewPasswordScreen");
+                  onPressed: () async {
+                    final String? forgetToken = await controller.verifyOtp(
+                      controller.verificationCodeController.text.trim(),
+                    );
+
+                    if (forgetToken != null) {
+                      if (context.mounted) {
+                        context.push(
+                          "/createNewPasswordScreen",
+                          extra: forgetToken,
+                        );
+                      }
+                    } else {
+                      log("Verification failed, no token received.");
+                    }
                   }
-                }
               ),
 
               SizedBox(height: 24.h),

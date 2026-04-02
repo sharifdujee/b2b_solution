@@ -32,23 +32,26 @@ import '../splash/provider/splash_provider.dart';
 
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final isLoading = ref.watch(splashProvider);
+  final startupState = ref.watch(splashProvider);
 
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
       final location = state.matchedLocation;
 
-      // Stay on splash while still loading
-      if (isLoading) {
-        return location == '/splash' ? null : '/splash';
+      if (startupState == AppStartupState.loading) {
+        return '/splash';
       }
 
-      // ✅ When loading finishes, redirect to onboarding
       if (location == '/splash') {
-        return '/onBoarding';
+        if (startupState == AppStartupState.authenticated) {
+          return '/nav';
+        } else {
+          return '/onBoarding';
+        }
       }
 
+      // 3. Allow all other navigations
       return null;
     },
     routes: [
@@ -75,8 +78,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
 
       GoRoute(path: '/businessLocation', builder: (context, state) => BusinessLocationMapView()),
-      GoRoute(path: "/createNewPasswordScreen", builder: (context, state)=> CreateNewPasswordScreen()),
-
+      GoRoute(
+        path: "/createNewPasswordScreen",
+        builder: (context, state) {
+          final String token = state.extra as String;
+          return CreateNewPasswordScreen(forgetToken: token);
+        },
+      ),
       GoRoute(path: "/signupVerificationCodeScreen", builder: (context, state)=> SignupVerificationCodeScreen()),
       GoRoute(path: "/roleSelectionScreen", builder: (context, state)=> RoleSelectionScreen()),
 

@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_dialog.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
@@ -9,19 +9,45 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/service/auth_service.dart';
+
 import '../../provider/profile_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      final profile = ref.read(profileProvider);
+      if(!profile.hasUser){
+        profile.getMyProfile();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
     final notifier = ref.read(profileProvider.notifier);
 
+    final user =profileState.userModel;
+    final isLoading = profileState.isLoading;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Slight off-white background
-      body: SingleChildScrollView(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: isLoading && user == null?
+      _buildLoadingState() :
+      SingleChildScrollView(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 48.h),
           child: Column(
@@ -45,22 +71,18 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Container(
                           padding: EdgeInsets.all(4.r),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            //border: Border.all(color: AppColor.primary, width: 2),
-                          ),
                           child: CircleAvatar(
                             radius: 70.r,
                             backgroundColor: Colors.grey[200],
-                            backgroundImage: (profileState.profileImage != null &&
-                                profileState.profileImage!.isNotEmpty)
-                                ? FileImage(File(profileState.profileImage!))
+                            backgroundImage: (user?.profileImage != null &&
+                                user!.profileImage.isNotEmpty)
+                                ? NetworkImage(user!.profileImage)
                                 : null,
-                            child: (profileState.profileImage == null ||
-                                profileState.profileImage!.isEmpty)
-                                ? Icon(Icons.person, size: 120.r, color: Colors.grey)
-                                : null,
-                          ),
+                            child: (user?.profileImage == null ||
+                                user!.profileImage.isEmpty)
+                                ? Icon(Icons.person, size: 80.r, color: Colors.grey)
+                               :null
+                          )
                         ),
                         Positioned(
                           bottom: 5.h,
@@ -73,11 +95,11 @@ class ProfileScreen extends ConsumerWidget {
                             child: Container(
                               padding: EdgeInsets.all(8.r),
                               decoration: BoxDecoration(
-                                color: Color(0xFFE27932),
+                                color: const Color(0xFFE27932),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Colors.white, width: 2),
                               ),
-                              child: Image.asset(IconPath.avatarEdit,height: 12.h,width: 12.h,)
+                              child: Image.asset(IconPath.avatarEdit, height: 12.h, width: 12.h),
                             ),
                           ),
                         ),
@@ -85,14 +107,14 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     SizedBox(height: 12.h),
                     CustomText(
-                      text: profileState.name ?? "Joe's Cafe",
+                      text: user?.fullName ?? "Joe's Cafe",
                       fontSize: 28.sp,
                       fontWeight: FontWeight.w500,
                       color: AppColor.black,
                     ),
                     SizedBox(height: 12.h),
                     CustomText(
-                      text: profileState.position ?? "Foreman",
+                      text: user?.position.toString() ?? "Foreman",
                       fontSize: 14.sp,
                       color: AppColor.grey300,
                       fontWeight: FontWeight.w400,
@@ -111,7 +133,7 @@ class ProfileScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF828282).withValues(alpha: 0.14),
+                      color: const Color(0xFF828282).withOpacity(0.14),
                       blurRadius: 16,
                     ),
                   ],
@@ -119,57 +141,74 @@ class ProfileScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     _buildListTile(
-                        icon: IconPath.userEdit, title: "Account Management",
-                      onTap: ()=> context.push("/editProfile")
-                    ),
+                        icon: IconPath.userEdit,
+                        title: "Account Management",
+                        onTap: () => context.push("/editProfile")),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.lockPassword, title: "Change Password",
-                      onTap: ()=> context.push("/changePasswordScreen")
-                    ),
+                        icon: IconPath.lockPassword,
+                        title: "Change Password",
+                        onTap: () => context.push("/changePasswordScreen")),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.helpCenter, title: "Help Center",
-                        onTap: ()=> context.push("/helpCenterScreen")
-
-                    ),
+                        icon: IconPath.helpCenter,
+                        title: "Help Center",
+                        onTap: () => context.push("/helpCenterScreen")),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.termsOfService, title: "Terms of Service",
-                      onTap: (){
-                          context.push('/terms');
-                      }
-                    ),
+                        icon: IconPath.termsOfService,
+                        title: "Terms of Service",
+                        onTap: () => context.push('/terms')),
                     _buildDivider(),
                     _buildListTile(
-                        icon: IconPath.privacyPolicy, title: "Privacy Policy",
-                        onTap: (){
-                          context.push('/privacyPolicy');
-                        }
-                    ),
+                        icon: IconPath.privacyPolicy,
+                        title: "Privacy Policy",
+                        onTap: () => context.push('/privacyPolicy')),
                     _buildDivider(),
                     _buildListTile(
                       icon: IconPath.deleteAccount,
                       title: "Delete Account",
                       color: Colors.red,
-                      onTap: (){
-                        showCustomDialog(context, backgroundContainer: false,button1Color: Colors.white, button2Color: AppColor.secondary, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
-                          context.pop();
-                        },
-                            message: "Do you want to Delete Account?", isDoubleButton: true, secondButtonText: 'Delete', onSecondPressed: (){
-                              context.push('/loginScreen');
-                            });
+                      showArrow: false,
+                      onTap: () {
+                        showCustomDialog(
+                          context,
+                          backgroundContainer: false,
+                          button1Color: Colors.white,
+                          button2Color: AppColor.secondary,
+                          imagePath: IconPath.confirmation,
+                          title: "Are You Sure?",
+                          buttonText: "cancel",
+                          isDoubleButton: true,
+                          message: "Do you want to Delete Account?",
+                          secondButtonText: 'Delete',
+                          onPressed: () => context.pop(),
+                          onSecondPressed: () {
+                            context.pushReplacement('/loginScreen');
+                          },
+                        );
                       },
                     ),
                     _buildDivider(),
                     _buildListTile(
-                      onTap: (){
-                        showCustomDialog(context, backgroundContainer: false,button1Color: Colors.white, button2Color: AppColor.secondary, imagePath: IconPath.confirmation, title: "Are You Sure?", buttonText: "cancel", onPressed: (){
-                          context.pop();
-                        },
-                        message: "Do you want to log out ?", isDoubleButton: true, secondButtonText: 'log out', onSecondPressed: (){
-                          context.push('/loginScreen');
-                            });
+                      onTap: () {
+                        showCustomDialog(
+                          context,
+                          backgroundContainer: false,
+                          imagePath: IconPath.confirmation,
+                          title: "Are You Sure?",
+                          message: "Do you want to log out?",
+                          isDoubleButton: true,
+                          buttonText: "Cancel",
+                          button1Color: Colors.white,
+                          onPressed: () => context.pop(),
+                          secondButtonText: "Log out",
+                          button2Color: AppColor.secondary,
+                          onSecondPressed: () async {
+                            context.pop();
+                            await AuthService.logoutUser(context);
+                          },
+                        );
                       },
                       icon: IconPath.logout,
                       title: "Logout",
@@ -186,7 +225,27 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  // Helper for List Items
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primary),
+          ),
+          SizedBox(height: 16.h),
+          CustomText(
+            text: "Loading profile...",
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColor.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildListTile({
     required String icon,
     required String title,
@@ -197,27 +256,29 @@ class ProfileScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16..h),
+        padding: EdgeInsets.symmetric(vertical: 16.h),
         child: Row(
           children: [
-            Image.asset(icon, height: 24.h, width: 24.w, color: color,),
-            SizedBox(width: 8.w,),
+            Image.asset(icon, height: 24.h, width: 24.w, color: color),
+            SizedBox(width: 8.w),
             CustomText(
               text: title,
               fontSize: 16.sp,
               fontWeight: FontWeight.w500,
               color: color ?? Colors.black,
             ),
-            Spacer(),
-            showArrow?
-            Image.asset(IconPath.arrowRight,height: 24.h,width: 24.w, color: AppColor.grey400,) : SizedBox.shrink(),
+            const Spacer(),
+            if (showArrow)
+              Image.asset(IconPath.arrowRight, height: 24.h, width: 24.w, color: AppColor.grey400)
+            else
+              const SizedBox.shrink(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDivider() => Divider(height: 1, color: Color(0xFFEDEEF4));
+  Widget _buildDivider() => const Divider(height: 1, color: Color(0xFFEDEEF4));
 
   void _showImageSourceSheet(BuildContext context, Function(ImageSource) onSourceSelected) {
     showModalBottomSheet(

@@ -23,9 +23,7 @@ class AuthService {
   static bool? _userSetUp;
   static String? _id;
   static bool? _isProfileSetup;
-  static String? _otp;
-  static String? _message;
-  static String? _fToken;
+
 
   // Initialize SharedPreferences (call this in main.dart)
   static Future<void> init() async {
@@ -37,32 +35,10 @@ class AuthService {
     _userSetUp = _preferences.getBool(_isSetUpKey);
     _id = _preferences.getString(_userIdKey);
     _isProfileSetup = _preferences.getBool(_isProfileSetupKey);
-    _otp = _preferences.getString(_otpKey);
-    _message = _preferences.getString(_resetMessageKey);
-    _fToken = _preferences.getString(_forgetTokenKey);
+
   }
 
   // --- Saver Methods ---
-
-  static Future<void> saveForgetToken(String token) async {
-    try {
-      await _preferences.setString(_forgetTokenKey, token);
-      _fToken = token;
-      log("Forget token saved: $token");
-    } catch (e) {
-      log('Error saving forget token: $e');
-    }
-  }
-
-  static Future<void> saveResetPasswordMessage(String message) async {
-    try {
-      await _preferences.setString(_resetMessageKey, message);
-      _message = message;
-    } catch (e) {
-      log('Error saving reset message: $e');
-    }
-  }
-
 
   static Future<void> saveToken(String token) async {
     try {
@@ -119,7 +95,7 @@ class AuthService {
     try {
       await deleteTokenRole();
       if (context.mounted) {
-        context.go("/login");
+        context.go("loginScreen");
       }
     } catch (e) {
       log('Error during logout: $e');
@@ -135,9 +111,6 @@ class AuthService {
         _isSetUpKey,
         _userIdKey,
         _isProfileSetupKey,
-        _otpKey,
-        _forgetTokenKey,
-        _resetMessageKey
       ];
 
       for (var key in keysToRemove) {
@@ -150,9 +123,7 @@ class AuthService {
       _userSetUp = null;
       _id = null;
       _isProfileSetup = null;
-      _otp = null;
-      _fToken = null;
-      _message = null;
+
 
       log("Auth data cleared successfully.");
     } catch (e) {
@@ -166,7 +137,4 @@ class AuthService {
   static bool? get userSetUp => _userSetUp;
   static String? get id => _id;
   static bool? get isProfileSetup => _isProfileSetup;
-  static String? get otp => _otp;
-  static String? get forgetToken => _fToken;
-  static String? get resetMessage => _message;
 }
