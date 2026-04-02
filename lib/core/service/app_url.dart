@@ -16,6 +16,9 @@ class AppUrl {
   static const String createUser = "$_baseUrl/user/create";
   static const String userVerifyOtp = "$_baseUrl/user/verify";
   static const String login  = "$_baseUrl/auth/login";
+  static const String forgetPasswordOtp = "$_baseUrl/auth/send-forgot-otp";
+  static const String verifyForgotOtp = "$_baseUrl/auth/verify-forgot-otp";
+  static const String resetPassword = "$_baseUrl/auth/reset-password";
 
 
   static const String updateLocation = "$_baseUrl/auth/update/user-location";
@@ -25,7 +28,6 @@ class AppUrl {
   static const String getMe = "$_baseUrl/users/profile";
   static const String sendOtp = "$_baseUrl/auth/send-otp";
   static const String otpVerification = "$_baseUrl/auth/verify-otp";
-  static const String resetPassword = "$_baseUrl/auth/reset-password";
   static const String changePassword = "$_baseUrl/auth/change-password";
   static const String editProfile = "$_baseUrl/users/update-profile";
   static const String editProfilePicture = "$_baseUrl/users/update-profile-image";

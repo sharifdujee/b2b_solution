@@ -1,22 +1,36 @@
-import 'dart:async'; // Required for Timer
+import 'dart:async';
+import 'dart:developer';
+import 'package:b2b_solution/core/service/network_caller.dart';
 import 'package:b2b_solution/feature/authentication/models/reset_password_state_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/legacy.dart';
+
+import '../../../core/service/app_url.dart';
+import '../../../core/service/auth_service.dart';
+
+
 
 class ResetPasswordNotifier extends StateNotifier<ResetPasswordStateModel> {
   ResetPasswordNotifier() : super(ResetPasswordStateModel());
 
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController verificationCodeController = TextEditingController();
+  final NetworkCaller networkCaller = NetworkCaller();
+
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
   Timer? _timer;
 
-  // --- Timer Logic ---
+  // --- Helpers ---
+  bool _isValidEmail(String email) {
+    return RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(email);
+  }
 
   void startTimer() {
-    // Reset state to initial timer values
     state = state.copyWith(timer: 60, canResend: false);
-
-    // Cancel any existing timer to avoid memory leaks/multiple instances
     _timer?.cancel();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.timer > 0) {
         state = state.copyWith(timer: state.timer - 1);
@@ -27,81 +41,191 @@ class ResetPasswordNotifier extends StateNotifier<ResetPasswordStateModel> {
     });
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel(); // Always cancel timers when the provider is disposed
-    super.dispose();
-  }
+  // --- State Updates ---
+  void updateEmail(String email) => state = state.copyWith(email: email, clearError: true);
+  void updateVerificationCode(String code) => state = state.copyWith(verificationCode: code, clearError: true);
+  void updatePassword(String pw) => state = state.copyWith(password: pw, clearError: true);
+  void updateConfirmPassword(String cpw) => state = state.copyWith(confirmPassword: cpw, clearError: true);
+  void toggleVisibility() => state = state.copyWith(obscurePassword: !state.obscurePassword);
+  void toggleConfirmPasswordVisibility() => state = state.copyWith(obscureConfirmPassword: !state.obscureConfirmPassword);
 
-  // --- OTP & Email Actions ---
+  // --- Logic ---
+  Future<bool> sendOtp() async {
+    final email = emailController.text.trim();
 
-  void updateEmail(String email) {
-    state = state.copyWith(email: email, clearError: true);
-  }
-
-  void updateVerificationCode(String verificationCode) {
-    state = state.copyWith(verificationCode: verificationCode, clearError: true);
-  }
-
-  Future<void> sendOtp() async {
-    if (state.email.isEmpty) {
+    if (email.isEmpty) {
       state = state.copyWith(errorMessage: 'Please enter your email address');
-      return;
+      return false;
+    }
+    if (!_isValidEmail(email)) {
+      state = state.copyWith(errorMessage: 'Please enter a valid email address');
+      return false;
     }
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Simulate API Call
-      await Future.delayed(const Duration(seconds: 2));
+      final response = await networkCaller.postRequest(
+        AppUrl.forgetPasswordOtp,
+        body: {'email': email},
+      );
+
+      if (!mounted) return false;
 
       state = state.copyWith(isLoading: false);
 
-      // Start the countdown once the OTP is successfully sent
-      startTimer();
+      if (response.isSuccess && response.responseData != null) {
+        final String message = response.responseData['message'] ?? '';
 
+        log("Message : $message");
+
+        await AuthService.saveResetPasswordMessage(message);
+
+        startTimer();
+        return true;
+      } else {
+        state = state.copyWith(errorMessage: response.errorMessage);
+        return false;
+      }
     } catch (e) {
+      log("Error in sendOtp: $e");
+      if (!mounted) return false;
       state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to send OTP. Please try again.'
+        isLoading: false,
+        errorMessage: 'Failed to send OTP. Please try again.',
       );
+      return false;
     }
   }
 
-  Future<void> verifyOtp(pin) async {
-    if (state.verificationCode.length != 4) {
+  Future<bool> verifyOtp(String pin) async {
+    if (pin.length != 4) {
       state = state.copyWith(errorMessage: 'Please enter a 4-digit code');
-      return;
+      return false;
     }
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      await Future.delayed(const Duration(seconds: 2)); // Simulating API call
+      final response = await networkCaller.postRequest(
+        AppUrl.verifyForgotOtp,
+        body: {
+          'email': emailController.text.trim(),
+          'otp': pin,
+        },
+      );
+      state = state.copyWith(isLoading: false);
 
-      if (state.verificationCode == "1234") {
-        state = state.copyWith(isLoading: false);
-        _timer?.cancel(); // Stop timer on success
-        // Logic for navigation goes here
+      if (response.isSuccess && response.responseData != null) {
+        final result = response.responseData['result'];
+
+        await AuthService.saveForgetToken(result['forgetToken']);
+        final String token = result['forgetToken'];
+        log("Token : $token");
+
+        final String message = response.responseData['message'] ?? '';
+        await AuthService.saveResetPasswordMessage(message);
+
+        return true;
       } else {
-        throw Exception('Invalid verification code');
+        state = state.copyWith(errorMessage: response.errorMessage);
+        return false;
       }
+      return false;
+
     } catch (e) {
+      log("Error in verifyOtp: $e");
+      if (!mounted) return false;
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Invalid verification code. Please try again.',
+        errorMessage: 'Failed to verify OTP. Please try again.',
       );
+      return false;
     }
   }
 
-  // --- Password Visibility & Other UI Logic ---
 
-  void updatePassword(String password) => state = state.copyWith(password: password, clearError: true);
-  void updateConfirmPassword(String confirmPassword) => state = state.copyWith(confirmPassword: confirmPassword, clearError: true);
-  void toggleVisibility() => state = state.copyWith(obscurePassword: !state.obscurePassword);
-  void toggleConfirmPasswordVisibility() => state = state.copyWith(obscureConfirmPassword: !state.obscureConfirmPassword);
+  bool _isPasswordValid(String password) {
+
+    final passwordRegExp = RegExp(
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$'
+    );
+
+    return passwordRegExp.hasMatch(password);
+  }
+
+  Future<bool> resetPassword() async {
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+
+    if (password.isEmpty || confirmPassword.isEmpty) {
+      state = state.copyWith(errorMessage: 'Please fill in all password fields');
+      return false;
+    }
+
+    if (password.length < 8) {
+      state = state.copyWith(errorMessage: 'Password must be at least 8 characters long');
+      return false;
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      state = state.copyWith(errorMessage: 'Password must contain at least one uppercase letter');
+      return false;
+    }
+    if (!RegExp(r'[a-z]').hasMatch(password)) {
+      state = state.copyWith(errorMessage: 'Password must contain at least one lowercase letter');
+      return false;
+    }
+    if (!RegExp(r'[0-9]').hasMatch(password)) {
+      state = state.copyWith(errorMessage: 'Password must contain at least one number');
+      return false;
+    }
+    if (!RegExp(r'[@$!%*?&]').hasMatch(password)) {
+      state = state.copyWith(errorMessage: 'Password must contain at least one special character (@\$!%*?&)');
+      return false;
+    }
+
+    if (password != confirmPassword) {
+      state = state.copyWith(errorMessage: 'Passwords do not match');
+      return false;
+    }
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try{
+      final response = await networkCaller.postRequest(
+        AppUrl.resetPassword,
+        body: {
+          'newPassword': password,
+        },
+        token: AuthService.forgetToken,
+      );
+      state = state.copyWith(isLoading: false);
+
+      if (response.isSuccess && response.responseData != null) {
+        final message = response.responseData['message'];
+        log("Message = ${message.toString()}");
+
+        return true;
+      } else {
+        state = state.copyWith(errorMessage: response.errorMessage);
+        return false;
+      }
+    }catch(e){
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
+    }
+
+  }
+
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    emailController.dispose();
+    verificationCodeController.dispose();
+    super.dispose();
+  }
 }
 
-final resetPasswordProvider = StateNotifierProvider.autoDispose<ResetPasswordNotifier, ResetPasswordStateModel>((ref) {
+final resetPasswordProvider = StateNotifierProvider<ResetPasswordNotifier, ResetPasswordStateModel>((ref) {
   return ResetPasswordNotifier();
 });

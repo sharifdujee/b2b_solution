@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:flutter/material.dart';
@@ -56,18 +58,16 @@ class ResetPassword extends ConsumerWidget {
               SizedBox(height: 12.h),
               CustomTextFormField(
                 borderRadius: 12.r,
-                onChanged: (value) => controller.updateEmail(value),
+                controller: controller.emailController,
                 hintText: "Email Address",
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
               ),
-              // Removed the button from here
-              SizedBox(height: 100.h), // Add extra space so content isn't hidden by the fixed button
+              SizedBox(height: 100.h),
             ],
           ),
         ),
       ),
-      // --- ADDED THIS SECTION ---
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(
           left: 20.w,
@@ -79,8 +79,12 @@ class ResetPassword extends ConsumerWidget {
           backgroundColor: AppColor.primary,
           textColor: AppColor.black,
           borderRadius: 16.r,
-          onPressed: () {
-            context.push('/resetVerificationCodeScreen');
+          onPressed: () async{
+            final success = await controller.sendOtp();
+            log("Success: $success");
+            if (success) {
+              context.push('/resetVerificationCodeScreen');
+            }
           },
         ),
       ),

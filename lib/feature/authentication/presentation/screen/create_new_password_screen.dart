@@ -60,7 +60,7 @@ class CreateNewPasswordScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updatePassword(value),
+                controller: controller.passwordController,
                 hintText: "New Password",
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
@@ -88,7 +88,7 @@ class CreateNewPasswordScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                  onChanged: (value) => controller.updatePassword(value),
+                controller: controller.confirmPasswordController,
                   hintText: "Confirm password",
                   hintTextColor: AppColor.grey400,
                   textColor: AppColor.black,
@@ -118,8 +118,11 @@ class CreateNewPasswordScreen extends ConsumerWidget{
                       title: "Password Changed",
                       message: "Password changed successfully, you can login again with new password",
                       buttonText: "Log in",
-                      onPressed: () {
-                        context.push('/loginScreen');
+                      onPressed: () async{
+                        final success = await controller.resetPassword();
+                        if (success){
+                          context.push('/loginScreen');
+                        }
                       },
                     );
                   }

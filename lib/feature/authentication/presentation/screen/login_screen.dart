@@ -71,7 +71,7 @@ class LoginScreen extends ConsumerWidget{
                 controller: controller.emailController,
                   hintText: "Email Address",
                   hintTextColor: AppColor.grey300,
-                  textColor: AppColor.grey300,
+                  textColor: AppColor.black,
                 borderRadius: 12.r,
               ),
         
@@ -91,7 +91,7 @@ class LoginScreen extends ConsumerWidget{
                 hintText: "Password",
                 hintTextColor: AppColor.grey300,
                 obscureText: state.obscurePassword,
-                textColor: AppColor.grey300,
+                textColor: AppColor.black,
                 borderRadius: 12.r,
                 suffixIcon: IconButton(
                   onPressed: () => controller.toggleVisibility(),

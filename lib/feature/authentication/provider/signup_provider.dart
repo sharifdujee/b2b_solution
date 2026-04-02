@@ -78,13 +78,12 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
       if (response.isSuccess && response.responseData != null) {
         final result = response.responseData['result'];
 
-        // Correctly assigning all variables to AuthService
         await AuthService.saveProfileSetup(result['isProfileComplete'] ?? false);
         await AuthService.saveId(result['userId'] ?? '');
         await AuthService.saveToken(result['accessToken'] ?? '');
         await AuthService.saveRole(result['role'] ?? '');
 
-        await AuthService.saveOtp('');
+
 
         return true;
       } else {
@@ -180,8 +179,6 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
 
       final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
 
-      // Note: Do not manually set 'Content-Type' to 'application/json' for Multipart
-      // The boundary is set automatically by the http package.
       request.fields['bodyData'] = jsonEncode(bodyData);
 
       // Media Type Helper
@@ -214,10 +211,7 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         final decodedData = jsonDecode(response.body);
         final result = decodedData['result'];
 
-        // Save initial data from signup response if needed
         if (result != null) {
-          if (result['otp'] != null) await AuthService.saveOtp(result['otp'].toString());
-          // Save email to token temporarily or use for verification
           if (result['email'] != null) await AuthService.saveToken(result['email']);
         }
 

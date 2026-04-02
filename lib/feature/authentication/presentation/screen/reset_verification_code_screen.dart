@@ -105,7 +105,8 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                   defaultPinTheme: defaultPinTheme,
                   focusedPinTheme: focusedPinTheme,
                   errorPinTheme: emptyPinTheme,
-                  onChanged: (value) => controller.updateVerificationCode(value),
+                  submittedPinTheme: defaultPinTheme,
+                  controller: controller.verificationCodeController,
                   pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
                   showCursor: true,
                   cursor: Container(
@@ -113,7 +114,6 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                     height: 30.h,
                     color: AppColor.primary,
                   ),
-                  onCompleted: (pin) => controller.verifyOtp(pin),
                   hapticFeedbackType: HapticFeedbackType.lightImpact,
                 ),
               ),
@@ -148,27 +148,15 @@ class ResetVerificationCodeScreen extends ConsumerWidget {
                 backgroundColor: AppColor.primary,
                 textColor: AppColor.black,
                 borderRadius: 16.r,
-                // If loading, onPressed is null (disables button)
-                // If not loading, it executes the verification logic
-                onPressed: state.isLoading
-                    ? null
-                    : () async {
-                  // 1. Call the controller to verify
-                  await controller.verifyOtp(state.verificationCode);
-
-                  // 2. Check if verification was successful (no error message)
-                  if (state.errorMessage == null && state.verificationCode == "1234") {
-                    // 3. Navigate to the NEXT screen (e.g., Create New Password)
-                    if (context.mounted) {
-                      context.push("/createNewPasswordScreen"); // Update this to your actual route
-                    }
+                onPressed: () async {
+                  if (await controller.verifyOtp(controller.verificationCodeController.text)) {
+                    context.push("/createNewPasswordScreen");
                   }
-                },
+                }
               ),
 
               SizedBox(height: 24.h),
 
-              // Resend Code Timer or Button
               Center(
                 child: state.canResend
                     ? GestureDetector(
