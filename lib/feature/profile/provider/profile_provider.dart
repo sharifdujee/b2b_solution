@@ -1,13 +1,15 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:convert'; // Added for json decoding
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:http/http.dart' as http; // Required for MultipartRequest
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:b2b_solution/core/service/app_url.dart';
 import 'package:b2b_solution/core/service/network_caller.dart';
-import 'package:flutter/cupertino.dart';
-
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:image_picker/image_picker.dart';
-
 import '../../../core/service/auth_service.dart';
 import '../model/profile_state_model.dart';
 
@@ -26,6 +28,10 @@ class ProfileProvider extends ChangeNotifier {
   bool get hasUser => userModel != null;
   bool get isLoading => _isLoading;
   ProfileStateModel? get profileStateModel => _profileStateModel;
+
+
+
+
 
   // --- Fetch Profile ---
   Future<void> getMyProfile() async {
@@ -70,52 +76,68 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  // --- Pick Image ---
   Future<void> pickProfileImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
-        imageQuality: 70,
-        maxWidth: 1000,
       );
 
       if (pickedFile != null) {
         await uploadProfileImage(File(pickedFile.path));
       }
     } catch (e) {
+      log("Pick Image Error: $e");
       _errorMessage = "Failed to pick image";
       notifyListeners();
     }
   }
 
-  // --- Upload Image ---
   Future<void> uploadProfileImage(File imageFile) async {
     String? token = AuthService.token;
-    if (token == null) return;
+    if (token == null) {
+      _errorMessage = "Authentication required";
+      notifyListeners();
+      return;
+    }
 
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
+      var request = http.MultipartRequest('PATCH', Uri.parse(AppUrl.updateProfile));
 
-      var response = await networkCaller.patchRequest(
-        AppUrl.updateProfile,
-        token: token,
-        body: {
-          'profileImage': imageFile.path,
-        },
+      request.headers.addAll({
+        'Authorization': token,
+        'Accept': 'application/json',
+      });
+
+      String extension = imageFile.path.split('.').last.toLowerCase();
+      String mimeType = (extension == 'png') ? 'image/png' : 'image/jpeg';
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'profileImage',
+          imageFile.path,
+          contentType: http.MediaType('image', extension == 'jpg' ? 'jpeg' : extension),
+        ),
       );
 
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
 
+      log("Upload Status: ${response.statusCode}");
+      log("Upload Response: ${response.body}");
 
-      if(response.isSuccess){
+      if (response.statusCode == 200 || response.statusCode == 201) {
         await getMyProfile();
-      }else{
-        _errorMessage = response.errorMessage;
+      } else {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        _errorMessage = responseData['message'] ?? "Upload failed";
       }
-      
     } catch (e) {
-      _errorMessage = "Upload failed $e";
+      log("Upload Error: $e");
+      _errorMessage = "Upload failed: $e";
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -128,5 +150,7 @@ class ProfileProvider extends ChangeNotifier {
   }
 }
 
-final profileProvider =
-ChangeNotifierProvider<ProfileProvider>((ref) => ProfileProvider());
+// Ensure you are using the correct Provider type for your version of Riverpod
+final profileProvider = ChangeNotifierProvider<ProfileProvider>((ref) {
+  return ProfileProvider();
+});

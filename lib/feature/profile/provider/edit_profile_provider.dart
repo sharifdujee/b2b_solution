@@ -1,93 +1,51 @@
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+import 'package:b2b_solution/core/service/auth_service.dart';
+import 'package:b2b_solution/feature/profile/provider/profile_provider.dart';
+import 'package:http/http.dart' as http;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/service/app_url.dart';
 import '../model/profile_edit_state_model.dart';
+import '../model/profile_state_model.dart';
 
 
 class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
 
   EditProfileNotifier() : super(ProfileEditStateModel());
 
-  Timer? _timer;
+  TextEditingController fullNameController = TextEditingController();
+  TextEditingController legalNameController = TextEditingController();
+  TextEditingController businessNameController = TextEditingController();
+  TextEditingController businessCategoryController = TextEditingController();
+  TextEditingController operationYearsController = TextEditingController();
+  TextEditingController positionController = TextEditingController();
+  TextEditingController businessLatitude = TextEditingController();
+  TextEditingController businessLongitude = TextEditingController();
 
-  // --- Timer Logic ---
+  TextEditingController businessAddressController = TextEditingController();
 
-  void startTimer() {
-    // Reset state to initial timer values
-    state = state.copyWith(timer: 60, canResend: false);
+  UserModel? userModel;
 
-    // Cancel any existing timer to avoid memory leaks/multiple instances
-    _timer?.cancel();
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (state.timer > 0) {
-        state = state.copyWith(timer: state.timer - 1);
-      } else {
-        state = state.copyWith(canResend: true);
-        _timer?.cancel();
-      }
-    });
-  }
+
+
+
+
 
   @override
   void dispose() {
-    _timer?.cancel();
     super.dispose();
   }
 
-  Future<void> sendOtp() async {
-    if (state.email.isEmpty) {
-      state = state.copyWith(errorMessage: 'Please enter your email address');
-      return;
-    }
 
-    state = state.copyWith(isLoading: true, errorMessage: null);
 
-    try {
-      // Simulate API Call
-      await Future.delayed(const Duration(seconds: 2));
-
-      state = state.copyWith(isLoading: false);
-
-      // Start the countdown once the OTP is successfully sent
-      startTimer();
-
-    } catch (e) {
-      state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to send OTP. Please try again.'
-      );
-    }
-  }
-
-  Future<void> verifyOtp(pin) async {
-    if (state.verificationCode.length != 4) {
-      state = state.copyWith(errorMessage: 'Please enter a 4-digit code');
-      return;
-    }
-
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    try {
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (state.verificationCode == "1234") {
-        state = state.copyWith(isLoading: false);
-        _timer?.cancel(); // Stop timer on success
-        // Logic for navigation goes here
-      } else {
-        throw Exception('Invalid verification code');
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Invalid verification code. Please try again.',
-      );
-    }
-  }
   void updateVerificationCode(String code) {
     state = state.copyWith(verificationCode: code, clearError: true);
   }
@@ -99,35 +57,16 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
       longitude: lng,
       businessAddress: address,
     );
+
+    businessLatitude.text = lat.toString();
+    businessLongitude.text = lng.toString();
+    if (address != null) {
+      businessAddressController.text = address;
+    }
   }
 
-  void updateLegalName(String legalName) {
-    state = state.copyWith(legalName: legalName, clearError: true);
-  }
 
-  void updateBusinessName(String businessName) {
-    state = state.copyWith(businessName: businessName, clearError: true);
-  }
 
-  void updateName(String name) {
-    state = state.copyWith(name: name, clearError: true);
-  }
-
-  void updateEmail(String email) {
-    state = state.copyWith(email: email, clearError: true);
-  }
-
-  void updatePosition(String position) {
-    state = state.copyWith(position: position, clearError: true);
-  }
-
-  void updateFoodCategory(String foodCategory) {
-    state = state.copyWith(foodCategory: foodCategory, clearError: true);
-  }
-
-  void updateYearsOfOperation(String yearsOfOperation) {
-    state = state.copyWith(yearsOfOperation: yearsOfOperation, clearError: true);
-  }
 
   final ImagePicker _picker = ImagePicker();
   Future<void> _pickImage(ImageSource source, String type) async {
@@ -153,15 +92,11 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
   // Public methods that now accept the Source
   Future<void> pickBusinessImage(ImageSource source) => _pickImage(source, 'business');
   Future<void> pickProfileImage(ImageSource source) => _pickImage(source, 'profile');
-  Future<void> pickLicenseImage(ImageSource source) => _pickImage(source, 'license');
 
   void updatePassword(String password) {
     state = state.copyWith(password: password, clearError: true);
   }
 
-  void updateConfirmPassword(String confirmPassword) {
-    state = state.copyWith(confirmPassword: confirmPassword, clearError: true);
-  }
 
   void toggleVisibility() {
     state = state.copyWith(obscurePassword: !state.obscurePassword);
@@ -176,19 +111,6 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
   }
 
   bool validateForm() {
-    if (state.legalName.isEmpty ||
-        state.businessName.isEmpty ||
-        state.email.isEmpty ||
-        state.password.isEmpty ||
-        state.confirmPassword.isEmpty) {
-      state = state.copyWith(errorMessage: "Please fill in all required fields");
-      return false;
-    }
-
-    if (!state.email.contains('@')) {
-      state = state.copyWith(errorMessage: "Please enter a valid email");
-      return false;
-    }
 
     if (state.password.length < 6) {
       state = state.copyWith(errorMessage: "Password must be at least 6 characters");
@@ -204,17 +126,128 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
     return true;
   }
 
-  Future<void> signup() async {
-    if (!validateForm())return;
+  Future<bool> saveChanges() async {
     state = state.copyWith(isLoading: true, clearError: true);
+    log("User Model : $userModel");
+    if(legalNameController.text.isEmpty && userModel?.legalName != null){
+      legalNameController.text = userModel!.legalName;
+    }
+    // if(businessNameController.text.isEmpty && userModel?.businessName != null){
+    //   businessNameController.text = userModel!.businessName;
+    // }
+    if(fullNameController.text.isEmpty && userModel?.fullName != null){
+      fullNameController.text = userModel!.fullName;
+    }
+    if(positionController.text.isEmpty && userModel?.position != null){
+      positionController.text = userModel!.position;
+    }
+
+    List<String> finalCategories = [];
+
+    if (businessCategoryController.text.trim().isNotEmpty) {
+      finalCategories = [businessCategoryController.text.trim()];
+    } else if (userModel?.businessCategory != null) {
+      finalCategories = userModel!.businessCategory!;
+    }
+    int opYears = int.tryParse(operationYearsController.text) ?? userModel?.operationYears ?? 0;
+
+    double lat = double.tryParse(state.latitude.toString()) ?? userModel?.businessLatitude ?? 0.0;
+
+    double lng = double.tryParse(state.longitude.toString()) ?? userModel?.businessLongitude ?? 0.0;
+
+
+
+
+
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      state = state.copyWith(isLoading: false);
+      Map<String, dynamic> bodyData = {
+        'legalName': legalNameController.text ,
+        'businessName': businessNameController.text,
+        'fullName': fullNameController.text,
+        'position': positionController.text,
+        'businessCategory': finalCategories,
+        'operationYears': opYears,
+        'businessLatitude': lat,
+        'businessLongitude': lng,
+      };
+      log("Body Data: $bodyData");
+
+      final request = http.MultipartRequest(
+        'PATCH',
+        Uri.parse(AppUrl.updateProfile),
+      );
+
+      request.headers.addAll({
+        'Authorization': '${AuthService.token}',
+        'Accept': 'application/json',
+      });
+
+      bodyData.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      if (businessCategoryController.text.isNotEmpty) {
+        request.fields['businessCategory'] = businessCategoryController.text;
+      }
+
+      http.MediaType _getMediaType(String path) {
+        final extension = path.split('.').last.toLowerCase();
+        return extension == 'png'
+            ? http.MediaType('image', 'png')
+            : http.MediaType('image', 'jpeg');
+      }
+
+      if (state.profileImage != null && File(state.profileImage!).existsSync()) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profileImage',
+          state.profileImage!,
+          contentType: _getMediaType(state.profileImage!),
+        ));
+      } else if (userModel?.profileImage != null) {
+        request.fields['profileImage'] = userModel!.profileImage!;
+      }
+
+
+      if (state.businessImage != null && File(state.businessImage!).existsSync()) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'businessImage',
+          state.businessImage!,
+          contentType: _getMediaType(state.businessImage!),
+        ));
+      } else if (userModel?.businessImage != null) {
+        request.fields['businessImage'] = userModel!.businessImage!;
+      }
+
+
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      log("Status: ${response.statusCode}");
+      log("Response: ${response.body}");
+
+      final decodedData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ProfileProvider profileProvider = ProfileProvider();
+        await profileProvider.getMyProfile();
+        return true;
+      } else {
+        state = state.copyWith(
+            isLoading: false,
+            errorMessage: decodedData['message'] ?? "Save changes failed"
+        );
+        return false;
+      }
     } catch (e) {
+      log("Catch Error: $e");
       state = state.copyWith(
         isLoading: false,
-        errorMessage: "Signup failed",
+        errorMessage: "An unexpected error occurred",
       );
+      return false;
     }
   }
 

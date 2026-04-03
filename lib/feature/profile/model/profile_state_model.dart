@@ -36,6 +36,7 @@ class UserModel{
   String id;
   String email;
   String fullName;
+  //String businessName;
   String role;
   DateTime lastLoginAt;
   String legalName;
@@ -46,11 +47,15 @@ class UserModel{
   String businessImage;
   String loginType;
   DateTime createdAt;
+  double? businessLatitude;
+  double? businessLongitude;
+
 
   UserModel({
     required this.id,
     required this.email,
     required this.fullName,
+    //required this.businessName,
     required this.role,
     required this.lastLoginAt,
     required this.legalName,
@@ -61,12 +66,15 @@ class UserModel{
     required this.businessImage,
     required this.loginType,
     required this.createdAt,
+    this.businessLatitude,
+    this.businessLongitude,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
     id: json["id"],
     email: json["email"],
     fullName: json["fullName"],
+    //businessName: json["businessName"],
     role: json["role"],
     lastLoginAt: DateTime.parse(json["lastLoginAt"]),
     legalName: json["legalName"],
@@ -77,6 +85,8 @@ class UserModel{
     businessImage: json["businessImage"],
     loginType: json["loginType"],
     createdAt: DateTime.parse(json["createdAt"]),
+    businessLatitude: json["businessLatitude"],
+    businessLongitude: json["businessLongitude"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -84,6 +94,7 @@ class UserModel{
     "email": email,
     "fullName": fullName,
     "role": role,
+    //"businessName": businessName,
     "lastLoginAt": lastLoginAt.toIso8601String(),
     "legalName": legalName,
     "businessCategory": List<dynamic>.from(businessCategory.map((x) => x)),
@@ -93,5 +104,7 @@ class UserModel{
     "businessImage": businessImage,
     "loginType": loginType,
     "createdAt": createdAt.toIso8601String(),
+    "businessLatitude": businessLatitude,
+    "businessLongitude": businessLongitude,
   };
 }

@@ -176,6 +176,8 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         'businessLongitude': double.tryParse(longitudeController.text.trim()),
         'fcmToken': '',
       };
+      log("Body Data: $bodyData");
+
 
       final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
 
@@ -210,10 +212,10 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decodedData = jsonDecode(response.body);
         final result = decodedData['result'];
-
         if (result != null) {
-          if (result['email'] != null) await AuthService.saveToken(result['email']);
+          if (result['id'] != null) await AuthService.saveToken(result['id']);
         }
+        await AuthService.saveProfileSetup(true);
 
         return true;
       } else {
