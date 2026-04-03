@@ -36,7 +36,7 @@ class UserModel{
   String id;
   String email;
   String fullName;
-  //String businessName;
+  String businessName;
   String role;
   DateTime lastLoginAt;
   String legalName;
@@ -55,7 +55,7 @@ class UserModel{
     required this.id,
     required this.email,
     required this.fullName,
-    //required this.businessName,
+    required this.businessName,
     required this.role,
     required this.lastLoginAt,
     required this.legalName,
@@ -74,7 +74,7 @@ class UserModel{
     id: json["id"],
     email: json["email"],
     fullName: json["fullName"],
-    //businessName: json["businessName"],
+    businessName: json["businessName"],
     role: json["role"],
     lastLoginAt: DateTime.parse(json["lastLoginAt"]),
     legalName: json["legalName"],
@@ -94,7 +94,7 @@ class UserModel{
     "email": email,
     "fullName": fullName,
     "role": role,
-    //"businessName": businessName,
+    "businessName": businessName,
     "lastLoginAt": lastLoginAt.toIso8601String(),
     "legalName": legalName,
     "businessCategory": List<dynamic>.from(businessCategory.map((x) => x)),

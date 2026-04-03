@@ -127,7 +127,7 @@ class EditProfile extends ConsumerWidget{
                 CustomTextFormField(
                   controller: editProfileController.businessNameController,
                   hintText:
-                  // user?.businessName ??
+                  user?.businessName ??
                       "Ex. Subway",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
