@@ -10,14 +10,16 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
+import '../../../profile/provider/profile_provider.dart';
 import '../../data/place_location.dart';
 import '../../provider/filter_provider.dart';
+import '../../provider/nearby_ping_provider.dart'; // Added
+import '../../provider/png_provider.dart'; // Added
 import '../widget/filter_bottom_sheet.dart';
 import '../widget/map_search_section.dart';
 
 class MapViewScreen extends ConsumerStatefulWidget {
   const MapViewScreen({super.key});
-
   @override
   ConsumerState<MapViewScreen> createState() => _MapViewScreenState();
 }
@@ -28,122 +30,173 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
   final FocusNode _searchFocus = FocusNode();
   bool _showSuggestions = false;
 
-  static const LatLng _dhaka = LatLng(23.7808, 90.4093);
-
-  @override
-  void initState() {
-    super.initState();
-    _searchFocus.addListener(() {
-      setState(
-        () => _showSuggestions =
-            _searchFocus.hasFocus && _searchController.text.length >= 2,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _searchFocus.dispose();
-    _mapController?.dispose();
-    super.dispose();
-  }
-
   void _onSearchChanged(String value) {
     ref.read(searchQueryProvider.notifier).state = value;
-    setState(() => _showSuggestions = value.length >= 2);
-  }
-
-  void _selectSuggestion(SearchSuggestion s) {
-    _searchController.text = s.mainText;
-    ref.read(searchQueryProvider.notifier).state = s.mainText;
-    _searchFocus.unfocus();
-    setState(() => _showSuggestions = false);
-    // In production: geocode placeId and animate camera
+    if (value.length >= 2 && !_showSuggestions) {
+      setState(() => _showSuggestions = true);
+    } else if (value.length < 2 && _showSuggestions) {
+      setState(() => _showSuggestions = false);
+    }
   }
 
   void _openFilterSheet() {
-    // Seed pending filter with current applied filter
     final current = ref.read(filterProvider);
     ref.read(pendingFilterProvider.notifier).state = FilterState(
       selectedCategory: current.selectedCategory,
       selectedRadius: current.selectedRadius,
+      searchLocation: current.searchLocation,
     );
+
+    // 3. Show the sheet
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (_) => const FilterBottomSheet(),
     );
   }
 
-  @override
+  Future<void> _selectSuggestion(SearchSuggestion s) async {
+    _searchController.text = s.mainText;
+    _searchFocus.unfocus();
+    setState(() => _showSuggestions = false);
+
+    const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+    final url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=${s.placeId}&fields=geometry&key=$apiKey";
+
+    final response = await ref.read(networkCallerProvider).getRequest(url);
+    if (response.isSuccess && response.responseData != null) {
+      final loc = response.responseData['result']['geometry']['location'];
+      final destination = LatLng(loc['lat'], loc['lng']);
+
+      // Smoothly animate the camera to the new location
+      _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: destination, zoom: 15, tilt: 45),
+        ),
+      );
+
+      ref.read(filterProvider.notifier).setSearchLocation(destination);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final markers = ref.watch(mapMarkersProvider);
+    final placesAsync = ref.watch(filteredPlacesProvider);
+    final profile = ref.watch(profileProvider);
 
     return Scaffold(
       backgroundColor: AppColor.white,
-      body: Column(
+      resizeToAvoidBottomInset: false, // Prevents map jumping when keyboard appears
+      body: Stack(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 48.h),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.w,)),
-                  ),
-                  SizedBox(width: 10.w),
-                  CustomText(
-                    text: "Map View",
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                  )
-                ],
-              ),
-              SizedBox(height: 12.h),
-
-              TopSection(),
-              SizedBox(height: 12.h),
-              MapSearchSection(
-                controller: _searchController,
-                focusNode: _searchFocus,
-                onChanged: _onSearchChanged,
-                onFilterTap: _openFilterSheet,
-                onClear: () {
-                  _searchController.clear();
-                  ref.read(searchQueryProvider.notifier).state = '';
-                  setState(() => _showSuggestions = false);
-                },
-              ),
-            ],
-          ),
-
-          if (_showSuggestions)
-            SuggestionList(onSelect: _selectSuggestion),
-
-          SizedBox(height: 8.h),
-
-          Expanded(
+          // 1. FULL SCREEN MAP
+          Positioned.fill(
             child: GoogleMap(
-              initialCameraPosition: const CameraPosition(
-                target: _dhaka,
-                zoom: 13,
+              initialCameraPosition: CameraPosition(
+                target: LatLng(profile.latitude ?? 0.0, profile.longitude ?? 0.0),
+                zoom: 12,
               ),
               markers: markers,
               onMapCreated: (c) => _mapController = c,
-              myLocationButtonEnabled: false,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false, // We use custom button for UI
               zoomControlsEnabled: false,
-              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{
-                Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
-              },
+              padding: EdgeInsets.only(top: 250.h), // Shifts Google logo/UI up
             ),
           ),
+
+          // 2. TOP FLOATING SECTION (Search & Header)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.only(top: 48.h, bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9), // Glass effect
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(24.r)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeader(),
+                  const TopSection(),
+                  SizedBox(height: 12.h),
+                  MapSearchSection(
+                    controller: _searchController,
+                    focusNode: _searchFocus,
+                    onChanged: _onSearchChanged,
+                    onFilterTap: _openFilterSheet,
+                    onClear: () {
+                      _searchController.clear();
+                      ref.read(searchQueryProvider.notifier).state = '';
+                      setState(() => _showSuggestions = false);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 3. SMOOTH SUGGESTION OVERLAY
+          Positioned(
+            top: 210.h, // Adjusted to sit right below the search bar
+            left: 16.w,
+            right: 16.w,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(begin: const Offset(0, -0.1), end: Offset.zero).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: _showSuggestions
+                  ? SuggestionList(key: const ValueKey('suggestions'), onSelect: _selectSuggestion)
+                  : const SizedBox.shrink(),
+            ),
+          ),
+
+          // 4. LOADING INDICATOR
+          if (placesAsync.isLoading)
+            const Positioned(
+              top: 230,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Card(
+                  shape: CircleBorder(),
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: AppColor.black),
+          ),
+          CustomText(text: "Nearby Pings", fontSize: 18.sp, fontWeight: FontWeight.bold),
         ],
       ),
     );
@@ -152,67 +205,56 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
 
 class SuggestionList extends ConsumerWidget {
   final ValueChanged<SearchSuggestion> onSelect;
-
   const SuggestionList({super.key, required this.onSelect});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final suggestions = ref.watch(searchSuggestionsProvider);
-    if (suggestions.isEmpty) return const SizedBox.shrink();
+    final suggestionsAsync = ref.watch(searchSuggestionsProvider);
 
+    return suggestionsAsync.when(
+      loading: () => _buildContainer(
+        child: const Center(child: LinearProgressIndicator(minHeight: 2)),
+      ),
+      error: (err, stack) => const SizedBox.shrink(),
+      data: (suggestions) {
+        if (suggestions.isEmpty) return const SizedBox.shrink();
+
+        return _buildContainer(
+          child: ListView.separated(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: suggestions.length,
+            separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100, indent: 50.w),
+            itemBuilder: (_, i) {
+              final s = suggestions[i];
+              return ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                leading: CircleAvatar(
+                  backgroundColor: AppColor.primary.withOpacity(0.1),
+                  child: Icon(Icons.location_on, color: AppColor.primary, size: 18.sp),
+                ),
+                title: Text(s.mainText, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                subtitle: Text(s.secondaryText, style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
+                onTap: () => onSelect(s),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContainer({required Widget child}) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+      constraints: BoxConstraints(maxHeight: 300.h),
       decoration: BoxDecoration(
-        color: AppColor.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))
         ],
       ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        itemCount: suggestions.length,
-        separatorBuilder: (_, __) =>
-            Divider(height: 1, color: AppColor.grey300, indent: 48.w),
-        itemBuilder: (_, i) {
-          final s = suggestions[i];
-          return ListTile(
-            dense: true,
-            leading: Container(
-              width: 32.w,
-              height: 32.h,
-              decoration: const BoxDecoration(
-                color: AppColor.grey100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.location_on_outlined,
-                size: 16.sp,
-                color: AppColor.grey500,
-              ),
-            ),
-            title: Text(
-              s.mainText,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColor.black,
-              ),
-            ),
-            subtitle: Text(
-              s.secondaryText,
-              style: TextStyle(fontSize: 11.sp, color: AppColor.grey500),
-            ),
-            onTap: () => onSelect(s),
-          );
-        },
-      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(16.r), child: child),
     );
   }
 }

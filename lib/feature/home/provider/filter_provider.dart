@@ -1,151 +1,114 @@
-
-
-
+import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
+import '../../../core/service/app_url.dart';
+import '../../../core/service/auth_service.dart';
+import '../../../core/service/model/response_data.dart';
+import '../../../core/service/network_caller.dart';
+import '../../profile/provider/profile_provider.dart';
 import '../data/place_location.dart';
 
+// --- State Model ---
 class FilterState {
-  final FoodCategory selectedCategory;
-  final RadiusOption selectedRadius;
+  final FoodCategory? selectedCategory;
+  final RadiusOption? selectedRadius;
+  final LatLng? searchLocation; // The LatLng from Google Search
 
-  const FilterState({
-    this.selectedCategory = FoodCategory.snacks,
-    this.selectedRadius   = RadiusOption.km5,
-  });
+  const FilterState({this.selectedCategory, this.selectedRadius, this.searchLocation});
 
   FilterState copyWith({
     FoodCategory? selectedCategory,
     RadiusOption? selectedRadius,
-  }) =>
-      FilterState(
-        selectedCategory: selectedCategory ?? this.selectedCategory,
-        selectedRadius:   selectedRadius   ?? this.selectedRadius,
-      );
+    LatLng? searchLocation,
+    bool clearCategory = false,
+    bool clearRadius = false,
+  }) => FilterState(
+    selectedCategory: clearCategory ? null : (selectedCategory ?? this.selectedCategory),
+    selectedRadius: clearRadius ? null : (selectedRadius ?? this.selectedRadius),
+    searchLocation: searchLocation ?? this.searchLocation,
+  );
 }
 
+// --- Notifier ---
 class FilterNotifier extends StateNotifier<FilterState> {
   FilterNotifier() : super(const FilterState());
 
-  void setCategory(FoodCategory category) =>
-      state = state.copyWith(selectedCategory: category);
+  void setCategory(FoodCategory cat) {
+    state = state.selectedCategory == cat ? state.copyWith(clearCategory: true) : state.copyWith(selectedCategory: cat);
+  }
 
-  void setRadius(RadiusOption radius) =>
-      state = state.copyWith(selectedRadius: radius);
+  void setRadius(RadiusOption rad) {
+    state = state.selectedRadius == rad ? state.copyWith(clearRadius: true) : state.copyWith(selectedRadius: rad);
+  }
+
+  void setSearchLocation(LatLng loc) => state = state.copyWith(searchLocation: loc);
+  void clearFilters() => state = const FilterState();
 }
 
-// ─────────────────────────────────────────────
-// PROVIDERS
-// ─────────────────────────────────────────────
-
-final filterProvider =
-StateNotifierProvider<FilterNotifier, FilterState>((ref) => FilterNotifier());
-
-// Pending (not-yet-applied) filter – mirrors live filter until user hits Apply
-final pendingFilterProvider =
-StateNotifierProvider<FilterNotifier, FilterState>((ref) => FilterNotifier());
-
+// --- Providers ---
+final filterProvider = StateNotifierProvider<FilterNotifier, FilterState>((ref) => FilterNotifier());
+final pendingFilterProvider = StateNotifierProvider<FilterNotifier, FilterState>((ref) => FilterNotifier());
 final searchQueryProvider = StateProvider<String>((ref) => '');
+final networkCallerProvider = Provider((ref) => NetworkCaller());
 
-final searchSuggestionsProvider =
-Provider<List<SearchSuggestion>>((ref) {
-  final query = ref.watch(searchQueryProvider).toLowerCase();
-  if (query.length < 2) return [];
+// 2. GOOGLE SEARCH SUGGESTIONS
+final searchSuggestionsProvider = FutureProvider<List<SearchSuggestion>>((ref) async {
+  final query = ref.watch(searchQueryProvider);
+  if (query.length < 3) return [];
 
-  // Simulated suggestions – replace with Google Places Autocomplete in production
-  final all = [
-    SearchSuggestion(
-        placeId: '1',
-        mainText: 'Bashundhara City',
-        secondaryText: 'Dhaka, Bangladesh'),
-    SearchSuggestion(
-        placeId: '2',
-        mainText: 'Gulshan 1 Circle',
-        secondaryText: 'Dhaka, Bangladesh'),
-    SearchSuggestion(
-        placeId: '3',
-        mainText: 'Dhanmondi 27',
-        secondaryText: 'Dhaka, Bangladesh'),
-    SearchSuggestion(
-        placeId: '4',
-        mainText: 'Banani Block C',
-        secondaryText: 'Dhaka, Bangladesh'),
-    SearchSuggestion(
-        placeId: '5',
-        mainText: 'Uttara Sector 7',
-        secondaryText: 'Dhaka, Bangladesh'),
-    SearchSuggestion(
-        placeId: '6',
-        mainText: 'Motijheel C/A',
-        secondaryText: 'Dhaka, Bangladesh'),
-  ];
+  const apiKey = "AIzaSyDMkcsHpM8saNMpVoHVxh5ryFYUiWnkxsA";
+  final url = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey";
 
-  return all
-      .where((s) =>
-  s.mainText.toLowerCase().contains(query) ||
-      s.secondaryText.toLowerCase().contains(query))
-      .toList();
+  final response = await ref.read(networkCallerProvider).getRequest(url);
+  if (response.isSuccess && response.responseData != null) {
+    final List predictions = response.responseData['predictions'] ?? [];
+    return predictions.map((p) => SearchSuggestion(
+      placeId: p['place_id'],
+      mainText: p['structured_formatting']['main_text'],
+      secondaryText: p['structured_formatting']['secondary_text'] ?? '',
+    )).toList();
+  }
+  return [];
 });
 
-// Nearby places (simulated)
-final nearbyPlacesProvider = Provider<List<PlaceLocation>>((ref) {
+// 3. FETCH PINGS (YOUR BACKEND)
+final filteredPlacesProvider = FutureProvider<List<PlaceLocation>>((ref) async {
   final filter = ref.watch(filterProvider);
+  final profile = ref.watch(profileProvider);
 
-  final allPlaces = [
-    PlaceLocation(
-        id: 'p1',
-        name: 'Crispy Corner',
-        address: 'Gulshan 2, Dhaka',
-        position: const LatLng(23.793, 90.414),
-        category: FoodCategory.snacks),
-    PlaceLocation(
-        id: 'p2',
-        name: 'Soup House',
-        address: 'Banani, Dhaka',
-        position: const LatLng(23.795, 90.404),
-        category: FoodCategory.soups),
-    PlaceLocation(
-        id: 'p3',
-        name: 'Fresh Sips',
-        address: 'Dhanmondi, Dhaka',
-        position: const LatLng(23.740, 90.375),
-        category: FoodCategory.drinks),
-    PlaceLocation(
-        id: 'p4',
-        name: 'Green Bowl',
-        address: 'Uttara, Dhaka',
-        position: const LatLng(23.870, 90.399),
-        category: FoodCategory.salads),
-    PlaceLocation(
-        id: 'p5',
-        name: 'Munchies Hub',
-        address: 'Mirpur, Dhaka',
-        position: const LatLng(23.806, 90.366),
-        category: FoodCategory.snacks),
-    PlaceLocation(
-        id: 'p6',
-        name: 'Broth Bros',
-        address: 'Motijheel, Dhaka',
-        position: const LatLng(23.726, 90.421),
-        category: FoodCategory.soups),
-  ];
+  // Use searched coordinates if available, otherwise fallback to user profile
+  final double lat = filter.searchLocation?.latitude ?? profile.latitude ?? 0.0;
+  final double lng = filter.searchLocation?.longitude ?? profile.longitude ?? 0.0;
 
-  return allPlaces
-      .where((p) => p.category == filter.selectedCategory)
-      .toList();
+  String url;
+  if (filter.selectedRadius != null && filter.selectedCategory != null) {
+    url = AppUrl.pingFilterByRadiusAndCategory(filter.selectedRadius!.value, filter.selectedCategory!.name);
+  } else if (filter.selectedRadius != null) {
+    url = AppUrl.pingFilterByRadius(filter.selectedRadius!.value);
+  } else if (filter.selectedCategory != null) {
+    url = AppUrl.pingFilterByCategory(filter.selectedCategory!.name);
+  } else {
+    url = AppUrl.nearbyPings(lat, lng);
+  }
+
+  final response = await ref.read(networkCallerProvider).getRequest(url, token: AuthService.token);
+  if (response.isSuccess && response.responseData != null) {
+    final result = response.responseData['result'];
+    if (result != null && result['data'] is List) {
+      return (result['data'] as List).map((j) => PlaceLocation.fromJson(j)).toList();
+    }
+  }
+  return [];
 });
 
+// 4. MAP MARKERS
 final mapMarkersProvider = Provider<Set<Marker>>((ref) {
-  final places = ref.watch(nearbyPlacesProvider);
-  return places
-      .map(
-        (p) => Marker(
-      markerId: MarkerId(p.id),
-      position: p.position,
-      infoWindow: InfoWindow(title: p.name, snippet: p.address),
-    ),
-  )
-      .toSet();
+  final places = ref.watch(filteredPlacesProvider).value ?? [];
+  return places.map((p) => Marker(
+    markerId: MarkerId(p.id),
+    position: p.position,
+    icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    infoWindow: InfoWindow(title: p.name, snippet: p.address),
+  )).toSet();
 });

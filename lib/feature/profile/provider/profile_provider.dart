@@ -27,6 +27,9 @@ class ProfileProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   ProfileStateModel? get profileStateModel => _profileStateModel;
 
+  double get latitude => userModel?.latitude ?? 0.0;
+  double get longitude => userModel?.longitude ?? 0.0;
+
 
 
 
@@ -52,6 +55,7 @@ class ProfileProvider extends ChangeNotifier {
 
       if (response.isSuccess) {
         final result = response.responseData['result'];
+        log("Profile Result: $result");
 
         if (result != null) {
           _profileStateModel =
