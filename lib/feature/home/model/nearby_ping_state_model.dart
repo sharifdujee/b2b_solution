@@ -2,7 +2,7 @@ import '../../ping/model/ping_model.dart';
 
 class NearbyPingState {
   final bool isLoading;
-  final List<PingModel> pings;
+  final List<Datum> pings;
   final String? errorMessage;
 
   NearbyPingState({
@@ -13,13 +13,13 @@ class NearbyPingState {
 
   NearbyPingState copyWith({
     bool? isLoading,
-    List<PingModel>? pings,
+    List<Datum>? pings,
     String? errorMessage,
   }) {
     return NearbyPingState(
       isLoading: isLoading ?? this.isLoading,
       pings: pings ?? this.pings,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 }

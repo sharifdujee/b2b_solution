@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:b2b_solution/core/service/auth_service.dart';
 import 'package:b2b_solution/core/service/network_caller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 
@@ -12,7 +13,7 @@ import '../../ping/provider/ping_provider.dart';
 import '../model/nearby_ping_state_model.dart';
 
 class NearbyPingNotifier extends StateNotifier<NearbyPingState> {
-  final Ref ref; // Add Ref to access other providers
+  final Ref ref;
 
   NearbyPingNotifier(this.ref) : super(NearbyPingState());
 
@@ -29,7 +30,6 @@ class NearbyPingNotifier extends StateNotifier<NearbyPingState> {
         final apiResponse = PingModel.fromJson(response.responseData);
         final List<Datum> fetchedPings = apiResponse.result?.data ?? [];
 
-        // 🟢 CRITICAL FIX: Update the shared ping list provider
         ref.read(pingListProvider.notifier).setPings(fetchedPings);
 
         state = state.copyWith(
