@@ -22,6 +22,12 @@ class AppUrl {
   static const String getMe = "$_baseUrl/auth/me";
   static const String updateProfile = "$_baseUrl/auth/me/update";
 
+  static String nearbyPings(double lat, double lng) {
+    return "${_baseUrl}/ping?latitude=$lat&longitude=$lng";
+  }
+
+  ///end add by lisan
+
 
   static const String updateLocation = "$_baseUrl/auth/update/user-location";
   static const String setUpProfile = "$_baseUrl/users/set-profile";

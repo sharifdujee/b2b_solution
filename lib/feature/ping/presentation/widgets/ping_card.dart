@@ -1,16 +1,16 @@
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
-import 'package:b2b_solution/core/gloabal/priority_badge.dart'; // ✅ import this
+import 'package:b2b_solution/core/gloabal/priority_badge.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+// Note: Ensure this points to the file where Datum is defined
 import '../../model/ping_model.dart';
-import '../../provider/ping_provider.dart';
 
 class PingCard extends StatelessWidget {
-  final PingModel ping;
+  final Datum ping;
 
   const PingCard({super.key, required this.ping});
 
@@ -23,9 +23,9 @@ class PingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 15,
-            offset: const Offset(0, 0), // shadow all sides
+            offset: const Offset(0, 0),
           ),
         ],
       ),
@@ -36,7 +36,6 @@ class PingCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar
                 Container(
                   padding: EdgeInsets.all(1.r),
                   decoration: BoxDecoration(
@@ -46,42 +45,44 @@ class PingCard extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 24.r,
                     backgroundColor: AppColor.grey100,
-                    backgroundImage: AssetImage(ping.logoUrl),
+                    backgroundImage: NetworkImage(ping.user!.profileImage),
                   ),
                 ),
 
                 SizedBox(width: 12.w),
 
-                // Content
+                // --- Content ---
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title + Badge
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CustomText(
-                            text: ping.shopName,
-                            fontSize: 17.sp,
-                            fontWeight: FontWeight.w700,
+                          Expanded(
+                            child: CustomText(
+                              text: ping.user!.businessName,
+                              fontSize: 17.sp,
+                              fontWeight: FontWeight.w700,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
 
-                          // ✅ Reusable Badge
-                          PriorityBadge(priority: ping.priority),
+                          PriorityBadge(urgencyLevel: ping.urgencyLevel),
                         ],
                       ),
 
                       SizedBox(height: 4.h),
 
                       CustomText(
-                        text: "Needs: ${ping.needs}",
+                        text: "Needs: ${ping.itemName}",
                         fontSize: 14.sp,
                         color: AppColor.grey600,
                       ),
 
                       SizedBox(height: 8.h),
 
+                      // Distance Row
                       Row(
                         children: [
                           Image.asset(
@@ -91,7 +92,7 @@ class PingCard extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           CustomText(
-                            text: ping.distance,
+                            text: "${ping.distanceKm} km away",
                             fontSize: 12.sp,
                             color: AppColor.grey500,
                           ),
@@ -105,28 +106,31 @@ class PingCard extends StatelessWidget {
 
             SizedBox(height: 16.h),
 
-            if (ping.category != PingFilter.accepted)...[
-              CustomButton(
-                text: "Details",
-                height: 44.h,
-                textStyle: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-                borderRadius: 10.r,
-                backgroundColor: AppColor.primary,
-                textColor: AppColor.black,
-                onPressed: () {
-                  context.push(
-                    '/pingDetails',
-                    extra: ping,
-                  );
-                },
+            // Details Button
+            CustomButton(
+              text: "Details",
+              height: 44.h,
+              textStyle: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
               ),
-            ]
+              borderRadius: 10.r,
+              backgroundColor: AppColor.primary,
+              textColor: AppColor.black,
+              onPressed: () {
+                context.push(
+                  '/pingDetails',
+                  extra: ping,
+                );
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  dynamic _parsePriority(String urgency) {
+    return urgency;
   }
 }

@@ -1,12 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:convert'; // Added for json decoding
-
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:http/http.dart' as http; // Required for MultipartRequest
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:b2b_solution/core/service/app_url.dart';
 import 'package:b2b_solution/core/service/network_caller.dart';
@@ -61,6 +59,7 @@ class ProfileProvider extends ChangeNotifier {
           userModel = UserModel.fromJson(result);
 
           log("User Loaded: ${userModel?.fullName}");
+          log("Profile Lat: ${userModel?.latitude}");
         } else {
           _errorMessage = "No User Data Found";
         }
@@ -150,7 +149,6 @@ class ProfileProvider extends ChangeNotifier {
   }
 }
 
-// Ensure you are using the correct Provider type for your version of Riverpod
 final profileProvider = ChangeNotifierProvider<ProfileProvider>((ref) {
   return ProfileProvider();
 });

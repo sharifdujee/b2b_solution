@@ -4,122 +4,183 @@ import 'package:b2b_solution/feature/navigation/presentation/screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../../ping/presentation/widgets/ping_card.dart';
 import '../../../ping/provider/ping_provider.dart';
+import '../../../profile/provider/profile_provider.dart';
+import '../../provider/nearby_ping_provider.dart';
 import '../widget/map_section.dart';
-import '../widget/quick_action.dart';
 import '../widget/top_section.dart';
-
+import '../widget/quick_action.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profileWatcher = ref.watch(profileProvider);
+    final pingState = ref.watch(nearbyPingProvider);
+    final filteredPings = ref.watch(filteredPingsProvider);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!profileWatcher.isLoading && profileWatcher.userModel != null) {
+        final user = profileWatcher.userModel!;
+
+        if (pingState.pings.isEmpty && !pingState.isLoading && pingState.errorMessage == null) {
+          ref.read(nearbyPingProvider.notifier).fetchPings(
+            user.latitude,
+            user.longitude,
+          );
+        }
+      }
+    });
+
     return Scaffold(
-
       backgroundColor: AppColor.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 48.h),
-
-            // ── Top Bar ──────────────────────────────────────────────────────
-            TopSection(),
-
-            SizedBox(height: 16.h),
-
-            // ── Map Section ──────────────────────────────────────────────────
-            MapSection(),
-
-            SizedBox(height: 24.h),
-
-            // ── Quick Actions ────────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: CustomText(
-                text: "Quick Actions",
-                fontWeight: FontWeight.w700,
-                fontSize: 18.sp,
-
-              ),
-            ),
-            SizedBox(height: 12.h),
-            QuickActions(),
-
-            SizedBox(height: 24.h),
-
-            // ── Nearby Ping Requests ─────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CustomText(
-                    text: "Nearby Ping Requests",
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18.sp,
-                    color: AppColor.black,
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(selectedIndexProvider.notifier).state =1;
-                    },
-                    child: Row(
-                      children: [
-                        CustomText(
-                          text: "View All",
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          color: AppColor.primary,
-                        ),
-                        SizedBox(width: 8.w),
-                        Image.asset(IconPath.arrowRight, height: 18.h, width: 18.w,color: AppColor.primary,)
-
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 12.h),
-        Consumer(
-          builder: (context, ref, child) {
-            final filteredPings = ref.watch(filteredPingsProvider);
-
-            if (filteredPings.isEmpty) {
-              return _buildEmptyState();
-            }
-
-            return ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredPings.length > 3 ? 3 : filteredPings.length, // Logic for "itemCount: 3"
-              itemBuilder: (context, index) => PingCard(ping: filteredPings[index]),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final user = ref.read(profileProvider).userModel;
+          if (user != null) {
+            await ref.read(nearbyPingProvider.notifier).fetchPings(
+              user.latitude,
+              user.longitude,
             );
-          },),
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 48.h),
 
-            SizedBox(height: 32.h),
+              const TopSection(),
+              SizedBox(height: 16.h),
+
+              const MapSection(),
+              SizedBox(height: 24.h),
+
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: CustomText(
+                  text: "Quick Actions",
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18.sp,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              const QuickActions(),
+              SizedBox(height: 24.h),
+
+              _buildHeader(ref),
+              SizedBox(height: 12.h),
+
+              _buildPingListContent(pingState, filteredPings),
+
+              SizedBox(height: 32.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Helper to handle Loading, Error, and List states
+  Widget _buildPingListContent(pingState, filteredPings) {
+    if (pingState.isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (pingState.errorMessage != null) {
+      return _buildErrorState(pingState.errorMessage!);
+    }
+
+    if (filteredPings.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      // Limit to 3 items for the Home preview, similar to your previous logic
+      itemCount: filteredPings.length > 3 ? 3 : filteredPings.length,
+      itemBuilder: (context, index) {
+        final ping = filteredPings[index];
+        return PingCard(
+          key: ValueKey(ping.id),
+          ping: ping,
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(height: 8.h),
+            CustomText(
+              text: message,
+              color: Colors.red,
+              fontSize: 14.sp,
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildHeader(WidgetRef ref) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CustomText(
+            text: "Nearby Ping Requests",
+            fontWeight: FontWeight.w600,
+            fontSize: 18.sp,
+            color: AppColor.black,
+          ),
+          GestureDetector(
+            onTap: () => ref.read(selectedIndexProvider.notifier).state = 1,
+            child: Row(
+              children: [
+                CustomText(
+                  text: "View All",
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w400,
+                  color: AppColor.primary,
+                ),
+                SizedBox(width: 8.w),
+                Icon(Icons.arrow_forward, size: 18.sp, color: AppColor.primary),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          SizedBox(height: 20.h),
           Icon(Icons.notifications_off_outlined, size: 48.sp, color: AppColor.grey400),
           SizedBox(height: 12.h),
           CustomText(
-            text: "No pings found for this category",
+            text: "No pings found in your area",
             fontSize: 14.sp,
             color: AppColor.grey500,
           ),
@@ -128,24 +189,3 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

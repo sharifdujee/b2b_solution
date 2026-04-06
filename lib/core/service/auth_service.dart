@@ -95,7 +95,7 @@ class AuthService {
     try {
       await deleteTokenRole();
       if (context.mounted) {
-        context.go("loginScreen");
+        context.go("/loginScreen");
       }
     } catch (e) {
       log('Error during logout: $e');

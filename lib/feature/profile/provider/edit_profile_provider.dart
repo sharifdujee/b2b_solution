@@ -114,8 +114,11 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
 
     int opYears = int.tryParse(operationYearsController.text) ?? _currentUser?.operationYears ?? 0;
 
-    double? lat = (state.latitude != 0.0) ? state.latitude : (_currentUser?.businessLatitude ?? 0.0);
-    double? lng = (state.longitude != 0.0) ? state.longitude : (_currentUser?.businessLongitude ?? 0.0);
+    double? lat = double.tryParse(businessLatitude.text) ?? state.latitude;
+    if (lat == 0.0) lat = _currentUser?.businessLatitude;
+
+    double? lng = double.tryParse(businessLongitude.text) ?? state.longitude;
+    if (lng == 0.0) lng = _currentUser?.businessLongitude;
 
     try {
       final request = http.MultipartRequest('PATCH', Uri.parse(AppUrl.updateProfile));

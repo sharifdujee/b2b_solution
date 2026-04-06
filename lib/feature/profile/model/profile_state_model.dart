@@ -40,6 +40,8 @@ class UserModel{
   String role;
   DateTime lastLoginAt;
   String legalName;
+  double latitude;
+  double longitude;
   List<String> businessCategory;
   int operationYears;
   String position;
@@ -55,6 +57,8 @@ class UserModel{
     required this.id,
     required this.email,
     required this.fullName,
+    required this.latitude,
+    required this.longitude,
     required this.businessName,
     required this.role,
     required this.lastLoginAt,
@@ -74,6 +78,8 @@ class UserModel{
     id: json["id"],
     email: json["email"],
     fullName: json["fullName"],
+    latitude: json["businessLatitude"],
+    longitude: json["businessLongitude"],
     businessName: json["businessName"],
     role: json["role"],
     lastLoginAt: DateTime.parse(json["lastLoginAt"]),

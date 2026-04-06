@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../feature/ping/model/ping_model.dart';
 import '../design_system/app_color.dart';
 import '../gloabal/custom_text.dart';
 
 class UrgencySelector extends StatelessWidget {
-  final PingPriority selected;
-  final Function(PingPriority) onChanged;
+  final String selected; // Changed from PingPriority to String
+  final Function(String) onChanged;
+
+  // Define the available options as a static list for consistency
+  static const List<String> urgencyOptions = ['EMERGENCY', 'MODERATE', 'GENERAL'];
 
   const UrgencySelector({
     super.key,
@@ -14,13 +16,15 @@ class UrgencySelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  Color _getColor(PingPriority priority) {
-    switch (priority) {
-      case PingPriority.emergency:
+  // Helper to get theme colors based on the string value
+  Color _getColor(String level) {
+    switch (level.toUpperCase()) {
+      case 'EMERGENCY':
         return AppColor.emergencyBadgeText;
-      case PingPriority.moderate:
+      case 'MODERATE':
         return AppColor.moderateBadgeText;
-      case PingPriority.general:
+      case 'GENERAL':
+      default:
         return AppColor.generalBadgeText;
     }
   }
@@ -28,19 +32,19 @@ class UrgencySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: PingPriority.values.map((priority) {
-        final isSelected = priority == selected;
-        final color = _getColor(priority);
+      children: urgencyOptions.map((level) {
+        final isSelected = level.toUpperCase() == selected.toUpperCase();
+        final color = _getColor(level);
 
-        // PIXEL PERFECT: Check if this is the last item to remove the right margin
-        final bool isLast = priority == PingPriority.values.last;
+        // Check if this is the last item to remove the right margin
+        final bool isLast = level == urgencyOptions.last;
 
         return Expanded(
           child: GestureDetector(
-            onTap: () => onChanged(priority),
-            child: AnimatedContainer( // Switched to AnimatedContainer for smooth transitions
+            onTap: () => onChanged(level),
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              margin: EdgeInsets.only(right: isLast ? 0 : 10.w), // Space between items
+              margin: EdgeInsets.only(right: isLast ? 0 : 10.w),
               padding: EdgeInsets.symmetric(vertical: 12.h),
               decoration: BoxDecoration(
                 color: isSelected
@@ -48,7 +52,6 @@ class UrgencySelector extends StatelessWidget {
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
-                  // When not selected, use a subtle grey border to define the shape
                   color: isSelected ? color : AppColor.grey100,
                   width: isSelected ? 1.5 : 1,
                 ),
@@ -56,21 +59,20 @@ class UrgencySelector extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Status Indicator Dot
+                  // Status Indicator Dot/Square
                   Container(
                     height: 18.h,
                     width: 18.w,
                     decoration: BoxDecoration(
                       color: color,
-                      borderRadius: BorderRadius.circular(4.r)
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
                   SizedBox(height: 8.h),
 
-                  // Priority Text
+                  // Priority Text (Capitalized first letter)
                   CustomText(
-                    text: priority.name[0].toUpperCase() +
-                        priority.name.substring(1),
+                    text: level[0].toUpperCase() + level.substring(1).toLowerCase(),
                     fontSize: 13.sp,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? color : AppColor.grey700,
