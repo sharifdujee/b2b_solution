@@ -37,6 +37,13 @@ class AppUrl {
   static String pingFilterByRadiusAndCategory(int radius, String category) =>
       "$_baseUrl/ping?radius=$radius&category=$category";
 
+  static String getMyAllConnection(int page, int limit) =>
+      "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
+
+  static String getMyConnectionBySearch(int page, int limit, String searchTerm) =>
+      "$_baseUrl/connection/my-connection?page=$page&limit=$limit&search=$searchTerm";
+
+  static String createPing = "$_baseUrl/ping/create";
 
   ///end add by lisan
 

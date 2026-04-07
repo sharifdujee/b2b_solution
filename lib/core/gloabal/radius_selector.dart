@@ -7,12 +7,13 @@ import 'custom_text.dart';
 
 class RadiusSelector extends StatelessWidget {
   final int selectedRadius;
-  final Function(int) onChanged;
+  // Replace onChanged with controller
+  final TextEditingController controller;
 
   const RadiusSelector({
     super.key,
     required this.selectedRadius,
-    required this.onChanged,
+    required this.controller,
   });
 
   @override
@@ -26,7 +27,8 @@ class RadiusSelector extends StatelessWidget {
 
         return Expanded(
           child: GestureDetector(
-            onTap: () => onChanged(radius),
+            // Update the controller text directly
+            onTap: () => controller.text = radius.toString(),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: EdgeInsets.only(right: isLast ? 0 : 10.w),

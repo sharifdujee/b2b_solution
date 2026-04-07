@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../design_system/app_color.dart';
 import 'custom_text.dart';
 
@@ -10,10 +12,13 @@ class CustomSelectField<T> extends StatelessWidget {
   final String label;
   final String hintText;
   final String Function(T) itemLabelBuilder;
-  final Function(dynamic) onChanged;
   final bool isMultiSelect;
   final bool showSearchBar;
   final bool showActionButtons;
+  final TextEditingController? controller;
+
+  // ADDED: Optional onChanged parameter
+  final void Function(dynamic)? onChanged;
 
   const CustomSelectField({
     super.key,
@@ -23,16 +28,17 @@ class CustomSelectField<T> extends StatelessWidget {
     required this.label,
     required this.hintText,
     required this.itemLabelBuilder,
-    required this.onChanged,
     this.isMultiSelect = false,
     this.showSearchBar = false,
     this.showActionButtons = true,
+    this.controller,
+    this.onChanged, // Initialize here
   });
 
   @override
   Widget build(BuildContext context) {
-    // Determine the text to display in the closed field box
     String displayText = hintText;
+
     if (isMultiSelect && initialSelectedItems != null && initialSelectedItems!.isNotEmpty) {
       displayText = initialSelectedItems!.map(itemLabelBuilder).join(", ");
     } else if (value != null) {
@@ -89,10 +95,25 @@ class CustomSelectField<T> extends StatelessWidget {
       ),
     );
 
-    if (result != null) onChanged(result);
+    if (result != null) {
+      // 1. Update Controller if it exists
+      if (controller != null) {
+        if (isMultiSelect && result is List) {
+          controller!.text = (result as List<T>).map(itemLabelBuilder).join(", ");
+        } else {
+          controller!.text = itemLabelBuilder(result as T);
+        }
+      }
+
+      // 2. TRIGGER ONCHANGED: Pass the result back to the caller
+      if (onChanged != null) {
+        onChanged!(result);
+      }
+    }
   }
 }
 
+// Internal Dialog remains the same, but returns the generic type T or List<T>
 class _SelectDialog<T> extends StatefulWidget {
   final List<T> items;
   final T? initialValue;
@@ -138,6 +159,19 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggle(T item) {
+    setState(() {
+      if (widget.isMultiSelect) {
+        selectedItems.contains(item)
+            ? selectedItems.remove(item)
+            : selectedItems.add(item);
+      } else {
+        selectedItems = [item];
+        if (!widget.showActionButtons) Navigator.pop(context, item);
+      }
+    });
   }
 
   @override
@@ -229,7 +263,6 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                   return ListTile(
                     visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
                     contentPadding: EdgeInsets.symmetric(horizontal: 4.w),
-                    // ONLY SHOW ICON IF MULTI-SELECT IS ON
                     leading: widget.isMultiSelect
                         ? Icon(
                       isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
@@ -242,7 +275,6 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                       color: isSelected ? AppColor.black : AppColor.grey500,
                       fontSize: 14.sp,
                     ),
-                    // SHOW CHECKMARK ON THE RIGHT FOR SINGLE SELECT (Optional)
                     trailing: !widget.isMultiSelect && isSelected
                         ? Icon(Icons.check, color: const Color(0xFFFFC107), size: 20.sp)
                         : null,
@@ -250,7 +282,8 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                   );
                 },
               ),
-            ),          ],
+            ),
+          ],
         ),
       ),
       actionsPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 20.h),
@@ -283,7 +316,7 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                 ),
                 onPressed: () => Navigator.pop(
                     context,
-                    widget.isMultiSelect ? selectedItems : selectedItems.firstOrNull
+                    widget.isMultiSelect ? selectedItems : (selectedItems.isNotEmpty ? selectedItems.first : null)
                 ),
                 child: CustomText(
                     text: "Done",
@@ -296,16 +329,5 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
         )
       ] : null,
     );
-  }
-
-  void _toggle(T item) {
-    setState(() {
-      if (widget.isMultiSelect) {
-        selectedItems.contains(item) ? selectedItems.remove(item) : selectedItems.add(item);
-      } else {
-        selectedItems = [item];
-        if (!widget.showActionButtons) Navigator.pop(context, item);
-      }
-    });
   }
 }

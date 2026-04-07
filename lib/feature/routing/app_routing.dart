@@ -103,7 +103,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       //     return PingDetails(ping: ping);
       //   },
       // ),
-      //GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
+      GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
       GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen()),
 

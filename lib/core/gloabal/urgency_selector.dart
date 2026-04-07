@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../feature/ping/model/create_ping_model.dart';
 import '../design_system/app_color.dart';
 import '../gloabal/custom_text.dart';
 
 class UrgencySelector extends StatelessWidget {
-  final String selected; // Changed from PingPriority to String
-  final Function(String) onChanged;
+  final UrgencyLevel selected;
+  final Function(UrgencyLevel) onSelected;
 
-  // Define the available options as a static list for consistency
-  static const List<String> urgencyOptions = ['EMERGENCY', 'MODERATE', 'GENERAL'];
+  static const List<UrgencyLevel> urgencyOptions = UrgencyLevel.values;
 
   const UrgencySelector({
     super.key,
     required this.selected,
-    required this.onChanged,
+    required this.onSelected,
   });
 
-  // Helper to get theme colors based on the string value
-  Color _getColor(String level) {
-    switch (level.toUpperCase()) {
-      case 'EMERGENCY':
+  Color _getColor(UrgencyLevel level) {
+    switch (level) {
+      case UrgencyLevel.EMERGENCY:
         return AppColor.emergencyBadgeText;
-      case 'MODERATE':
+      case UrgencyLevel.MODERATE:
         return AppColor.moderateBadgeText;
-      case 'GENERAL':
-      default:
+      case UrgencyLevel.GENERAL:
         return AppColor.generalBadgeText;
     }
   }
@@ -33,23 +31,19 @@ class UrgencySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: urgencyOptions.map((level) {
-        final isSelected = level.toUpperCase() == selected.toUpperCase();
+        final isSelected = level == selected;
         final color = _getColor(level);
-
-        // Check if this is the last item to remove the right margin
         final bool isLast = level == urgencyOptions.last;
 
         return Expanded(
           child: GestureDetector(
-            onTap: () => onChanged(level),
+            onTap: () => onSelected(level),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: EdgeInsets.only(right: isLast ? 0 : 10.w),
               padding: EdgeInsets.symmetric(vertical: 12.h),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? color.withOpacity(0.1)
-                    : Colors.transparent,
+                color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
                   color: isSelected ? color : AppColor.grey100,
@@ -59,7 +53,6 @@ class UrgencySelector extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Status Indicator Dot/Square
                   Container(
                     height: 18.h,
                     width: 18.w,
@@ -69,10 +62,8 @@ class UrgencySelector extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 8.h),
-
-                  // Priority Text (Capitalized first letter)
                   CustomText(
-                    text: level[0].toUpperCase() + level.substring(1).toLowerCase(),
+                    text: level.name[0] + level.name.substring(1).toLowerCase(),
                     fontSize: 13.sp,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? color : AppColor.grey700,
