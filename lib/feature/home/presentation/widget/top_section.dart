@@ -43,14 +43,25 @@ class _TopSectionState extends ConsumerState<TopSection> {
       margin: EdgeInsets.symmetric(horizontal: 20.w),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 30.r,
-            backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
-                ? NetworkImage(user!.profileImage)
-                : null,
-              child: (user?.profileImage == null || user!.profileImage.isEmpty)
-                  ? Icon(Icons.person, size: 30.r, color: Colors.grey)
-                  :null
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100.r),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 10,
+                  color: AppColor.secondary.withValues(alpha: 0.7),
+                )
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 30.r,
+              backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
+                  ? NetworkImage(user!.profileImage)
+                  : null,
+                child: (user?.profileImage == null || user!.profileImage.isEmpty)
+                    ? Icon(Icons.person, size: 30.r, color: Colors.grey)
+                    :null
+            ),
           ),
           SizedBox(width: 8.w),
           Column(
@@ -81,18 +92,19 @@ class _TopSectionState extends ConsumerState<TopSection> {
                 boxShadow: [
                   BoxShadow(
                     blurRadius: 10,
-                    color: AppColor.black.withValues(alpha: 0.16),
+                    color: AppColor.secondary.withValues(alpha: 0.16),
                   )
                 ],
                 border: Border.all(
                   width: 1.w,
                   color: AppColor.black.withValues(alpha: 0.16),
                 ),
-                color: AppColor.white,
+                color: AppColor.secondary.withValues(alpha: 0.9),
               ),
               child: SvgPicture.asset(
                 IconPath.notification,
                 fit: BoxFit.cover,
+                color: AppColor.white,
                 height: 20.h,
                 width: 20.w,
               ),

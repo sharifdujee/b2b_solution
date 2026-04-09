@@ -23,7 +23,7 @@ class PingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: AppColor.secondary.withValues(alpha: 0.6),
             blurRadius: 15,
             offset: const Offset(0, 0),
           ),
@@ -41,6 +41,13 @@ class PingCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.grey.shade100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColor.secondary.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 0),
+                      )
+                    ]
                   ),
                   child: CircleAvatar(
                     radius: 24.r,

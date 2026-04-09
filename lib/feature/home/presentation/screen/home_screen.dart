@@ -37,48 +37,62 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColor.white,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          final user = ref.read(profileProvider).userModel;
-          if (user != null) {
-            await ref.read(nearbyPingProvider.notifier).fetchPings(
-              user.latitude,
-              user.longitude,
-            );
-          }
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 48.h),
-
-              const TopSection(),
-              SizedBox(height: 16.h),
-
-              const MapSection(),
-              SizedBox(height: 24.h),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: CustomText(
-                  text: "Quick Actions",
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18.sp,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              const QuickActions(),
-              SizedBox(height: 24.h),
-
-              _buildHeader(ref),
-              SizedBox(height: 12.h),
-
-              _buildPingListContent(pingState, filteredPings),
-
-              SizedBox(height: 32.h),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: const [0.0, 0.3, 0.8],
+            colors: [
+              AppColor.primary.withValues(alpha: 0.6),
+              AppColor.primary.withValues(alpha: 0.3),
+              AppColor.white,
             ],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            final user = ref.read(profileProvider).userModel;
+            if (user != null) {
+              await ref.read(nearbyPingProvider.notifier).fetchPings(
+                user.latitude,
+                user.longitude,
+              );
+            }
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 48.h),
+
+                const TopSection(),
+                SizedBox(height: 16.h),
+
+                const MapSection(),
+                SizedBox(height: 24.h),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: CustomText(
+                    text: "Quick Actions",
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18.sp,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                const QuickActions(),
+                SizedBox(height: 24.h),
+
+                _buildHeader(ref),
+                SizedBox(height: 12.h),
+
+                _buildPingListContent(pingState, filteredPings),
+
+                SizedBox(height: 32.h),
+              ],
+            ),
           ),
         ),
       ),
@@ -159,11 +173,11 @@ class HomeScreen extends ConsumerWidget {
                 CustomText(
                   text: "View All",
                   fontSize: 12.sp,
-                  fontWeight: FontWeight.w400,
-                  color: AppColor.primary,
+                  fontWeight: FontWeight.w500,
+                  color: AppColor.secondary,
                 ),
                 SizedBox(width: 8.w),
-                Icon(Icons.arrow_forward, size: 18.sp, color: AppColor.primary),
+                Icon(Icons.arrow_forward, size: 18.sp, color: AppColor.secondary),
               ],
             ),
           ),

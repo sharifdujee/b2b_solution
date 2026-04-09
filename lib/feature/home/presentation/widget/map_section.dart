@@ -68,7 +68,7 @@ class _MapSectionState extends ConsumerState<MapSection> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColor.black.withOpacity(0.08),
+            color: AppColor.secondary.withValues(alpha: 0.6),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
