@@ -95,14 +95,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/terms", builder: (context, state)=> TermsConditions()),
       GoRoute(path: "/mapView", builder: (context, state)=> MapViewScreen()),
 
-      // GoRoute(
-      //   path: '/pingDetails',
-      //   builder: (context, state) {
-      //     // Retrieve the PingModel from the extra parameter
-      //     final ping = state.extra as PingModel;
-      //     return PingDetails(ping: ping);
-      //   },
-      // ),
+      GoRoute(
+        path: '/pingDetails',
+        builder: (context, state) {
+          final datum = state.extra as Datum;
+          return PingDetails(ping: datum);
+        },
+      ),
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
       GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen()),

@@ -11,21 +11,9 @@ class PriorityBadge extends StatelessWidget {
     required this.urgencyLevel,
   });
 
-  // Helper to get background color based on the string value
-  Color _getBgColor(String level) {
-    switch (level.toUpperCase()) {
-      case 'EMERGENCY':
-        return AppColor.emergencyBadge;
-      case 'MODERATE':
-        return AppColor.moderateBadge;
-      case 'GENERAL':
-      default:
-        return AppColor.generalBadge;
-    }
-  }
 
-  // Helper to get text color based on the string value
-  Color _getTextColor(String level) {
+
+  Color _getBgColor(String level) {
     switch (level.toUpperCase()) {
       case 'EMERGENCY':
         return AppColor.emergencyBadgeText;
@@ -39,7 +27,6 @@ class PriorityBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Default to 'GENERAL' if the API returns null
     final String displayLevel = urgencyLevel?.toUpperCase() ?? 'GENERAL';
 
     return Container(
@@ -52,7 +39,7 @@ class PriorityBadge extends StatelessWidget {
         text: displayLevel,
         fontSize: 10.sp,
         fontWeight: FontWeight.w800,
-        color: _getTextColor(displayLevel),
+        color: AppColor.white,
         letterSpacing: 0.5,
       ),
     );

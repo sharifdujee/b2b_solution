@@ -45,6 +45,17 @@ class AppUrl {
 
   static String createPing = "$_baseUrl/ping/create";
 
+  static String acceptedPings(int page, int limit) => "$_baseUrl/ping/accepted-by-me?page=$page&limit=$limit";
+
+  static String myPings(int page, int limit) => "$_baseUrl/ping/my?page=$page&limit=$limit";
+
+  static String getPing(int radius) => "$_baseUrl/ping?radius=$radius";
+
+  static String deletePing(String pingId) => "$_baseUrl/ping/delete/$pingId";
+
+  static String acceptPing(String pingId) => "$_baseUrl/ping/accept/$pingId";
+  static String rejectPing(String pingId) => "$_baseUrl/ping/reject/$pingId";
+
   ///end add by lisan
 
 

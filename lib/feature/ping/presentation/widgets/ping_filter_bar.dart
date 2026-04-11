@@ -52,7 +52,6 @@ class PingFilterBar extends ConsumerWidget {
       }) {
     return Expanded(
       child: GestureDetector(
-        // Calling the method defined in your Notifier class
         onTap: () => ref.read(pingFilterProvider.notifier).updateFilter(targetFilter),
         behavior: HitTestBehavior.opaque,
         child: Column(
@@ -70,7 +69,6 @@ class PingFilterBar extends ConsumerWidget {
                 ),
               ),
             ),
-            // Use AnimatedContainer for a smooth color transition
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               height: 3.h,

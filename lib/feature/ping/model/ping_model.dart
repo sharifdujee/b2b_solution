@@ -58,7 +58,7 @@ class Datum {
   final String unit;
   final String urgencyLevel;
   final int neededWithin;
-  final User? user; // Nullable to prevent crashes if a user profile is deleted
+  final User? user;
   final int distanceKm;
 
   Datum({

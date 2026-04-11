@@ -16,6 +16,8 @@ class PingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = ping.user;
+
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
@@ -39,26 +41,31 @@ class PingCard extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(1.r),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade100),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColor.secondary.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 0),
-                      )
-                    ]
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColor.secondary.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 0),
+                        )
+                      ]
                   ),
                   child: CircleAvatar(
                     radius: 24.r,
                     backgroundColor: AppColor.grey100,
-                    backgroundImage: NetworkImage(ping.user!.profileImage),
+                    // SAFE IMAGE CHECK
+                    backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
+                        ? NetworkImage(user.profileImage)
+                        : null,
+                    child: (user?.profileImage == null || user!.profileImage.isEmpty)
+                        ? Icon(Icons.person, color: AppColor.grey400)
+                        : null,
                   ),
                 ),
 
                 SizedBox(width: 12.w),
 
-                // --- Content ---
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,28 +75,27 @@ class PingCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: CustomText(
-                              text: ping.user!.businessName,
+                              text: user?.businessName ?? "Business Name",
                               fontSize: 17.sp,
                               fontWeight: FontWeight.w700,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-
-                          PriorityBadge(urgencyLevel: ping.urgencyLevel),
+                          PriorityBadge(urgencyLevel: ping.urgencyLevel ?? 'Low'),
                         ],
                       ),
 
                       SizedBox(height: 4.h),
 
                       CustomText(
-                        text: "Needs: ${ping.itemName}",
+                        // SAFE ITEM NAME
+                        text: "Needs: ${ping.itemName ?? 'General request'}",
                         fontSize: 14.sp,
                         color: AppColor.grey600,
                       ),
 
                       SizedBox(height: 8.h),
 
-                      // Distance Row
                       Row(
                         children: [
                           Image.asset(
@@ -99,7 +105,7 @@ class PingCard extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           CustomText(
-                            text: "${ping.distanceKm} km away",
+                            text: "${ping.distanceKm ?? '0'} km away",
                             fontSize: 12.sp,
                             color: AppColor.grey500,
                           ),
@@ -113,7 +119,6 @@ class PingCard extends StatelessWidget {
 
             SizedBox(height: 16.h),
 
-            // Details Button
             CustomButton(
               text: "Details",
               height: 44.h,

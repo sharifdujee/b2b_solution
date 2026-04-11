@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../ping/model/ping_pagination_state_model.dart';
 import '../../../ping/presentation/widgets/ping_card.dart';
 import '../../../ping/provider/ping_provider.dart';
 import '../../../profile/provider/profile_provider.dart';
@@ -20,12 +21,15 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileWatcher = ref.watch(profileProvider);
     final pingState = ref.watch(nearbyPingProvider);
-    final filteredPings = ref.watch(filteredPingsProvider);
+
+    // FIX: Watch the paginated list provider instead of the filter enum
+    final pingListAsync = ref.watch(pingListProvider);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!profileWatcher.isLoading && profileWatcher.userModel != null) {
         final user = profileWatcher.userModel!;
 
+        // Logic to fetch pings if the nearby list is currently empty
         if (pingState.pings.isEmpty && !pingState.isLoading && pingState.errorMessage == null) {
           ref.read(nearbyPingProvider.notifier).fetchPings(
             user.latitude,
@@ -37,98 +41,85 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColor.white,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: const [0.0, 0.3, 0.8],
-            colors: [
-              AppColor.primary.withValues(alpha: 0.6),
-              AppColor.primary.withValues(alpha: 0.3),
-              AppColor.white,
-            ],
-          ),
-        ),
-        child: RefreshIndicator(
-          onRefresh: () async {
-            final user = ref.read(profileProvider).userModel;
-            if (user != null) {
-              await ref.read(nearbyPingProvider.notifier).fetchPings(
-                user.latitude,
-                user.longitude,
-              );
-            }
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 48.h),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final user = ref.read(profileProvider).userModel;
+          if (user != null) {
+            await ref.read(nearbyPingProvider.notifier).fetchPings(
+              user.latitude,
+              user.longitude,
+            );
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 48.h),
 
-                const TopSection(),
-                SizedBox(height: 16.h),
+              const TopSection(),
+              SizedBox(height: 16.h),
 
-                const MapSection(),
-                SizedBox(height: 24.h),
+              const MapSection(),
+              SizedBox(height: 24.h),
 
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: CustomText(
-                    text: "Quick Actions",
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18.sp,
-                  ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: CustomText(
+                  text: "Quick Actions",
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18.sp,
                 ),
-                SizedBox(height: 12.h),
-                const QuickActions(),
-                SizedBox(height: 24.h),
+              ),
+              SizedBox(height: 12.h),
+              const QuickActions(),
+              SizedBox(height: 24.h),
 
-                _buildHeader(ref),
-                SizedBox(height: 12.h),
+              _buildHeader(ref),
+              SizedBox(height: 12.h),
 
-                _buildPingListContent(pingState, filteredPings),
+              /// FIX: Use the AsyncValue from pingListProvider
+              _buildPingListContent(pingListAsync),
 
-                SizedBox(height: 32.h),
-              ],
-            ),
+              SizedBox(height: 32.h),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// Helper to handle Loading, Error, and List states
-  Widget _buildPingListContent(pingState, filteredPings) {
-    if (pingState.isLoading) {
-      return const Center(
+  /// Handles Loading, Error, and Data states for the paginated ping list
+  Widget _buildPingListContent(AsyncValue<PingPaginationState> pingsAsync) {
+    return pingsAsync.when(
+      loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
           child: CircularProgressIndicator(),
         ),
-      );
-    }
+      ),
+      error: (err, stack) => _buildErrorState(err.toString()),
+      data: (paginationState) {
+        final pings = paginationState.pings;
 
-    if (pingState.errorMessage != null) {
-      return _buildErrorState(pingState.errorMessage!);
-    }
+        if (pings.isEmpty) {
+          return _buildEmptyState();
+        }
 
-    if (filteredPings.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      // Limit to 3 items for the Home preview, similar to your previous logic
-      itemCount: filteredPings.length > 3 ? 3 : filteredPings.length,
-      itemBuilder: (context, index) {
-        final ping = filteredPings[index];
-        return PingCard(
-          key: ValueKey(ping.id),
-          ping: ping,
+        return ListView.builder(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          // Limit to 3 items for the Home preview
+          itemCount: pings.length > 3 ? 3 : pings.length,
+          itemBuilder: (context, index) {
+            final ping = pings[index];
+            return PingCard(
+              key: ValueKey(ping.id),
+              ping: ping,
+            );
+          },
         );
       },
     );
@@ -143,10 +134,9 @@ class HomeScreen extends ConsumerWidget {
             const Icon(Icons.error_outline, color: Colors.red),
             SizedBox(height: 8.h),
             CustomText(
-              text: message,
+              text: "Failed to load pings",
               color: Colors.red,
               fontSize: 14.sp,
-              textAlign: TextAlign.center,
             ),
           ],
         ),

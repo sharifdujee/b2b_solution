@@ -47,9 +47,8 @@ class QuickActionItem extends ConsumerWidget {
             children: [
               Image.asset(
                 icon,
-                color: isSelected ? AppColor.white : AppColor.primary,
-                height: 24.h,
-                width: 24.w,
+                height: 40.h,
+                width: 40.w,
               ),
               SizedBox(height: 6.h),
               Text(

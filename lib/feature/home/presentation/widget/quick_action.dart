@@ -23,7 +23,6 @@ class QuickActions extends ConsumerWidget {
           QuickActionItem(
             label: "Map View",
             icon: IconPath.map,
-            // Check if this label matches the provider state
             isSelected: selectedLabel == "Map View",
             onTap: () {
               ref.read(selectedQuickActionProvider.notifier).state = "Map View";

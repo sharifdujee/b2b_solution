@@ -29,7 +29,6 @@ class NearbyPingNotifier extends StateNotifier<NearbyPingState> {
       if (response.isSuccess) {
         final apiResponse = PingModel.fromJson(response.responseData);
         final List<Datum> fetchedPings = apiResponse.result?.data ?? [];
-
         ref.read(pingListProvider.notifier).setPings(fetchedPings);
 
         state = state.copyWith(
