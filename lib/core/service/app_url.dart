@@ -13,7 +13,7 @@ class AppUrl {
   static const String socketUrl = "ws://10.0.30.184:4009";
 
   /// auth section
-  /// used by Lisan
+
   static const String createUser = "$_baseUrl/user/create";
   static const String userVerifyOtp = "$_baseUrl/user/verify";
   static const String login = "$_baseUrl/auth/login";
