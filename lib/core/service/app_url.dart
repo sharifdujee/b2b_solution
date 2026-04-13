@@ -60,6 +60,9 @@ class AppUrl {
   static String findUsers(int page, int limit) => "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
   static String pendingConnections(int page, int limit) => "$_baseUrl/connection/pending-request?page=$page&limit=$limit";
 
+  static String notifications (int page, int limit,String isRead) => "$_baseUrl/notify/my?limit=$limit&page=$page&isRead=$isRead";
+  static String markAllAsReadNotification = "$_baseUrl/notify/mark-all";
+  static String singleNotificationRead(String notificationId) => "$_baseUrl/notify/single/$notificationId";
 
 
   ///end add by lisan
