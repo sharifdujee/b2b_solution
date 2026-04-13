@@ -1,21 +1,23 @@
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
-import 'package:b2b_solution/core/gloabal/priority_badge.dart'; // ✅ import this
+import 'package:b2b_solution/core/gloabal/priority_badge.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+// Note: Ensure this points to the file where Datum is defined
 import '../../model/ping_model.dart';
-import '../../provider/ping_provider.dart';
 
 class PingCard extends StatelessWidget {
-  final PingModel ping;
+  final Datum ping;
 
   const PingCard({super.key, required this.ping});
 
   @override
   Widget build(BuildContext context) {
+    final user = ping.user;
+
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       decoration: BoxDecoration(
@@ -23,9 +25,9 @@ class PingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColor.secondary.withValues(alpha: 0.6),
             blurRadius: 15,
-            offset: const Offset(0, 0), // shadow all sides
+            offset: const Offset(0, 0),
           ),
         ],
       ),
@@ -36,46 +38,58 @@ class PingCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar
                 Container(
                   padding: EdgeInsets.all(1.r),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade100),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColor.secondary.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 0),
+                        )
+                      ]
                   ),
                   child: CircleAvatar(
                     radius: 24.r,
                     backgroundColor: AppColor.grey100,
-                    backgroundImage: AssetImage(ping.logoUrl),
+                    // SAFE IMAGE CHECK
+                    backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
+                        ? NetworkImage(user.profileImage)
+                        : null,
+                    child: (user?.profileImage == null || user!.profileImage.isEmpty)
+                        ? Icon(Icons.person, color: AppColor.grey400)
+                        : null,
                   ),
                 ),
 
                 SizedBox(width: 12.w),
 
-                // Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title + Badge
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CustomText(
-                            text: ping.shopName,
-                            fontSize: 17.sp,
-                            fontWeight: FontWeight.w700,
+                          Expanded(
+                            child: CustomText(
+                              text: user?.businessName ?? "Business Name",
+                              fontSize: 17.sp,
+                              fontWeight: FontWeight.w700,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-
-                          // ✅ Reusable Badge
-                          PriorityBadge(priority: ping.priority),
+                          PriorityBadge(urgencyLevel: ping.urgencyLevel ?? 'Low'),
                         ],
                       ),
 
                       SizedBox(height: 4.h),
 
                       CustomText(
-                        text: "Needs: ${ping.needs}",
+                        // SAFE ITEM NAME
+                        text: "Needs: ${ping.itemName ?? 'General request'}",
                         fontSize: 14.sp,
                         color: AppColor.grey600,
                       ),
@@ -91,7 +105,7 @@ class PingCard extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           CustomText(
-                            text: ping.distance,
+                            text: "${ping.distanceKm ?? '0'} km away",
                             fontSize: 12.sp,
                             color: AppColor.grey500,
                           ),
@@ -105,28 +119,30 @@ class PingCard extends StatelessWidget {
 
             SizedBox(height: 16.h),
 
-            if (ping.category != PingFilter.accepted)...[
-              CustomButton(
-                text: "Details",
-                height: 44.h,
-                textStyle: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-                borderRadius: 10.r,
-                backgroundColor: AppColor.primary,
-                textColor: AppColor.black,
-                onPressed: () {
-                  context.push(
-                    '/pingDetails',
-                    extra: ping,
-                  );
-                },
+            CustomButton(
+              text: "Details",
+              height: 44.h,
+              textStyle: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
               ),
-            ]
+              borderRadius: 10.r,
+              backgroundColor: AppColor.primary,
+              textColor: AppColor.black,
+              onPressed: () {
+                context.push(
+                  '/pingDetails',
+                  extra: ping,
+                );
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  dynamic _parsePriority(String urgency) {
+    return urgency;
   }
 }

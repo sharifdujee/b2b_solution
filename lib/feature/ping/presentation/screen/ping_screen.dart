@@ -14,8 +14,12 @@ class PingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the filter to pass it to the 'loadMore' logic
+    final currentFilter = ref.watch(pingFilterProvider);
+    final pingsAsync = ref.watch(pingListProvider);
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,8 +33,7 @@ class PingScreen extends ConsumerWidget {
                   CustomText(
                       text: "Ping",
                       fontSize: 24.sp,
-                      fontWeight: FontWeight.bold
-                  ),
+                      fontWeight: FontWeight.bold),
                   const Spacer(),
                   _buildCreatePingButton(context),
                 ],
@@ -39,28 +42,66 @@ class PingScreen extends ConsumerWidget {
 
             /// Fixed elements: Divider and Filter Bar
             const Divider(thickness: 1, height: 1, color: Color(0xFFEEEEEE)),
-            SizedBox(height: 24.h,),
+            SizedBox(height: 24.h),
             Container(
-              color: AppColor.white,
+                color: AppColor.white,
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: PingFilterBar()
-            ),
+                child: const PingFilterBar()),
 
-            /// Scrollable Card Area
+            /// Scrollable Card Area with Auto-Paging
             Expanded(
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final filteredPings = ref.watch(filteredPingsProvider);
+              child: pingsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomText(text: "Error loading pings", color: Colors.red),
+                      TextButton(
+                        onPressed: () => ref.read(pingListProvider.notifier).fetchPingsByFilter(currentFilter),
+                        child: const Text("Retry"),
+                      )
+                    ],
+                  ),
+                ),
+                data: (paginationState) {
+                  final pings = paginationState.pings;
 
-                  if (filteredPings.isEmpty) {
+                  if (pings.isEmpty) {
                     return _buildEmptyState();
                   }
 
-                  return ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: filteredPings.length,
-                    itemBuilder: (context, index) => PingCard(ping: filteredPings[index]),
+                  return NotificationListener<ScrollNotification>(
+                    onNotification: (ScrollNotification scrollInfo) {
+                      // Trigger load more when user is 200 pixels from the bottom
+                      if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+                        ref.read(pingListProvider.notifier).loadMore(currentFilter);
+                      }
+                      return false;
+                    },
+                    child: RefreshIndicator(
+                      onRefresh: () => ref.read(pingListProvider.notifier).fetchPingsByFilter(currentFilter),
+                      child: ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        // Add 1 to itemCount if there is more data to show the bottom loader
+                        itemCount: pings.length + (paginationState.hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index < pings.length) {
+                            return PingCard(ping: pings[index]);
+                          } else {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20.h),
+                              child: const Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
                   );
                 },
               ),
@@ -71,7 +112,7 @@ class PingScreen extends ConsumerWidget {
     );
   }
 
-  /// Create Ping Button consistent with screenshot
+  /// Create Ping Button
   Widget _buildCreatePingButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -105,7 +146,8 @@ class PingScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off_outlined, size: 48.sp, color: AppColor.grey400),
+          Icon(Icons.notifications_off_outlined,
+              size: 48.sp, color: AppColor.grey400),
           SizedBox(height: 12.h),
           CustomText(
             text: "No pings found for this category",

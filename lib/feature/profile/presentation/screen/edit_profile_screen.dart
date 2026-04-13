@@ -1,3 +1,6 @@
+
+import 'dart:developer';
+
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_dialog.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
@@ -12,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../provider/profile_provider.dart';
 
 
 class EditProfile extends ConsumerWidget{
@@ -19,8 +23,17 @@ class EditProfile extends ConsumerWidget{
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(editProfileProvider);
-    final controller = ref.read(editProfileProvider.notifier);
+    final editProfileState = ref.watch(editProfileProvider);
+    final editProfileController = ref.read(editProfileProvider.notifier);
+
+    final profileState = ref.watch(profileProvider);
+    final notifier = ref.read(profileProvider.notifier);
+
+    final user = profileState.userModel;
+    final isLoading = profileState.isLoading;
+
+
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -61,10 +74,10 @@ class EditProfile extends ConsumerWidget{
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
                     decoration: BoxDecoration(
-                      color: AppColor.magentaSoft, // Your soft background color
+                      color: AppColor.magentaSoft,
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
-                        color: const Color(0xFFE2E8F0), // Soft border
+                        color: const Color(0xFFE2E8F0),
                         width: 1,
                       ),
                     ),
@@ -72,13 +85,10 @@ class EditProfile extends ConsumerWidget{
                       children: [
                         Expanded(
                           child: CustomText(
-                            // Use the state value if it exists, otherwise show the placeholder
-                            text: state.email.isNotEmpty
-                                ? state.email
-                                : "Jhonsmith@gmail.com",
+                            text: user?.email ?? "Jhonsmith@gmail.com",
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
-                            color: state.email.isNotEmpty
+                            color: editProfileState.email.isNotEmpty
                                 ? Colors.black
                                 : AppColor.grey400,
                           ),
@@ -98,8 +108,8 @@ class EditProfile extends ConsumerWidget{
 
                 SizedBox(height: 12.h,),
                 CustomTextFormField(
-                  onChanged: (value) => controller.updateLegalName(value),
-                  hintText: "Ex. 101010 Ontario inc",
+                  controller: editProfileController.legalNameController,
+                  hintText: user?.legalName ?? "Ex. 101010 Ontario inc",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
                   borderRadius: 12.r,
@@ -115,8 +125,10 @@ class EditProfile extends ConsumerWidget{
 
                 SizedBox(height: 12.h,),
                 CustomTextFormField(
-                  onChanged: (value) => controller.updateBusinessName(value),
-                  hintText: "Ex. Subway",
+                  controller: editProfileController.businessNameController,
+                  hintText:
+                  user?.businessName ??
+                      "Ex. Subway",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
 
@@ -133,8 +145,8 @@ class EditProfile extends ConsumerWidget{
 
                 SizedBox(height: 12.h,),
                 CustomTextFormField(
-                  onChanged: (value) => controller.updateName(value),
-                  hintText: "Ex. John smith",
+                  controller: editProfileController.fullNameController,
+                  hintText: user?.fullName ?? "Ex. John smith",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
 
@@ -152,8 +164,8 @@ class EditProfile extends ConsumerWidget{
 
                 SizedBox(height: 12.h,),
                 CustomTextFormField(
-                  onChanged: (value) => controller.updatePosition(value),
-                  hintText: "Ex. Owner",
+                  controller: editProfileController.positionController,
+                  hintText: user?.position ?? "Ex. Owner",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
 
@@ -170,8 +182,8 @@ class EditProfile extends ConsumerWidget{
 
                 SizedBox(height: 12.h,),
                 CustomTextFormField(
-                  onChanged: (value) => controller.updateFoodCategory(value),
-                  hintText: "Ex. Sandwich",
+                  controller: editProfileController.businessCategoryController,
+                  hintText: user?.businessCategory.toString() ?? "Ex. Sandwich",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
 
@@ -188,13 +200,47 @@ class EditProfile extends ConsumerWidget{
 
                 SizedBox(height: 12.h,),
                 CustomTextFormField(
-                  onChanged: (value) => controller.updateYearsOfOperation(value),
-                  hintText: "Ex. Sandwich",
+                  controller: editProfileController.operationYearsController,
+                  hintText: user?.operationYears.toString() ?? "2026",
                   hintTextColor: AppColor.grey400,
                   textColor: Colors.black,
 
                   borderRadius: 12.r,
                 ),
+
+
+                SizedBox(height: 16.h,),
+                CustomText(
+                  text: "Business Location",
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+
+                SizedBox(height: 12.h,),
+                GestureDetector(
+                  onTap: (){
+                    context.push('/businessLocation');
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+
+                    decoration: BoxDecoration(
+                      color: AppColor.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColor.primary, width: 1),
+                    ),
+                    child: CustomText(
+                      text: editProfileState.businessAddress ?? "Select Location",
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+
+                ),
+
+
 
                 SizedBox(height: 16.h,),
 
@@ -208,10 +254,10 @@ class EditProfile extends ConsumerWidget{
                 SizedBox(height: 12.h,),
                 CustomImagePickerCard(
                   title: "Profile image",
-                  imagePath: state.profileImage,
+                  imagePath: editProfileState.profileImage,
                   onPickImage: () {
                     _showImageSourceSheet(context, (source) {
-                      ref.read(editProfileProvider.notifier).pickProfileImage(source);
+                      editProfileController.pickProfileImage(source);
                     });
                   },
                 ),
@@ -226,10 +272,10 @@ class EditProfile extends ConsumerWidget{
                 SizedBox(height: 12.h,),
                 CustomImagePickerCard(
                   title: "business image",
-                  imagePath: state.businessLicenseImage, // <--- Using businessImage here too!
+                  imagePath: editProfileState.businessImage,
                   onPickImage: () {
                     _showImageSourceSheet(context, (source) {
-                      ref.read(editProfileProvider.notifier).pickLicenseImage(source);
+                      editProfileController.pickBusinessImage(source);
                     });
                   },
                 ),
@@ -242,17 +288,23 @@ class EditProfile extends ConsumerWidget{
                   borderRadius: 16.r,
                   text: "Save Changes",
                   textColor: Colors.black,
-                  onPressed: (){
-                    showCustomDialog(
-                      context,
-                      imagePath: IconPath.shield,
-                      title: "Success",
-                      buttonText: "ok",
-                      onPressed: () {
-                        context.pop();
-                        context.pop();
-                      },
-                    );                  },
+                  onPressed: () async{
+                    log("Save Change Pressed");
+                    final isSuccess = await editProfileController.saveChanges();
+                    log("Save Change Success: $isSuccess");
+                    if(isSuccess){
+                      showCustomDialog(
+                        context,
+                        imagePath: IconPath.shield,
+                        title: "Success",
+                        buttonText: "ok",
+                        onPressed: () {
+                          context.pop();
+                          context.pop();
+                        },
+                      );
+                    }
+                    },
                 ),
 
 
@@ -272,7 +324,7 @@ class EditProfile extends ConsumerWidget{
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (context) => Container(
-        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h), // Extra bottom padding for safe area
+        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

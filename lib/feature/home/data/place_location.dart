@@ -1,5 +1,4 @@
-
-
+import 'dart:math';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -16,6 +15,13 @@ extension FoodCategoryX on FoodCategory {
       case FoodCategory.salads:  return 'Salads';
     }
   }
+
+  static FoodCategory fromString(String category) {
+    return FoodCategory.values.firstWhere(
+          (e) => e.name == category.toLowerCase(),
+      orElse: () => FoodCategory.snacks,
+    );
+  }
 }
 
 extension RadiusOptionX on RadiusOption {
@@ -28,7 +34,7 @@ extension RadiusOptionX on RadiusOption {
     }
   }
 
-  double get km {
+  int get value {
     switch (this) {
       case RadiusOption.km5:  return 5;
       case RadiusOption.km10: return 10;
@@ -52,6 +58,36 @@ class PlaceLocation {
     required this.position,
     required this.category,
   });
+
+
+  factory PlaceLocation.fromJson(Map<String, dynamic> json) {
+    final userMap = json['user'] as Map<String, dynamic>?;
+
+    final random = Random();
+    double jitter() => (random.nextDouble() - 0.5) * 0.0001;
+
+    return PlaceLocation(
+      id: json['id'] ?? json['_id'] ?? '',
+      name: json['itemName'] ?? 'Unknown Item',
+      address: userMap?['businessName'] ?? '',
+      category: FoodCategoryX.fromString(json['category'] ?? ''),
+      position: LatLng(
+        (userMap?['businessLatitude'] ?? 0.0).toDouble() + jitter(),
+        (userMap?['businessLongitude'] ?? 0.0).toDouble() + jitter(),
+      ),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'address': address,
+      'category': category.name,
+      'lat': position.latitude,
+      'lng': position.longitude,
+    };
+  }
 }
 
 class SearchSuggestion {

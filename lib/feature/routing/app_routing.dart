@@ -6,6 +6,7 @@ import 'package:b2b_solution/feature/profile/presentation/screen/terms_condition
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/service/auth_service.dart';
 import '../authentication/presentation/screen/create_new_password_screen.dart';
 import '../authentication/presentation/screen/location_access_screen.dart';
 import '../authentication/presentation/screen/login_screen.dart';
@@ -32,23 +33,26 @@ import '../splash/provider/splash_provider.dart';
 
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final isLoading = ref.watch(splashProvider);
+  final startupState = ref.watch(splashProvider);
 
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
       final location = state.matchedLocation;
 
-      // Stay on splash while still loading
-      if (isLoading) {
-        return location == '/splash' ? null : '/splash';
+      if (startupState == AppStartupState.loading) {
+        return '/splash';
       }
 
-      // ✅ When loading finishes, redirect to onboarding
       if (location == '/splash') {
-        return '/onBoarding';
+        if (startupState == AppStartupState.authenticated) {
+          return '/nav';
+        } else {
+          return '/onBoarding';
+        }
       }
 
+      // 3. Allow all other navigations
       return null;
     },
     routes: [
@@ -75,8 +79,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
 
       GoRoute(path: '/businessLocation', builder: (context, state) => BusinessLocationMapView()),
-      GoRoute(path: "/createNewPasswordScreen", builder: (context, state)=> CreateNewPasswordScreen()),
-
+      GoRoute(
+        path: "/createNewPasswordScreen",
+        builder: (context, state) {
+          final String token = state.extra as String;
+          return CreateNewPasswordScreen(forgetToken: token);
+        },
+      ),
       GoRoute(path: "/signupVerificationCodeScreen", builder: (context, state)=> SignupVerificationCodeScreen()),
       GoRoute(path: "/roleSelectionScreen", builder: (context, state)=> RoleSelectionScreen()),
 
@@ -90,9 +99,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/pingDetails',
         builder: (context, state) {
-          // Retrieve the PingModel from the extra parameter
-          final ping = state.extra as PingModel;
-          return PingDetails(ping: ping);
+          final datum = state.extra as Datum;
+          return PingDetails(ping: datum);
         },
       ),
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
@@ -109,10 +117,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/businessCardScreen',
         builder: (context, state) {
-          final connection = state.extra as MyConnectionStateModel;
-          return BusinessCardScreen(connection: connection);
+          final extraData = state.extra as Map<String, dynamic>;
+
+          final connection = extraData['connection'] as MyConnectionStateModel;
+          final String currentUserId = extraData['currentUserId'] as String;
+
+          return BusinessCardScreen(
+            connection: connection,
+            currentUserId: currentUserId,
+          );
         },
-      ),
+      )
     ],
   );
 });

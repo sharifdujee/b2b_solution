@@ -33,12 +33,12 @@ class QuickActionItem extends ConsumerWidget {
               BoxShadow(
                 blurRadius: 2,
                 offset:  Offset(0, 1),
-                color: AppColor.black.withValues(alpha: 0.6)
+                color: AppColor.secondary.withValues(alpha: 0.6)
               ),
               BoxShadow(
                   blurRadius: 8,
                   offset:  Offset(0, 4),
-                  color: AppColor.black.withValues(alpha: 0.12)
+                  color: AppColor.secondary.withValues(alpha: 0.12)
               )
             ],
           ),
@@ -47,9 +47,8 @@ class QuickActionItem extends ConsumerWidget {
             children: [
               Image.asset(
                 icon,
-                color: isSelected ? AppColor.white : AppColor.black,
-                height: 24.h,
-                width: 24.w,
+                height: 40.h,
+                width: 40.w,
               ),
               SizedBox(height: 6.h),
               Text(

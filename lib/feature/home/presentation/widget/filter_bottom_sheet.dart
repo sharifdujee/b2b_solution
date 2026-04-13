@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/design_system/app_color.dart';
 import '../../data/place_location.dart';
 import '../../provider/filter_provider.dart';
+
 class FilterBottomSheet extends ConsumerWidget {
   const FilterBottomSheet({super.key});
 
@@ -23,7 +24,7 @@ class FilterBottomSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle
+          // Drag Handle
           Center(
             child: Container(
               width: 40.w,
@@ -34,14 +35,27 @@ class FilterBottomSheet extends ConsumerWidget {
               ),
             ),
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 16.h),
 
-          Center(
-            child: Text('Filter By',
-                style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColor.black)),
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(width: 48.w), // Placeholder for balance
+              Text('Filter By',
+                  style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColor.black)),
+              GestureDetector(
+                onTap: () => notifier.clearFilters(),
+                child: Text('Reset',
+                    style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.primary)),
+              ),
+            ],
           ),
           SizedBox(height: 24.h),
 
@@ -93,11 +107,8 @@ class FilterBottomSheet extends ConsumerWidget {
             height: 52.h,
             child: ElevatedButton(
               onPressed: () {
-                // Apply pending filter → live filter
-                ref.read(filterProvider.notifier).state = FilterState(
-                  selectedCategory: pending.selectedCategory,
-                  selectedRadius:   pending.selectedRadius,
-                );
+                // Apply pending state to live filter state
+                ref.read(filterProvider.notifier).state = pending;
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
@@ -127,7 +138,8 @@ class FilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const FilterChip({super.key,
+  const FilterChip({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -144,7 +156,7 @@ class FilterChip extends StatelessWidget {
           color: selected ? AppColor.secondary : AppColor.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: AppColor.primary ,
+            color: selected ? AppColor.primary : AppColor.grey300,
             width: 1.5,
           ),
         ),
@@ -152,7 +164,7 @@ class FilterChip extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.w400,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             color: selected ? AppColor.primary : AppColor.black,
           ),
         ),

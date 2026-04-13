@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../feature/ping/model/ping_model.dart';
+import '../../feature/ping/model/create_ping_model.dart';
 import '../design_system/app_color.dart';
 import '../gloabal/custom_text.dart';
 
 class UrgencySelector extends StatelessWidget {
-  final PingPriority selected;
-  final Function(PingPriority) onChanged;
+  final UrgencyLevel selected;
+  final Function(UrgencyLevel) onSelected;
+
+  static const List<UrgencyLevel> urgencyOptions = UrgencyLevel.values;
 
   const UrgencySelector({
     super.key,
     required this.selected,
-    required this.onChanged,
+    required this.onSelected,
   });
 
-  Color _getColor(PingPriority priority) {
-    switch (priority) {
-      case PingPriority.emergency:
+  Color _getColor(UrgencyLevel level) {
+    switch (level) {
+      case UrgencyLevel.EMERGENCY:
         return AppColor.emergencyBadgeText;
-      case PingPriority.moderate:
+      case UrgencyLevel.MODERATE:
         return AppColor.moderateBadgeText;
-      case PingPriority.general:
+      case UrgencyLevel.GENERAL:
         return AppColor.generalBadgeText;
     }
   }
@@ -28,27 +30,22 @@ class UrgencySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: PingPriority.values.map((priority) {
-        final isSelected = priority == selected;
-        final color = _getColor(priority);
-
-        // PIXEL PERFECT: Check if this is the last item to remove the right margin
-        final bool isLast = priority == PingPriority.values.last;
+      children: urgencyOptions.map((level) {
+        final isSelected = level == selected;
+        final color = _getColor(level);
+        final bool isLast = level == urgencyOptions.last;
 
         return Expanded(
           child: GestureDetector(
-            onTap: () => onChanged(priority),
-            child: AnimatedContainer( // Switched to AnimatedContainer for smooth transitions
+            onTap: () => onSelected(level),
+            child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              margin: EdgeInsets.only(right: isLast ? 0 : 10.w), // Space between items
+              margin: EdgeInsets.only(right: isLast ? 0 : 10.w),
               padding: EdgeInsets.symmetric(vertical: 12.h),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? color.withOpacity(0.1)
-                    : Colors.transparent,
+                color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
-                  // When not selected, use a subtle grey border to define the shape
                   color: isSelected ? color : AppColor.grey100,
                   width: isSelected ? 1.5 : 1,
                 ),
@@ -56,21 +53,17 @@ class UrgencySelector extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Status Indicator Dot
                   Container(
                     height: 18.h,
                     width: 18.w,
                     decoration: BoxDecoration(
                       color: color,
-                      borderRadius: BorderRadius.circular(4.r)
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
                   SizedBox(height: 8.h),
-
-                  // Priority Text
                   CustomText(
-                    text: priority.name[0].toUpperCase() +
-                        priority.name.substring(1),
+                    text: level.name[0] + level.name.substring(1).toLowerCase(),
                     fontSize: 13.sp,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? color : AppColor.grey700,

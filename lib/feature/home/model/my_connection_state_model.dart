@@ -1,55 +1,93 @@
 enum ConnectionFilterOption { Connected, Pending, Find }
 
 
-
-
-
 class MyConnectionStateModel {
-  final String name;
-  final String address;
-  final String note;
-  final String icon;
-  final int membershipYear;
-  final String phoneNumber;
-  final String email;
-  final ConnectionFilterOption status;
-  final bool? sendRequestStatus;
-
-
+  final String id;
+  final String senderId;
+  final String  receiverId;
+  final String? status;
+  final DateTime createdAt;
+  final ConnectionUserData? receiver;
+  final ConnectionUserData? sender;
 
   MyConnectionStateModel({
-    required this.name,
-    required this.address,
-    required this.note,
-    required this.icon,
-    required this.membershipYear,
-    required this.phoneNumber,
-    required this.email,
-    required this.status,
-    this.sendRequestStatus = false
+    required this.id,
+    required this.senderId,
+    required this.receiverId,
+    this.status,
+    required this.createdAt,
+    this.receiver,
+    this.sender,
   });
 
-  MyConnectionStateModel copyWith({
-    String? name,
-    String? address,
-    String? note,
-    String? icon,
-    int? membershipYear,
-    String? phoneNumber,
-    String? email,
-    ConnectionFilterOption? status,
-    bool? sendRequestStatus,
-  }) {
+  factory MyConnectionStateModel.fromJson(Map<String, dynamic> json) {
     return MyConnectionStateModel(
-      name: name ?? this.name,
-      address: address ?? this.address,
-      note: note ?? this.note,
-      icon: icon ?? this.icon,
-      membershipYear: membershipYear ?? this.membershipYear,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      email: email ?? this.email,
-      status: status ?? this.status,
-      sendRequestStatus: sendRequestStatus ?? this.sendRequestStatus,
+      id: json['id'] ?? '',
+      senderId: json['senderId'] ?? '',
+      receiverId: json['receiverId'] ?? '',
+      status: json['status']?? '',
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+      receiver: json['receiver'] != null
+          ? ConnectionUserData.fromJson(json['receiver'])
+          : null,
+      sender: json['sender'] != null
+          ? ConnectionUserData.fromJson(json['sender'])
+          : null,
+    );
+  }
+
+  /// Helper method to get the "Other Person's" data
+  /// Pass the current logged-in user's ID here
+  ConnectionUserData? getDisplayUser(String currentUserId) {
+    if (currentUserId == receiverId) {
+      return sender;
+    } else {
+      return receiver;
+    }
+  }
+}
+
+class ConnectionUserData {
+  final String? legalName;
+  final String? businessName;
+  final String fullName;
+  final List<String> businessCategory;
+  final int? operationYears;
+  final String? businessImage;
+  final String? profileImage;
+  final String? position;
+  final double? businessLatitude;
+  final double? businessLongitude;
+
+  ConnectionUserData({
+    this.legalName,
+    this.businessName,
+    required this.fullName,
+    this.businessCategory = const [],
+    this.operationYears,
+    this.businessImage,
+    this.profileImage,
+    this.position,
+    this.businessLatitude,
+    this.businessLongitude,
+  });
+
+  factory ConnectionUserData.fromJson(Map<String, dynamic> json) {
+    return ConnectionUserData(
+      legalName: json['legalName'],
+      businessName: json['businessName'],
+      fullName: json['fullName'] ?? 'Unknown User',
+      businessCategory: json['businessCategory'] != null
+          ? List<String>.from(json['businessCategory'])
+          : [],
+      operationYears: json['operationYears'],
+      businessImage: json['businessImage'],
+      profileImage: json['profileImage'],
+      position: json['position'],
+      businessLatitude: (json['businessLatitude'] as num?)?.toDouble(),
+      businessLongitude: (json['businessLongitude'] as num?)?.toDouble(),
     );
   }
 }

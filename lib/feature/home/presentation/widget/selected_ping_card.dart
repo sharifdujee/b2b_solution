@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/design_system/app_color.dart';
-import '../../data/ping_request.dart';
-import '../../provider/png_provider.dart';
+import '../../../ping/model/ping_model.dart';
 
 class SelectedPingCard extends ConsumerWidget {
-  final PingRequest ping;
+  final Datum ping;
 
   const SelectedPingCard({super.key, required this.ping});
 
@@ -20,7 +19,7 @@ class SelectedPingCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: AppColor.black.withValues(alpha: 0.14),
+            color: AppColor.black.withOpacity(0.14),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -28,30 +27,33 @@ class SelectedPingCard extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Category icon circle
+          // ── Shop Profile Image ──────────────────────────────────────────
           Container(
             width: 40.w,
             height: 40.w,
             decoration: BoxDecoration(
-              color: AppColor.primary.withValues(alpha: 0.1),
+              color: AppColor.primary.withOpacity(0.1),
               shape: BoxShape.circle,
+              image: ping.user?.profileImage != null
+                  ? DecorationImage(
+                  image: NetworkImage(ping.user!.profileImage),
+                  fit: BoxFit.cover)
+                  : null,
             ),
-            child: Center(
-              child: Icon(
-                _categoryIcon(ping.category),
-                color: AppColor.primary,
-                size: 18.sp,
-              ),
-            ),
+            child: ping.user?.profileImage == null
+                ? Icon(Icons.storefront, color: AppColor.primary, size: 20.sp)
+                : null,
           ),
           SizedBox(width: 10.w),
 
+          // ── Text Content ────────────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  ping.title,
+                  ping.user?.businessName ?? "Unknown Business",
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
@@ -62,34 +64,36 @@ class SelectedPingCard extends ConsumerWidget {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  "${ping.vendorName}  •  ${ping.distanceKm} km away",
+                  "${ping.itemName} • ${ping.distanceKm} km away",
                   style: TextStyle(
                     fontSize: 11.sp,
                     color: AppColor.welcomeColor,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
 
-          // Accept quick action
+          // ── Action Button ───────────────────────────────────────────────
           GestureDetector(
             onTap: () {
-              ref.read(pingProvider.notifier).updatePingStatus(ping.id, PingStatus.accepted);
-              _showSnack(context, "Ping accepted ✓");
+
+              _showSnack(context, "Requesting details...");
             },
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
               decoration: BoxDecoration(
                 color: AppColor.primary,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
-                "Accept",
+                "Details", // Changed to Details as per modern B2B flows
                 style: TextStyle(
-                  color: AppColor.white,
+                  color: AppColor.black,
                   fontSize: 11.sp,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -107,18 +111,5 @@ class SelectedPingCard extends ConsumerWidget {
         duration: const Duration(seconds: 2),
       ),
     );
-  }
-
-  IconData _categoryIcon(String category) {
-    switch (category) {
-      case 'Coffee':
-        return Icons.local_cafe_rounded;
-      case 'Food':
-        return Icons.restaurant_rounded;
-      case 'Retail':
-        return Icons.shopping_bag_rounded;
-      default:
-        return Icons.business_center_rounded;
-    }
   }
 }

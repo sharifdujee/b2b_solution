@@ -2,6 +2,7 @@ import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:b2b_solution/core/gloabal/urgency_selector.dart';
+import 'package:b2b_solution/core/service/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,16 +12,23 @@ import '../../../../core/gloabal/custom_selector.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
 import '../../../../core/gloabal/radius_selector.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
-import '../../model/ping_model.dart';
-import '../../provider/ping_provider.dart';
+import '../../model/connection_model.dart';
+import '../../model/create_ping_model.dart';
+import '../../provider/connection_provider.dart';
+import '../../provider/create_ping_provider.dart';
 
 class CreatePingScreen extends ConsumerWidget{
   const CreatePingScreen({super.key});
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(createPingProvider);
     final controller = ref.read(createPingProvider.notifier);
+
+    final connectionState = ref.watch(connectionProvider);
+
+
 
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -45,12 +53,12 @@ class CreatePingScreen extends ConsumerWidget{
                   )
                 ],
               ),
-          
-          
+
+
               SizedBox(height: 8.h,),
               Divider(color: AppColor.grey50,),
-          
-          
+
+
               SizedBox(height: 24.h,),
               CustomText(
                 text: "Urgency Level",
@@ -58,14 +66,16 @@ class CreatePingScreen extends ConsumerWidget{
                 color: AppColor.black,
                 fontWeight: FontWeight.w600,
               ),
-          
+
               SizedBox(height: 12.h),
               UrgencySelector(
-                  selected: state.priority,
-                  onChanged: (newPriority) => controller.updatePriority(newPriority),
+                selected: state.urgencyLevel,
+                onSelected: (level) {
+                  ref.read(createPingProvider.notifier).updateUrgency(level);
+                },
               ),
-          
-          
+
+
               SizedBox(height: 16.h,),
               CustomText(
                 text: "Item Needed",
@@ -73,17 +83,17 @@ class CreatePingScreen extends ConsumerWidget{
                 color: AppColor.black,
                 fontWeight: FontWeight.w600,
               ),
-          
+
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateItemName(value),
+                controller: controller.itemNameController,
                 hintText: "Coffee Cups",
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
                 borderRadius: 12.r,
               ),
-          
-          
+
+
               SizedBox(height: 16.h,),
               CustomText(
                 text: "Quantity",
@@ -91,15 +101,10 @@ class CreatePingScreen extends ConsumerWidget{
                 color: AppColor.black,
                 fontWeight: FontWeight.w600,
               ),
-          
+
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) {
-                  final double? parsedValue = double.tryParse(value);
-                  if (parsedValue != null) {
-                    controller.updateQuantity(parsedValue);
-                  }
-                },
+                controller: controller.quantityController,
                 hintText: "Quantity (e.g. 50)",
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 hintTextColor: AppColor.grey400,
@@ -108,16 +113,17 @@ class CreatePingScreen extends ConsumerWidget{
               ),
 
 
-          
+
               SizedBox(height: 16.h,),
-              CustomSelectField<String>(
+              CustomSelectField<Unit>(
                 label: "Unit",
-                hintText: "Select Category",
+                hintText: "Select Unit",
                 value: state.unit,
-                items: const ["Kg", "Liter", "Bag", "Pieces", "Meter"],
-                itemLabelBuilder: (val) => val,
+                items: Unit.values,
+                itemLabelBuilder: (val) => val.name,
                 showSearchBar: true,
                 showActionButtons: false,
+                controller: controller.unitController,
                 onChanged: (val) => controller.updateUnit(val),
               ),
 
@@ -125,14 +131,20 @@ class CreatePingScreen extends ConsumerWidget{
 
               SizedBox(height: 16.h,),
               CustomSelectField<String>(
-                label: "Category",
-                hintText: "Select Category",
-                value: state.productCategory,
-                items: const ["Snacks", "Soups", "Salads", "Drinks"],
+                label: "Food Category",
+                hintText: "Select Categories",
+                items: const [
+                  "Snacks", "Soups", "Salads", "Drinks",
+                  "Appetizers", "Main Course", "Desserts",
+                  "Bakery", "Dairy", "Frozen Food", "Meat & Poultry"
+                ],
+                initialSelectedItems: state.categories,
                 itemLabelBuilder: (val) => val,
                 showSearchBar: true,
-                showActionButtons: false,
-                onChanged: (val) => controller.updateProductCategory(val),
+                showActionButtons: true,
+                isMultiSelect: true,
+                controller: controller.categoryController,
+
               ),
 
 
@@ -146,7 +158,7 @@ class CreatePingScreen extends ConsumerWidget{
               SizedBox(height: 12.h,),
               CustomTextFormField(
                 onChanged: (value) {
-                    controller.updateNotes(value);
+                    controller.notesController.text = value;
                 },
                 hintText: "Write a note",
                 hintTextColor: AppColor.grey400,
@@ -182,56 +194,94 @@ class CreatePingScreen extends ConsumerWidget{
               SizedBox(height: 12.h),
               RadiusSelector(
                 selectedRadius: state.radius ?? 5,
-                onChanged: (newRadius) => controller.updateRadius(newRadius),
+                controller: controller.radiusController,
               ),
 
               SizedBox(height: 16.h,),
-              CustomSelectField<String>(
+              CustomSelectField<ConnectionModel>(
                 label: "Choose Connection",
-                hintText: "Choose Connection",
+                hintText: "Search connections...",
                 isMultiSelect: true,
                 showSearchBar: true,
-                initialSelectedItems: state.chooseConnection ?? [],
-                items: const ["Friends", "B2B Gold","Abc Restaurant"],
-                itemLabelBuilder: (val) => val,
-                onChanged: (list) => controller.updateConnection(list),
+                items: connectionState.connections,
+                initialSelectedItems: connectionState.connections
+                    .where((conn) => state.connectedIds.contains(conn.id))
+                    .toList(),
+                itemLabelBuilder: (conn) {
+                  final currentUserId = AuthService.id ?? "";
+                  return conn.getDisplayUser(currentUserId)?.fullName ?? "Unknown User";
+                },
+                controller: controller.connectionDisplayController,
               ),
-
 
               SizedBox(height: 16.h,),
               GestureDetector(
                 onTap: () => controller.toggleMyConnectionOnly(),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Icon(
-                      state.myConnectionOnly
-                          ? Icons.check_circle
-                          : Icons.check_circle_outline,
-                      color: state.myConnectionOnly ? AppColor.secondary : AppColor.grey400,
-                      size: 22.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    CustomText(
-                      text: "Send To My Connection Only.",
-                      fontSize: 14.sp,
-                      color: AppColor.black,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ],
+                child: Container(
+                  color: Colors.transparent,
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(
+                        state.myConnectionOnly
+                            ? Icons.check_circle
+                            : Icons.check_circle_outline,
+                        color: state.myConnectionOnly ? AppColor.secondary : AppColor.grey400,
+                        size: 22.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      CustomText(
+                        text: "Send To My Connection Only.",
+                        fontSize: 14.sp,
+                        color: AppColor.black,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
 
               SizedBox(height: 32.h,),
               CustomButton(
-                backgroundColor: AppColor.primary,
-                  borderRadius: 16.r,
-                  text: "Send Ping",
-                  textColor: AppColor.black,
-                  onPressed: (){
+                backgroundColor: state.isLoading ? AppColor.grey300 : AppColor.primary,
+                borderRadius: 16.r,
+                textColor: AppColor.black,
 
+                text: state.isLoading ? "" : "Send Ping",
+
+                image: state.isLoading
+                    ? SizedBox(
+                  height: 20.h,
+                  width: 20.w,
+                  child: CircularProgressIndicator(
+                    color: AppColor.black,
+                    strokeWidth: 2.5,
+                  ),
+                )
+                    : null,
+
+                onPressed: state.isLoading
+                    ? null
+                    : () async {
+                  if (state.itemName.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please enter an item name")),
+                    );
+                    return;
                   }
+
+                  if (state.connectedIds.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please select at least one connection")),
+                    );
+                    return;
+                  }
+                  // 2. Trigger API
+                  await controller.sendPing();
+
+                },
               )
 
             ],

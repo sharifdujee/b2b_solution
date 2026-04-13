@@ -1,22 +1,17 @@
-
-
 import 'dart:async';
-
-import 'package:b2b_solution/feature/authentication/provider/state/business_location_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
 import '../models/location_suggestion_data_model.dart';
+import 'state/business_location_state.dart';
 
 class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
   BusinessLocationNotifier() : super(const BusinessLocationState());
 
   Timer? _debounce;
 
-  /// Call this when the search field changes.
   void onSearchChanged(String query) {
     state = state.copyWith(searchQuery: query, clearSelected: true);
-
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     if (query.trim().isEmpty) {
@@ -25,37 +20,23 @@ class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
     }
 
     state = state.copyWith(isSearching: true);
-
     _debounce = Timer(const Duration(milliseconds: 400), () {
       _fetchSuggestions(query.trim());
     });
   }
 
-  /// Replace with your actual Places Autocomplete API call.
   Future<void> _fetchSuggestions(String query) async {
-    // TODO: integrate google_places_flutter / dio + Places API
-    // Example mock — remove when wiring real API:
+    // API Implementation Tip: Use Google Places Autocomplete API here
     await Future.delayed(const Duration(milliseconds: 300));
 
     final mock = [
       LocationSuggestion(
         placeId: '1',
         mainText: '$query Street',
-        secondaryText: 'San Francisco, CA, USA',
-        latLng: const LatLng(37.7749, -122.4194),
+        secondaryText: 'London, UK',
+        latLng: const LatLng(51.5074, -0.1278),
       ),
-      LocationSuggestion(
-        placeId: '2',
-        mainText: '$query Avenue',
-        secondaryText: 'Oakland, CA, USA',
-        latLng: const LatLng(37.8044, -122.2712),
-      ),
-      LocationSuggestion(
-        placeId: '3',
-        mainText: '$query Boulevard',
-        secondaryText: 'San Jose, CA, USA',
-        latLng: const LatLng(37.3382, -121.8863),
-      ),
+      // ... add more mock or real data
     ];
 
     if (mounted) {
@@ -63,9 +44,8 @@ class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
     }
   }
 
-  /// Called when the user taps a suggestion.
   void selectSuggestion(LocationSuggestion suggestion) {
-    // TODO: fetch precise LatLng via Places Details API if suggestion.latLng == null
+    // If suggestion doesn't have LatLng, you'd call Place Details API here
     final latLng = suggestion.latLng ?? state.cameraPosition;
 
     state = state.copyWith(
@@ -77,11 +57,27 @@ class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
     );
   }
 
-  /// Called when the user drags the map pin manually.
-  void onMapTap(LatLng position) {
+  /// When user taps the map, we update the position and "Reverse Geocode"
+  Future<void> onMapTap(LatLng position) async {
     state = state.copyWith(
       cameraPosition: position,
-      clearSelected: true,
+      isSearching: true,
+    );
+
+    // Mock Reverse Geocoding (Getting address from Lat/Lng)
+    // Real implementation: Use geocoding package or Google Geocoding API
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final tappedLocation = LocationSuggestion(
+      placeId: 'manual',
+      mainText: 'Pinned Location',
+      secondaryText: '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
+      latLng: position,
+    );
+
+    state = state.copyWith(
+      selectedLocation: tappedLocation,
+      isSearching: false,
       suggestions: [],
     );
   }
@@ -91,21 +87,10 @@ class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
     state = state.copyWith(
       suggestions: [],
       searchQuery: '',
-      clearSelected: true,
       isSearching: false,
     );
   }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
 }
-
-// ---------------------------------------------------------------------------
-// PROVIDERS
-// ---------------------------------------------------------------------------
 
 final businessLocationProvider =
 StateNotifierProvider.autoDispose<BusinessLocationNotifier, BusinessLocationState>(

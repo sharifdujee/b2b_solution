@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:http_parser/http_parser.dart'; // Added for MediaType
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:async';
 
 import '../../../core/service/app_url.dart';
+import '../../../core/service/auth_service.dart';
 import '../../../core/service/network_caller.dart';
 import '../models/signup_state_model.dart';
 
@@ -31,22 +31,30 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
+  final TextEditingController businessAddressController = TextEditingController();
+  final TextEditingController pinController = TextEditingController();
 
-
-
-  final NetworkCaller _networkCaller = NetworkCaller();
   final ImagePicker _picker = ImagePicker();
   Timer? _timer;
 
-  // --- Role Management ---
+  // --- Helpers ---
+  bool _isValidEmail(String email) {
+    return RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(email);
+  }
+
+  void resetErrorMessage() {
+    state = state.copyWith(errorMessage: null);
+  }
+
   void changeRole(Role role) {
-    state = state.copyWith(selectRole: role);
+    state = state.copyWith(selectRole: role, errorMessage: null);
     roleController.text = role.name;
   }
 
-  // --- Timer & OTP ---
+  // --- Timer Logic ---
   void startTimer() {
-    state = state.copyWith(timer: 60, canResend: false);
+    state = state.copyWith(timer: 60, canResend: false, errorMessage: null);
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.timer > 0) {
@@ -58,17 +66,51 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     });
   }
 
-  void updateVerificationCode(String code) {
-    state = state.copyWith(verificationCode: code, clearError: true);
+  // --- OTP Verification ---
+  Future<bool> verify(String code) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final NetworkCaller networkCaller = NetworkCaller();
+
+    try {
+      final response = await networkCaller.postRequest(
+        AppUrl.userVerifyOtp,
+        body: {
+          'email': emailController.text.trim(),
+          'otp': code,
+        },
+      );
+
+      if (!mounted) return false;
+      state = state.copyWith(isLoading: false);
+
+      if (response.isSuccess && response.responseData != null) {
+        final result = response.responseData['result'];
+        await AuthService.saveProfileSetup(result['isProfileComplete'] ?? false);
+        await AuthService.saveId(result['userId'] ?? '');
+        await AuthService.saveToken(result['accessToken'] ?? '');
+        await AuthService.saveRole(result['role'] ?? '');
+        return true;
+      } else {
+        state = state.copyWith(errorMessage: response.errorMessage ?? "Verification failed");
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: "An error occurred during verification");
+      return false;
+    }
   }
 
-  // --- Location & Details Updates ---
+  // --- Location ---
   void updateLocation({required double lat, required double lng, String? address}) {
     state = state.copyWith(
-      latitude: lat, // Keep as requested
-      longitude: lng, // Keep as requested
+      latitude: lat,
+      longitude: lng,
       businessAddress: address,
+      errorMessage: null,
     );
+    latitudeController.text = lat.toString();
+    longitudeController.text = lng.toString();
+    if (address != null) businessAddressController.text = address;
   }
 
   // --- Image Picking ---
@@ -76,12 +118,13 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
+        state = state.copyWith(errorMessage: null);
         if (type == 'business') {
-          state = state.copyWith(businessImage: pickedFile.path, clearError: true);
+          state = state.copyWith(businessImage: pickedFile.path);
         } else if (type == 'profile') {
-          state = state.copyWith(profileImage: pickedFile.path, clearError: true);
+          state = state.copyWith(profileImage: pickedFile.path);
         } else if (type == 'license') {
-          state = state.copyWith(businessLicenseImage: pickedFile.path, clearError: true);
+          state = state.copyWith(businessLicenseImage: pickedFile.path);
         }
       }
     } catch (e) {
@@ -93,36 +136,45 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   Future<void> pickProfileImage(ImageSource source) => _pickImage(source, 'profile');
   Future<void> pickLicenseImage(ImageSource source) => _pickImage(source, 'license');
 
-  // --- UI Toggles ---
   void toggleVisibility() => state = state.copyWith(obscurePassword: !state.obscurePassword);
   void toggleConfirmPasswordVisibility() => state = state.copyWith(obscureConfirmPassword: !state.obscureConfirmPassword);
 
-  // --- API Implementation ---
+  // --- Validation ---
   bool validateForm() {
+    state = state.copyWith(errorMessage: null);
     final email = emailController.text.trim();
-    if (legalNameController.text.isEmpty || email.isEmpty || passwordController.text.isEmpty) {
-      state = state.copyWith(errorMessage: "Please fill in required fields");
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    if (legalNameController.text.isEmpty || email.isEmpty || password.isEmpty || nameController.text.isEmpty) {
+      state = state.copyWith(errorMessage: "Please fill in all required fields");
       return false;
     }
-    if (!email.contains('@')) {
-      state = state.copyWith(errorMessage: "Invalid email");
+    if (!_isValidEmail(email)) {
+      state = state.copyWith(errorMessage: "Please enter a valid email address");
       return false;
     }
-    if (passwordController.text != confirmPasswordController.text) {
+    if (password.length < 8) {
+      state = state.copyWith(errorMessage: "Password must be at least 8 characters");
+      return false;
+    }
+    if (password != confirmPassword) {
       state = state.copyWith(errorMessage: "Passwords do not match");
+      return false;
+    }
+    if (state.selectRole == null) {
+      state = state.copyWith(errorMessage: "Please select a role");
       return false;
     }
     return true;
   }
 
+  // --- Signup Logic ---
   Future<bool> signup() async {
     if (!validateForm()) return false;
-
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-
-
       Map<String, dynamic> bodyData = {
         'role': state.selectRole?.name.toUpperCase() ?? '',
         'legalName': legalNameController.text.trim(),
@@ -131,49 +183,56 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         'email': emailController.text.trim(),
         'password': passwordController.text,
         'position': positionController.text.trim(),
-        'businessCategory': foodCategoryController.text.trim(),
-        'application/json': yearsOfOperationController.text.trim(),
-        'businessLatitude': double.tryParse(latitudeController.text.trim()),
-        'businessLongitude': double.tryParse(longitudeController.text.trim()),
+        'businessCategory': [foodCategoryController.text.trim()],
+        'operationYears': int.tryParse(yearsOfOperationController.text.trim()) ?? 0,
+        'businessLatitude': double.tryParse(latitudeController.text.trim()) ?? 0.0,
+        'businessLongitude': double.tryParse(longitudeController.text.trim()) ?? 0.0,
         'fcmToken': '',
       };
-      final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
 
-      request.headers.addAll({
-        'Content-Type': 'application/json',
-      });
+      final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
       request.fields['bodyData'] = jsonEncode(bodyData);
+
+      MediaType _getMediaType(String path) {
+        final extension = path.split('.').last.toLowerCase();
+        return extension == 'png' ? MediaType('image', 'png') : MediaType('image', 'jpeg');
+      }
 
       if (state.profileImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'profileImage',
-          state.profileImage!,
+          'profileImage', state.profileImage!,
+          contentType: _getMediaType(state.profileImage!),
         ));
       }
       if (state.businessImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'businessImage',
-          state.businessImage!,
+          'businessImage', state.businessImage!,
+          contentType: _getMediaType(state.businessImage!),
         ));
       }
 
-      var response = await request.send();
-      var responseBody = await http.Response.fromStream(response);
-      log("Response Body: ${responseBody.body}");
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
 
-
-
+      if (!mounted) return false;
       state = state.copyWith(isLoading: false);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
-        log("Signup success");
-        debugPrint("✅ Success: $responseBody");
+        final decodedData = jsonDecode(response.body);
+        final result = decodedData['result'];
+        if (result != null && result['id'] != null) {
+          await AuthService.saveToken(result['id']);
+        }
+        await AuthService.saveProfileSetup(true);
         return true;
       } else {
-        state = state.copyWith(errorMessage: state.errorMessage ?? "Signup failed");
+        final decodedData = jsonDecode(response.body);
+        state = state.copyWith(errorMessage: decodedData['message'] ?? "Signup failed. Please try again.");
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      log("Signup Error: $e");
+      state = state.copyWith(isLoading: false, errorMessage: "Network error. Please check your connection.");
       return false;
     }
   }
@@ -191,6 +250,10 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     yearsOfOperationController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    latitudeController.dispose();
+    longitudeController.dispose();
+    businessAddressController.dispose();
+    pinController.dispose();
     super.dispose();
   }
 }
