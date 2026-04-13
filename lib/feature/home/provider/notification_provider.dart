@@ -123,6 +123,8 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       );
       state = state.copyWith(isLoading: false);
 
+
+
     }catch(e){
       state = state.copyWith(
         isLoading: false,
