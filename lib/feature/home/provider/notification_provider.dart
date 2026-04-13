@@ -126,6 +126,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
 
     }catch(e){
+
       state = state.copyWith(
         isLoading: false,
         errorMessage: "An unexpected error occurred: $e",
