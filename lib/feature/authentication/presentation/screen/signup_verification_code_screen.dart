@@ -115,7 +115,6 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                       height: 30.h,
                       color: AppColor.primary,
                     ),
-                    onCompleted: (pin) => controller.verifyOtp(pin),
                     hapticFeedbackType: HapticFeedbackType.lightImpact,
                   ),
                 ),
@@ -150,25 +149,9 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                   backgroundColor: AppColor.primary,
                   textColor: AppColor.black,
                   borderRadius: 16.r,
-                  onPressed: state.isLoading
-                      ? null
-                      : () async {
-                    await controller.verifyOtp(state.verificationCode);
+                  onPressed: (){
 
-                    if (state.errorMessage == null && state.verificationCode == "1234") {
-                      if (context.mounted) {
-                        showCustomDialog(
-                          context,
-                          buttonText: "Done",
-                          imagePath: IconPath.shield,
-                          title: "Account successfully verified",
-                          onPressed: () {
-                            context.push('/nav');
-                          },
-                        );
-                      }
-                    }
-                  },
+                  }
                 ),
 
                 SizedBox(height: 24.h),
@@ -178,7 +161,7 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                   child: state.canResend
                       ? GestureDetector(
                     onTap: () {
-                      controller.sendOtp();
+
                     },
                     child: CustomText(
                       text: "Resend Code",

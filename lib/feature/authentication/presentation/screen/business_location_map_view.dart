@@ -239,6 +239,8 @@ class _BusinessLocationMapViewState
                         final lng = locationState.cameraPosition.longitude;
                         final address = locationState.selectedLocation!.mainText;
 
+
+
                         // Update your Signup Notifier
                         ref.read(signupProvider.notifier).updateLocation(
                             lat: lat,
@@ -246,7 +248,7 @@ class _BusinessLocationMapViewState
                             address: address
                         );
 
-                        context.push('/signupVerificationCodeScreen');
+                        context.push('/signupScreen');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.primary,

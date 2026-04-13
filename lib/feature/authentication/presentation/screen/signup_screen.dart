@@ -59,7 +59,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateLegalName(value),
+                controller: controller.legalNameController,
                 hintText: "Ex. 101010 Ontario inc",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
@@ -76,11 +76,10 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateBusinessName(value),
+                controller: controller.businessNameController,
                 hintText: "Ex. Subway",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
-
                 borderRadius: 12.r,
               ),
 
@@ -94,7 +93,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateName(value),
+                controller: controller.nameController,
                 hintText: "Ex. John smith",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
@@ -112,7 +111,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateEmail(value),
+                controller: controller.emailController,
                 hintText: "Ex. Jhonsmith@gmail.com",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
@@ -131,7 +130,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updatePosition(value),
+                controller: controller.positionController,
                 hintText: "Ex. Owner",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
@@ -149,7 +148,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateFoodCategory(value),
+                controller: controller.foodCategoryController,
                 hintText: "Ex. Sandwich",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
@@ -167,16 +166,48 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateYearsOfOperation(value),
-                hintText: "Ex. Sandwich",
+                controller: controller.yearsOfOperationController,
+                hintText: "2026",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
 
                 borderRadius: 12.r,
               ),
 
-              SizedBox(height: 16.h,),
 
+
+              SizedBox(height: 16.h,),
+              CustomText(
+                text: "Food Category",
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+
+              SizedBox(height: 12.h,),
+              GestureDetector(
+                onTap: (){
+                  context.push('/businessLocation');
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+
+                  decoration: BoxDecoration(
+                    color: AppColor.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColor.primary, width: 1),
+                  ),
+                  child: Expanded(
+                    child: CustomText(
+                      text: "Select Location",
+                    ),
+                  ),
+                ),
+
+              ),
+
+              SizedBox(height: 16.h,),
               CustomText(
                     text :"Profile image",
                     fontSize: 16.sp,
@@ -187,7 +218,7 @@ class SignupScreen extends ConsumerWidget{
               SizedBox(height: 12.h,),
               CustomImagePickerCard(
                 title: "Profile image",
-                imagePath: state.profileImage, // <--- Using businessImage here too!
+                imagePath: state.profileImage,
                 onPickImage: () {
                   _showImageSourceSheet(context, (source) {
                     ref.read(signupProvider.notifier).pickProfileImage(source);
@@ -205,7 +236,7 @@ class SignupScreen extends ConsumerWidget{
               SizedBox(height: 12.h,),
               CustomImagePickerCard(
                 title: "business license",
-                imagePath: state.businessLicenseImage, // <--- Using businessImage here too!
+                imagePath: state.businessLicenseImage,
                 onPickImage: () {
                   _showImageSourceSheet(context, (source) {
                     ref.read(signupProvider.notifier).pickLicenseImage(source);
@@ -223,7 +254,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updatePassword(value),
+                controller: controller.passwordController,
                 hintText: "",
                 hintTextColor: AppColor.grey400,
                 borderRadius: 12.r,
@@ -250,7 +281,7 @@ class SignupScreen extends ConsumerWidget{
 
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updateConfirmPassword(value),
+                controller: controller.confirmPasswordController,
                 hintText: "",
                 hintTextColor: AppColor.grey400,
                 textColor: Colors.black,
@@ -278,7 +309,7 @@ class SignupScreen extends ConsumerWidget{
                 text: "Sign Up",
                 textColor: Colors.black,
                 onPressed: (){
-                  context.push('/businessLocation');
+                  context.push('/signupVerificationCodeScreen');
                 },
               ),
 

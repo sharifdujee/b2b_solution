@@ -68,7 +68,7 @@ class LoginScreen extends ConsumerWidget{
         
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                  onChanged: (value) => controller.updateEmail(value),
+                controller: controller.emailController,
                   hintText: "Email Address",
                   hintTextColor: AppColor.grey300,
                   textColor: AppColor.grey300,
@@ -87,7 +87,7 @@ class LoginScreen extends ConsumerWidget{
         
               SizedBox(height: 12.h,),
               CustomTextFormField(
-                onChanged: (value) => controller.updatePassword(value),
+                controller: controller.passwordController,
                 hintText: "Password",
                 hintTextColor: AppColor.grey300,
                 obscureText: state.obscurePassword,
@@ -167,8 +167,13 @@ class LoginScreen extends ConsumerWidget{
               SizedBox(height: 32.h,),
               CustomButton(
                 borderRadius: 16.r,
-                onPressed: ()=> context.pushReplacement('/nav'),
-                text: "Log in",
+                onPressed: (state.isLoading ? null : () async {
+                  final success = await controller.login();
+                  if(success){
+                    context.pushReplacement('/nav');
+                  }
+                }) ,
+                text: state.isLoading ? "Loading..." : "Log in",
                 backgroundColor: AppColor.primary,
                 textColor: Colors.black
               ),
@@ -185,7 +190,7 @@ class LoginScreen extends ConsumerWidget{
                   SizedBox(width: 8.w,),
                   GestureDetector(
                     onTap: (){
-                      context.push('/signupScreen');
+                      context.push('/roleSelectionScreen');
                     },
                     child: CustomText(
                       text: "Sign Up",
