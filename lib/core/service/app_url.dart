@@ -12,6 +12,7 @@ class AppUrl {
   static const String socketUrl = "ws://10.0.30.184:4009";
 
   /// auth section
+
   static const String createUser = "$_baseUrl/user/create";
   static const String verifyOtp = "$_baseUrl/users/verify-account";
   static const String updateLocation = "$_baseUrl/auth/update/user-location";
