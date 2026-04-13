@@ -6,6 +6,7 @@ import 'package:b2b_solution/feature/profile/presentation/screen/terms_condition
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/service/auth_service.dart';
 import '../authentication/presentation/screen/create_new_password_screen.dart';
 import '../authentication/presentation/screen/location_access_screen.dart';
 import '../authentication/presentation/screen/login_screen.dart';
@@ -116,10 +117,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/businessCardScreen',
         builder: (context, state) {
-          final connection = state.extra as MyConnectionStateModel;
-          return BusinessCardScreen(connection: connection);
+          final extraData = state.extra as Map<String, dynamic>;
+
+          final connection = extraData['connection'] as MyConnectionStateModel;
+          final String currentUserId = extraData['currentUserId'] as String;
+
+          return BusinessCardScreen(
+            connection: connection,
+            currentUserId: currentUserId,
+          );
         },
-      ),
+      )
     ],
   );
 });

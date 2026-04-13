@@ -15,12 +15,11 @@ import '../../provider/reset_password_provider.dart';
 
 
 class ResetPassword extends ConsumerWidget {
-
   const ResetPassword({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
+    final state = ref.watch(resetPasswordProvider);
     final controller = ref.read(resetPasswordProvider.notifier);
 
     return Scaffold(
@@ -62,8 +61,33 @@ class ResetPassword extends ConsumerWidget {
                 hintText: "Email Address",
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
+                keyboardType: TextInputType.emailAddress,
               ),
-              SizedBox(height: 100.h),
+
+              if (state.errorMessage != null) ...[
+                SizedBox(height: 16.h),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red, size: 20.sp),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: CustomText(
+                          text: state.errorMessage!,
+                          fontSize: 13.sp,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -75,14 +99,17 @@ class ResetPassword extends ConsumerWidget {
           bottom: MediaQuery.of(context).padding.bottom + 20.h,
         ),
         child: CustomButton(
-          text: "Send Code",
+          text: state.isLoading ? "Sending..." : "Send Code",
           backgroundColor: AppColor.primary,
           textColor: AppColor.black,
           borderRadius: 16.r,
-          onPressed: () async{
+          onPressed: state.isLoading
+              ? null
+              : () async {
             final success = await controller.sendOtp();
-            log("Success: $success");
-            if (success) {
+
+            if (success && context.mounted) {
+              controller.resetErrorMessage();
               context.push('/resetVerificationCodeScreen');
             }
           },

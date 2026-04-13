@@ -1,20 +1,32 @@
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
-import 'package:b2b_solution/feature/home/model/my_connection_state_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../model/my_connection_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionCard extends ConsumerWidget {
   final MyConnectionStateModel connection;
-  const MyConnectionCard({super.key, required this.connection});
+
+  final String currentUserId;
+
+  const MyConnectionCard({
+    super.key,
+    required this.connection,
+    required this.currentUserId,
+  });
+
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentFilter = ref.watch(connectionFilterProvider);
+    final displayUser = connection.getDisplayUser(currentUserId);
+    final connectionState = ref.watch(myConnectionListProvider);
+    final connectionItems = connectionState.items;
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -24,7 +36,7 @@ class MyConnectionCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 0),
           ),
@@ -33,7 +45,7 @@ class MyConnectionCard extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildAvatar(),
+          _buildAvatar(displayUser?.profileImage),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -43,20 +55,21 @@ class MyConnectionCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: CustomText(
-                        text: connection.name,
+                        // Display Business Name or Full Name
+                        text: displayUser?.businessName ?? displayUser?.fullName ?? "Unknown",
                         fontSize: 17.sp,
                         fontWeight: FontWeight.w700,
                         maxLines: 1,
                       ),
                     ),
-                    _buildTopAction(currentFilter, context, connection),
+                    _buildTopAction(currentFilter, context),
                   ],
                 ),
                 SizedBox(height: 6.h),
-                _buildInfoRow(IconPath.location05, connection.address),
+                _buildInfoRow(IconPath.location05, displayUser?.position ?? "Business Member"),
                 SizedBox(height: 8.h),
                 CustomText(
-                  text: connection.note,
+                  text: displayUser?.businessCategory.join(", ") ?? "No categories listed",
                   fontSize: 13.sp,
                   color: AppColor.grey800,
                   maxLines: 2,
@@ -71,8 +84,7 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 
-
-  Widget _buildAvatar() {
+  Widget _buildAvatar(String? imageUrl) {
     return Container(
       padding: EdgeInsets.all(1.r),
       decoration: BoxDecoration(
@@ -82,7 +94,12 @@ class MyConnectionCard extends ConsumerWidget {
       child: CircleAvatar(
         radius: 24.r,
         backgroundColor: AppColor.grey100,
-        backgroundImage: AssetImage(connection.icon),
+        backgroundImage: imageUrl != null
+            ? NetworkImage(imageUrl)
+            : null,
+        child: imageUrl == null
+            ? Icon(Icons.person, color: AppColor.grey400, size: 24.r)
+            : null,
       ),
     );
   }
@@ -104,18 +121,23 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopAction(ConnectionFilterOption filter, BuildContext context, MyConnectionStateModel connection) {
+  Widget _buildTopAction(ConnectionFilterOption filter, BuildContext context) {
     if (filter == ConnectionFilterOption.Connected || filter == ConnectionFilterOption.Find) {
       return _actionButton(
         text: "Details",
         bg: AppColor.primary,
         txtColor: AppColor.black,
         onTap: () {
-          context.push("/businessCardScreen", extra: connection);
+          context.push(
+            "/businessCardScreen",
+            extra: {
+              'connection': connection,
+              'currentUserId': currentUserId,
+            },
+          );
         },
       );
     }
-
     return const SizedBox.shrink();
   }
 
@@ -130,7 +152,7 @@ class MyConnectionCard extends ConsumerWidget {
             bg: AppColor.emergencyBadgeText,
             txtColor: AppColor.white,
             onTap: () {
-              debugPrint("Rejecting request");
+              debugPrint("Rejecting request: ${connection.id}");
             },
           ),
           SizedBox(width: 8.w),
@@ -139,7 +161,7 @@ class MyConnectionCard extends ConsumerWidget {
             bg: AppColor.primary,
             txtColor: AppColor.black,
             onTap: () {
-              debugPrint("Accepting request");
+              debugPrint("Accepting request: ${connection.id}");
             },
           ),
         ],
@@ -166,7 +188,7 @@ class MyConnectionCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 16.r),
+              Icon(icon, size: 16.r, color: txtColor),
               SizedBox(width: 4.w),
             ],
             CustomText(

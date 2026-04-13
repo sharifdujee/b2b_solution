@@ -56,6 +56,12 @@ class AppUrl {
   static String acceptPing(String pingId) => "$_baseUrl/ping/accept/$pingId";
   static String rejectPing(String pingId) => "$_baseUrl/ping/reject/$pingId";
 
+  static String myConnections(int page, int limit) => "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
+  static String findUsers(int page, int limit) => "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
+  static String pendingConnections(int page, int limit) => "$_baseUrl/connection/pending-request?page=$page&limit=$limit";
+
+
+
   ///end add by lisan
 
 

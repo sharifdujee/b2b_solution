@@ -17,8 +17,11 @@ class MyConnectionScreen extends ConsumerWidget{
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Watch the filtered list from your provider
-    final connections = ref.watch(filteredConnectionsProvider);
+
+    final connectionState = ref.watch(myConnectionListProvider);
+    final connectionItems = connectionState.items;
+    final isLoading = connectionState.isLoading;
+
 
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -62,21 +65,25 @@ class MyConnectionScreen extends ConsumerWidget{
               const MyConnectionFilter(),
 
               SizedBox(height: 24.h),
-
-              // 2. FIXED ListView Section
-              connections.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true, // Required for SingleChildScrollView
-                physics: const NeverScrollableScrollPhysics(), // Required for SingleChildScrollView
-                itemCount: connections.length,
-                itemBuilder: (context, index) {
-                  final connection = connections[index];
-                  // 3. Return your custom card
-                  return MyConnectionCard(connection: connection);
-                },
-              ),
+              if(isLoading && connectionItems.isEmpty)
+                _buildLoadingState()
+              else if(connectionItems.isEmpty)
+                _buildEmptyState()
+              else
+                Column(
+                  children: [
+                    ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: connectionItems.length,
+                      itemBuilder: (context, index) {
+                        final connection = connectionItems[index];
+                        return MyConnectionCard(connection: connection, currentUserId: connection.senderId,);
+                      }
+                    )
+                  ],
+                )
             ],
           ),
         ),
@@ -84,7 +91,6 @@ class MyConnectionScreen extends ConsumerWidget{
     );
   }
 
-// Helper for when no data is found
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -93,6 +99,17 @@ class MyConnectionScreen extends ConsumerWidget{
           text: "No connections found",
           color: AppColor.grey400,
           fontSize: 14.sp,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(top: 100.h),
+        child: CircularProgressIndicator(
+          color: AppColor.primary,
         ),
       ),
     );

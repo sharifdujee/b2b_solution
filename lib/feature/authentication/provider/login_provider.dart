@@ -18,8 +18,6 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
 
   final RegExp _emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
-
-
   void toggleVisibility() {
     state = state.copyWith(obscurePassword: !state.obscurePassword);
   }
@@ -28,17 +26,28 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
-    // Validation using controller values
+    // 1. Reset state before validation
+    state = state.copyWith(errorMessage: null, isLoading: false);
+
+    // 2. Client-side Validation
+    if (email.isEmpty) {
+      state = state.copyWith(errorMessage: 'Email address is required');
+      return false;
+    }
     if (!_emailRegExp.hasMatch(email)) {
-      state = state.copyWith(errorMessage: 'A valid email is required');
+      state = state.copyWith(errorMessage: 'Please enter a valid email address');
+      return false;
+    }
+    if (password.isEmpty) {
+      state = state.copyWith(errorMessage: 'Password is required');
       return false;
     }
     if (password.length < 6) {
-      state = state.copyWith(errorMessage: 'Password is too short');
+      state = state.copyWith(errorMessage: 'Password must be at least 6 characters');
       return false;
     }
 
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final response = await NetworkCaller().postRequest(
@@ -57,32 +66,29 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
         await AuthService.saveProfileSetup(result['isProfileComplete']);
         await AuthService.saveRole(result['role']);
 
-        log("The token After login : ${AuthService.token}");
-
-
         state = state.copyWith(isLoading: false);
         return true;
       } else {
         state = state.copyWith(
           isLoading: false,
-          errorMessage: response.errorMessage ?? "Login failed",
+          errorMessage: response.errorMessage ?? "Invalid credentials. Please try again.",
         );
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(isLoading: false, errorMessage: "Connection error: ${e.toString()}");
       return false;
     }
   }
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    emailController.clear();
+    passwordController.clear();
     super.dispose();
   }
 }
 
-final loginProvider = StateNotifierProvider<LoginNotifier, LoginStateModel>(
-  (ref) => LoginNotifier(ref),
-);
+final loginProvider = StateNotifierProvider<LoginNotifier, LoginStateModel>((ref) {
+  return LoginNotifier(ref);
+});
