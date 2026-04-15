@@ -3,9 +3,11 @@ import 'dart:developer';
 
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:b2b_solution/feature/home/presentation/widget/selected_ping_card.dart';
+import 'package:b2b_solution/feature/home/provider/current_position_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -13,6 +15,7 @@ import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../authentication/provider/location_provider.dart';
 import '../../../profile/provider/profile_provider.dart';
+import '../../provider/map_filter_provider.dart';
 import '../../provider/nearby_ping_provider.dart';
 import '../../provider/png_provider.dart' hide mapControllerProvider;
 import 'map_badge.dart';
@@ -30,13 +33,37 @@ class _MapSectionState extends ConsumerState<MapSection> {
 
   @override
   Widget build(BuildContext context) {
-    final markers = ref.watch(pingMarkersProvider);
     final mapState = ref.watch(pingMapProvider);
     final pingDataState = ref.watch(nearbyPingProvider);
 
-    // Filter pings within 20km radius
-    final pingsWithinRadius = pingDataState.pings.where((p) => p.distanceKm <= 20).toList();
+    final activeFilter = ref.watch(mapFilterProvider);
 
+    final deviceLocationAsync = ref.watch(currentPositionProvider);
+
+    final pingsWithinRadius = pingDataState.pings.where((p) {
+      final bool isWithinRange = p.distanceKm <= 20;
+
+      if (activeFilter == MapFilterType.EMERGENCY) {
+        return isWithinRange && p.urgencyLevel.toUpperCase() == "EMERGENCY";
+      } else {
+        return isWithinRange && p.urgencyLevel.toUpperCase() != "EMERGENCY";
+      }
+    }).toList();
+
+    final pingMarkers = ref.watch(pingMarkersProvider);
+
+    final Set<Marker> markers = {
+      ...pingMarkers, // Spread existing markers
+
+      if (deviceLocationAsync.hasValue)
+        Marker(
+          markerId: const MarkerId('my_current_location'),
+          position: deviceLocationAsync.value!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: const InfoWindow(title: "You are here"),
+          zIndex: 5.0,
+        ),
+    };
     final selectedPing = mapState.selectedPingId == null
         ? null
         : pingsWithinRadius.firstWhere(
@@ -73,8 +100,11 @@ class _MapSectionState extends ConsumerState<MapSection> {
             offset: const Offset(0, 4),
           ),
         ],
-      ),
-      child: Stack(
+      ),child: deviceLocationAsync.when(
+      error: (err, stack) => const Center(child: Text("Location Error")),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      data: (deviceLatLng) =>
+      Stack(
         children: [
           // ── Google Map ──────────────────────────────────────────────────
           ClipRRect(
@@ -84,12 +114,20 @@ class _MapSectionState extends ConsumerState<MapSection> {
                 // Use ping location if available, else user location
                 target: pingsWithinRadius.isNotEmpty
                     ? LatLng(pingsWithinRadius.first.user!.businessLatitude, pingsWithinRadius.first.user!.businessLongitude)
-                    : LatLng(userLat, userLng),
-                zoom: 11,
+                    : deviceLatLng,
+                zoom: 13,
               ),
               markers: markers,
-              myLocationButtonEnabled: false,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
               zoomControlsEnabled: false,
+
+              rotateGesturesEnabled: true,
+              tiltGesturesEnabled: true,
+              scrollGesturesEnabled: true,
+              zoomGesturesEnabled: true,
+              fortyFiveDegreeImageryEnabled: true,
+
               onMapCreated: (controller) {
                 if (!_controller.isCompleted) {
                   _controller.complete(controller);
@@ -119,11 +157,11 @@ class _MapSectionState extends ConsumerState<MapSection> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(50.r),
                   boxShadow: [
                     BoxShadow(
                       blurRadius: 10,
-                      color: AppColor.black.withOpacity(0.16),
+                      color: AppColor.primary.withValues(alpha: 0.16),
                     )
                   ],
                   border: Border(
@@ -137,7 +175,7 @@ class _MapSectionState extends ConsumerState<MapSection> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(IconPath.sosIcon, height: 40.h),
+                    SvgPicture.asset(IconPath.emergency,height: 32.h,),
                     SizedBox(width: 8.w),
                     CustomText(
                       text: "PING (SOS)",
@@ -199,6 +237,8 @@ class _MapSectionState extends ConsumerState<MapSection> {
           ),
         ],
       ),
+
+    ),
     );
   }
 }

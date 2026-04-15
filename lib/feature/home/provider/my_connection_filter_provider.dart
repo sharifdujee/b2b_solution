@@ -50,6 +50,8 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
   Future<void> fetchBasedOnFilter({bool isRefresh = false}) async {
     final filter = ref.read(connectionFilterProvider);
 
+    log('Auth Token : ${AuthService.token}');
+
     if (isRefresh) {
       state = state.copyWith(items: [], currentPage: 1, hasMore: true, isLoading: true);
     } else {

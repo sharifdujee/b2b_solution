@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/gloabal/custom_dialog.dart';
 import '../../../../core/gloabal/priority_badge.dart';
-import '../../../../core/utils/local_assets/image_path.dart';
 import '../../model/ping_model.dart';
 import '../../provider/ping_provider.dart';
 
@@ -21,6 +20,7 @@ class PingDetails extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentFilter = ref.watch(pingFilterProvider);
     final user = ping.user;
     final shopName = user?.businessName ?? "Unknown Shop";
     final profileImage = user?.profileImage ?? "";
@@ -114,7 +114,7 @@ class PingDetails extends ConsumerWidget {
               _buildInfoRow(IconPath.agreement, "Connection", "Direct"),
 
               SizedBox(height: 42.h),
-              if(ping.userId != AuthService.id)...[
+              if(ping.userId != AuthService.id && currentFilter != PingFilter.accepted)...[
                 Row(
                   children: [
                     Expanded(

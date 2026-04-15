@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
-import '../../../../core/utils/local_assets/image_path.dart';
 import '../../../profile/provider/profile_provider.dart';
 
 class TopSection extends ConsumerStatefulWidget {
@@ -30,85 +29,106 @@ class _TopSectionState extends ConsumerState<TopSection> {
       }
     });
   }
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 5 && hour < 12) {
+      return "Good morning, ";
+    } else if (hour >= 12 && hour < 17) {
+      return "Good afternoon, ";
+    } else if (hour >= 17 && hour < 21) {
+      return "Good evening, ";
+    } else if (hour >= 21 || hour < 5) {
+      return "Good night, ";
+    } else {
+      return "Hello, ";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
-    final notifier = ref.read(profileProvider.notifier);
 
     final user =profileState.userModel;
-    final isLoading = profileState.isLoading;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100.r),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 10,
-                  color: AppColor.secondary.withValues(alpha: 0.7),
-                )
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 30.r,
-              backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
-                  ? NetworkImage(user!.profileImage)
-                  : null,
-                child: (user?.profileImage == null || user!.profileImage.isEmpty)
-                    ? Icon(Icons.person, size: 30.r, color: Colors.grey)
-                    :null
-            ),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => context.push('/notificationScreen'),
+                child: Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100.r),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 10,
+                        color: AppColor.secondary.withValues(alpha: 0.16),
+                      )
+                    ],
+                    border: Border.all(
+                      width: 1.w,
+                      color: AppColor.black.withValues(alpha: 0.16),
+                    ),
+                    color: AppColor.primary.withValues(alpha: 0.9),
+                  ),
+                  child: SvgPicture.asset(
+                    IconPath.red_mug,
+                    fit: BoxFit.cover,
+                    height: 24.h,
+                    width: 28.w,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                child: Icon(Icons.wallet,size: 32.r,color: AppColor.secondary,),
+              ),
+              SizedBox(width: 8.w,),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(100.r),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: AppColor.secondary.withValues(alpha: 0.7),
+                    )
+                  ],
+                ),
+                child: CircleAvatar(
+                    radius: 30.r,
+                    backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
+                        ? NetworkImage(user!.profileImage)
+                        : null,
+                    child: (user?.profileImage == null || user!.profileImage.isEmpty)
+                        ? Icon(Icons.person, size: 30.r, color: Colors.grey)
+                        :null
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 8.w),
-          Column(
+          SizedBox(height: 8.w),
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CustomText(
-                text: "Welcome,",
+                text: _getGreeting(),
                 fontWeight: FontWeight.w500,
-                fontSize: 14.sp,
-                color: AppColor.welcomeColor,
+                fontSize: 16.sp,
+                color: AppColor.black,
               ),
-              SizedBox(height: 4.h),
               CustomText(
                 text: user?.fullName ?? "Joe's Cafe",
                 color: AppColor.black,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
               ),
+              SizedBox(width: 8.w),
+              Image.asset(IconPath.shield, height: 16.h, width: 16.w)
             ],
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () => context.push('/notificationScreen'),
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100.r),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 10,
-                    color: AppColor.secondary.withValues(alpha: 0.16),
-                  )
-                ],
-                border: Border.all(
-                  width: 1.w,
-                  color: AppColor.black.withValues(alpha: 0.16),
-                ),
-                color: AppColor.secondary.withValues(alpha: 0.9),
-              ),
-              child: SvgPicture.asset(
-                IconPath.notification,
-                fit: BoxFit.cover,
-                color: AppColor.white,
-                height: 20.h,
-                width: 20.w,
-              ),
-            ),
           ),
         ],
       ),

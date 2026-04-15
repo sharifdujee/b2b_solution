@@ -9,12 +9,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
-import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../../profile/provider/profile_provider.dart';
 import '../../data/place_location.dart';
+import '../../provider/current_position_provider.dart';
 import '../../provider/filter_provider.dart';
-import '../../provider/nearby_ping_provider.dart'; // Added
-import '../../provider/png_provider.dart'; // Added
 import '../widget/filter_bottom_sheet.dart';
 import '../widget/map_search_section.dart';
 
@@ -29,6 +27,7 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   bool _showSuggestions = false;
+
 
   void _onSearchChanged(String value) {
     ref.read(searchQueryProvider.notifier).state = value;
@@ -52,7 +51,7 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (_) => const FilterBottomSheet(),
     );
   }
@@ -62,7 +61,7 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
     _searchFocus.unfocus();
     setState(() => _showSuggestions = false);
 
-    const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+    const apiKey = "AIzaSyDCp_EGIWaoVYOeML3Kl8YiPN1az3hV9WA";
     final url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=${s.placeId}&fields=geometry&key=$apiKey";
 
     final response = await ref.read(networkCallerProvider).getRequest(url);
@@ -70,7 +69,6 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
       final loc = response.responseData['result']['geometry']['location'];
       final destination = LatLng(loc['lat'], loc['lng']);
 
-      // Smoothly animate the camera to the new location
       _mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(target: destination, zoom: 15, tilt: 45),
@@ -83,32 +81,47 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final markers = ref.watch(mapMarkersProvider);
     final placesAsync = ref.watch(filteredPlacesProvider);
     final profile = ref.watch(profileProvider);
 
+    final markersFromProvider = ref.watch(mapMarkersProvider);
+    final deviceLocationAsync = ref.watch(currentPositionProvider);
+
+    final Set<Marker> allMarkers = {
+      ...markersFromProvider,
+      if (deviceLocationAsync.hasValue)
+        Marker(
+          markerId: const MarkerId('device_location_marker'),
+          position: deviceLocationAsync.value!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: const InfoWindow(title: "My Current Location"),
+          zIndex: 10, // Keep user marker on top
+        ),
+    };
+
     return Scaffold(
       backgroundColor: AppColor.white,
-      resizeToAvoidBottomInset: false, // Prevents map jumping when keyboard appears
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // 1. FULL SCREEN MAP
-          Positioned.fill(
-            child: GoogleMap(
+          deviceLocationAsync.when(
+            error: (err, stack) => const Center(child: Text("Location Error")),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            data: (deviceLatLng) => GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: LatLng(profile.latitude ?? 0.0, profile.longitude ?? 0.0),
+                target: deviceLatLng,
                 zoom: 12,
               ),
-              markers: markers,
+              markers: allMarkers,
               onMapCreated: (c) => _mapController = c,
               myLocationEnabled: true,
-              myLocationButtonEnabled: false, // We use custom button for UI
-              zoomControlsEnabled: false,
-              padding: EdgeInsets.only(top: 250.h), // Shifts Google logo/UI up
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: true,
+              padding: EdgeInsets.only(top: 250.h),
             ),
           ),
 
-          // 2. TOP FLOATING SECTION (Search & Header)
           Positioned(
             top: 0,
             left: 0,
@@ -116,10 +129,10 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
             child: Container(
               padding: EdgeInsets.only(top: 48.h, bottom: 16.h),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9), // Glass effect
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(24.r)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 5))
                 ],
               ),
               child: Column(
@@ -144,9 +157,8 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
             ),
           ),
 
-          // 3. SMOOTH SUGGESTION OVERLAY
           Positioned(
-            top: 210.h, // Adjusted to sit right below the search bar
+            top: 210.h,
             left: 16.w,
             right: 16.w,
             child: AnimatedSwitcher(
@@ -166,7 +178,6 @@ class _MapViewScreenState extends ConsumerState<MapViewScreen> {
             ),
           ),
 
-          // 4. LOADING INDICATOR
           if (placesAsync.isLoading)
             const Positioned(
               top: 230,

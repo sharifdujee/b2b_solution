@@ -9,7 +9,9 @@ import '../../../ping/model/ping_pagination_state_model.dart';
 import '../../../ping/presentation/widgets/ping_card.dart';
 import '../../../ping/provider/ping_provider.dart';
 import '../../../profile/provider/profile_provider.dart';
+import '../../provider/map_filter_provider.dart';
 import '../../provider/nearby_ping_provider.dart';
+import '../widget/map_filter.dart';
 import '../widget/map_section.dart';
 import '../widget/top_section.dart';
 import '../widget/quick_action.dart';
@@ -21,8 +23,8 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileWatcher = ref.watch(profileProvider);
     final pingState = ref.watch(nearbyPingProvider);
+    final currentType = ref.watch(mapFilterProvider);
 
-    // FIX: Watch the paginated list provider instead of the filter enum
     final pingListAsync = ref.watch(pingListProvider);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -59,7 +61,14 @@ class HomeScreen extends ConsumerWidget {
               SizedBox(height: 48.h),
 
               const TopSection(),
-              SizedBox(height: 16.h),
+              SizedBox(height: 8.h),
+
+              Divider(thickness: 1,color: AppColor.grey200),
+              SizedBox(height: 8.h,),
+
+
+              MapFilter(),
+              SizedBox(height: 16.h,),
 
               const MapSection(),
               SizedBox(height: 24.h),
@@ -79,7 +88,6 @@ class HomeScreen extends ConsumerWidget {
               _buildHeader(ref),
               SizedBox(height: 12.h),
 
-              /// FIX: Use the AsyncValue from pingListProvider
               _buildPingListContent(pingListAsync),
 
               SizedBox(height: 32.h),
@@ -90,7 +98,6 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// Handles Loading, Error, and Data states for the paginated ping list
   Widget _buildPingListContent(AsyncValue<PingPaginationState> pingsAsync) {
     return pingsAsync.when(
       loading: () => const Center(
@@ -111,7 +118,6 @@ class HomeScreen extends ConsumerWidget {
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          // Limit to 3 items for the Home preview
           itemCount: pings.length > 3 ? 3 : pings.length,
           itemBuilder: (context, index) {
             final ping = pings[index];

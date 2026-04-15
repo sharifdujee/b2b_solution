@@ -2,11 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../provider/nearby_ping_provider.dart';
-
+import 'map_filter_provider.dart'; // Ensure this is imported
 
 class PingMapState {
   final String? selectedPingId;
-
   const PingMapState({this.selectedPingId});
 
   PingMapState copyWith({String? selectedPingId, bool clearSelected = false}) =>
@@ -14,7 +13,6 @@ class PingMapState {
         selectedPingId: clearSelected ? null : (selectedPingId ?? this.selectedPingId),
       );
 }
-
 
 class PingMapNotifier extends StateNotifier<PingMapState> {
   PingMapNotifier() : super(const PingMapState());
@@ -38,18 +36,28 @@ final pingMarkersProvider = Provider<Set<Marker>>((ref) {
   final pingState = ref.watch(nearbyPingProvider);
   final selectedId = ref.watch(pingMapProvider).selectedPingId;
 
-  final pingsWithinRadius = pingState.pings.where((p) => p.distanceKm <= 20).toList();
+  final activeFilter = ref.watch(mapFilterProvider);
+
+  final filteredPings = pingState.pings.where((p) {
+    final bool isWithinRadius = p.distanceKm <= 20;
+    final bool isEmergency = p.urgencyLevel.toUpperCase() == 'EMERGENCY';
+
+    if (activeFilter == MapFilterType.EMERGENCY) {
+      return isWithinRadius && isEmergency;
+    } else {
+      return isWithinRadius && !isEmergency;
+    }
+  }).toList();
 
   final Set<Marker> markers = {};
 
-  for (int i = 0; i < pingsWithinRadius.length; i++) {
-    final ping = pingsWithinRadius[i];
-
+  for (int i = 0; i < filteredPings.length; i++) {
+    final ping = filteredPings[i];
     double lat = ping.user?.businessLatitude ?? 0.0;
     double lng = ping.user?.businessLongitude ?? 0.0;
     final bool isSelected = ping.id == selectedId;
 
-
+    // Slight offset for overlapping markers
     if (i > 0) {
       lat += (i * 0.00008);
       lng += (i * 0.00008);
@@ -65,7 +73,7 @@ final pingMarkersProvider = Provider<Set<Marker>>((ref) {
               ? BitmapDescriptor.hueAzure
               : (ping.urgencyLevel.toUpperCase() == 'EMERGENCY'
               ? BitmapDescriptor.hueRed
-              : BitmapDescriptor.hueOrange),
+              : BitmapDescriptor.hueGreen),
         ),
         onTap: () {
           ref.read(pingMapProvider.notifier).selectPing(ping.id);
