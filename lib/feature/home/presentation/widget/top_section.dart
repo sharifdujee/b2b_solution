@@ -57,37 +57,6 @@ class _TopSectionState extends ConsumerState<TopSection> {
         children: [
           Row(
             children: [
-              GestureDetector(
-                onTap: () => context.push('/notificationScreen'),
-                child: Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100.r),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 10,
-                        color: AppColor.secondary.withValues(alpha: 0.16),
-                      )
-                    ],
-                    border: Border.all(
-                      width: 1.w,
-                      color: AppColor.black.withValues(alpha: 0.16),
-                    ),
-                    color: AppColor.primary.withValues(alpha: 0.9),
-                  ),
-                  child: SvgPicture.asset(
-                    IconPath.red_mug,
-                    fit: BoxFit.cover,
-                    height: 24.h,
-                    width: 28.w,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                child: Icon(Icons.wallet,size: 32.r,color: AppColor.secondary,),
-              ),
-              SizedBox(width: 8.w,),
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(100.r),
@@ -108,6 +77,43 @@ class _TopSectionState extends ConsumerState<TopSection> {
                         :null
                 ),
               ),
+
+              const Spacer(),
+
+
+
+              GestureDetector(
+                child: Icon(Icons.wallet,size: 32.r,color: AppColor.secondary,),
+              ),
+              SizedBox(width: 8.w,),
+
+              GestureDetector(
+                onTap: () => context.push('/notificationScreen'),
+                child: Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100.r),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 10,
+                        color: AppColor.secondary.withValues(alpha: 0.16),
+                      )
+                    ],
+                    border: Border.all(
+                      width: 1.w,
+                      color: AppColor.black.withValues(alpha: 0.16),
+                    ),
+                    color: AppColor.primary.withValues(alpha: 0.9),
+                  ),
+                  child: SvgPicture.asset(
+                    IconPath.notification,
+                    fit: BoxFit.cover,
+                    height: 24.h,
+                    width: 24.w,
+                  ),
+                ),
+              ),
+
             ],
           ),
           SizedBox(height: 8.w),

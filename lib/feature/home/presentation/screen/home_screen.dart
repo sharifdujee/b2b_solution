@@ -64,11 +64,11 @@ class HomeScreen extends ConsumerWidget {
               SizedBox(height: 8.h),
 
               Divider(thickness: 1,color: AppColor.grey200),
-              SizedBox(height: 8.h,),
-
-
-              MapFilter(),
               SizedBox(height: 16.h,),
+
+
+              // MapFilter(),
+              // SizedBox(height: 16.h,),
 
               const MapSection(),
               SizedBox(height: 24.h),
