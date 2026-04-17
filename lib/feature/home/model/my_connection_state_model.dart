@@ -9,15 +9,22 @@ class MyConnectionStateModel {
   final DateTime createdAt;
   final ConnectionUserData? receiver;
   final ConnectionUserData? sender;
+  final double lat;
+  final double lng;
+  final String email;
+
 
   MyConnectionStateModel({
     required this.id,
     required this.senderId,
     required this.receiverId,
+    required this.email,
     this.status,
     required this.createdAt,
     this.receiver,
     this.sender,
+    required this.lat,
+    required this.lng,
   });
 
   factory MyConnectionStateModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +32,9 @@ class MyConnectionStateModel {
       id: json['id'] ?? '',
       senderId: json['senderId'] ?? '',
       receiverId: json['receiverId'] ?? '',
+      email: json['email'] ?? '',
+      lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
+      lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?? '',
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
@@ -53,6 +63,7 @@ class ConnectionUserData {
   final String? legalName;
   final String? businessName;
   final String fullName;
+  final String? email;
   final List<String> businessCategory;
   final int? operationYears;
   final String? businessImage;
@@ -65,6 +76,7 @@ class ConnectionUserData {
     this.legalName,
     this.businessName,
     required this.fullName,
+    this.email,
     this.businessCategory = const [],
     this.operationYears,
     this.businessImage,
@@ -79,6 +91,7 @@ class ConnectionUserData {
       legalName: json['legalName'],
       businessName: json['businessName'],
       fullName: json['fullName'] ?? 'Unknown User',
+      email: json['email'],
       businessCategory: json['businessCategory'] != null
           ? List<String>.from(json['businessCategory'])
           : [],

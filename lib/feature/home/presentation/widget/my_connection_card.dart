@@ -5,28 +5,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../model/find_connecion_state_model.dart';
 import '../../model/my_connection_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionCard extends ConsumerWidget {
-  final MyConnectionStateModel connection;
-
+  // Can be MyConnectionStateModel or FindDatum
+  final dynamic connectionData;
   final String currentUserId;
 
   const MyConnectionCard({
     super.key,
-    required this.connection,
+    required this.connectionData,
     required this.currentUserId,
   });
-
-
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentFilter = ref.watch(connectionFilterProvider);
-    final displayUser = connection.getDisplayUser(currentUserId);
     final connectionState = ref.watch(myConnectionListProvider);
-    final connectionItems = connectionState.items;
+
+    // --- Data Extraction Logic ---
+    final bool isFindModel = connectionData is FindDatum;
+
+    // Extract relevant display info based on the model type
+    final String fullName = isFindModel
+        ? (connectionData.businessName ?? connectionData.fullName)
+        : (connectionData.getDisplayUser(currentUserId)?.businessName ?? connectionData.getDisplayUser(currentUserId)?.fullName ?? "Unknown");
+
+    final String? profileImage = isFindModel
+        ? connectionData.profileImage
+        : connectionData.getDisplayUser(currentUserId)?.profileImage;
+
+    final String position = isFindModel
+        ? (connectionData.position ?? "Business Member")
+        : (connectionData.getDisplayUser(currentUserId)?.position ?? "Business Member");
+
+    final String categories = isFindModel
+        ? connectionData.businessCategory.join(", ")
+        : (connectionData.getDisplayUser(currentUserId)?.businessCategory.join(", ") ?? "No categories listed");
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -45,7 +62,7 @@ class MyConnectionCard extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildAvatar(displayUser?.profileImage),
+          _buildAvatar(profileImage),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -55,27 +72,27 @@ class MyConnectionCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: CustomText(
-                        // Display Business Name or Full Name
-                        text: displayUser?.businessName ?? displayUser?.fullName ?? "Unknown",
+                        text: fullName,
                         fontSize: 17.sp,
                         fontWeight: FontWeight.w700,
                         maxLines: 1,
                       ),
                     ),
-                    _buildTopAction(currentFilter, context),
+                    _buildTopAction(currentFilter, context, ref),
                   ],
                 ),
                 SizedBox(height: 6.h),
-                _buildInfoRow(IconPath.location05, displayUser?.position ?? "Business Member"),
+                _buildInfoRow(IconPath.location05, position),
                 SizedBox(height: 8.h),
                 CustomText(
-                  text: displayUser?.businessCategory.join(", ") ?? "No categories listed",
+                  text: categories,
                   fontSize: 13.sp,
                   color: AppColor.grey800,
                   maxLines: 2,
                 ),
-                if (currentFilter == ConnectionFilterOption.Pending)
-                  _buildPendingActions(),
+                // Only show Accept/Reject if it's a connection model in Pending state
+                if (!isFindModel && currentFilter == ConnectionFilterOption.Pending)
+                  _buildPendingActions(ref, context),
               ],
             ),
           ),
@@ -94,10 +111,10 @@ class MyConnectionCard extends ConsumerWidget {
       child: CircleAvatar(
         radius: 24.r,
         backgroundColor: AppColor.grey100,
-        backgroundImage: imageUrl != null
+        backgroundImage: (imageUrl != null && imageUrl.isNotEmpty)
             ? NetworkImage(imageUrl)
             : null,
-        child: imageUrl == null
+        child: (imageUrl == null || imageUrl.isEmpty)
             ? Icon(Icons.person, color: AppColor.grey400, size: 24.r)
             : null,
       ),
@@ -121,27 +138,41 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopAction(ConnectionFilterOption filter, BuildContext context) {
-    if (filter == ConnectionFilterOption.Connected || filter == ConnectionFilterOption.Find) {
-      return _actionButton(
-        text: "Details",
-        bg: AppColor.primary,
-        txtColor: AppColor.black,
-        onTap: () {
-          context.push(
-            "/businessCardScreen",
-            extra: {
-              'connection': connection,
-              'currentUserId': currentUserId,
-            },
-          );
-        },
-      );
-    }
-    return const SizedBox.shrink();
-  }
+  Widget _buildTopAction(ConnectionFilterOption filter, BuildContext context, WidgetRef ref) {
+    return _actionButton(
+      text: "Details",
+      bg: AppColor.primary,
+      txtColor: AppColor.black,
+      onTap: () {
+        // Map the enum to a simple string status for the next screen
+        String statusHint;
+        switch (filter) {
+          case ConnectionFilterOption.Find:
+            statusHint = 'FIND';
+            break;
+          case ConnectionFilterOption.Pending:
+            statusHint = 'PENDING';
+            break;
+          case ConnectionFilterOption.Connected:
+            statusHint = 'CONNECTED';
+            break;
+        }
 
-  Widget _buildPendingActions() {
+        context.push(
+          "/businessCardScreen",
+          extra: {
+            'connectionData': connectionData, // The MyConnectionStateModel or FindDatum
+            'currentUserId': currentUserId,
+            'status': statusHint,
+          },
+        );
+      },
+    );
+  }
+  Widget _buildPendingActions(WidgetRef ref, BuildContext context) {
+    final notifier = ref.read(myConnectionListProvider.notifier);
+    final connection = connectionData as MyConnectionStateModel;
+
     return Padding(
       padding: EdgeInsets.only(top: 12.h),
       child: Row(
@@ -151,18 +182,14 @@ class MyConnectionCard extends ConsumerWidget {
             text: "Reject",
             bg: AppColor.emergencyBadgeText,
             txtColor: AppColor.white,
-            onTap: () {
-              debugPrint("Rejecting request: ${connection.id}");
-            },
+            onTap: () => notifier.rejectConnection(connection.id, context),
           ),
           SizedBox(width: 8.w),
           _actionButton(
             text: "Accept",
             bg: AppColor.primary,
             txtColor: AppColor.black,
-            onTap: () {
-              debugPrint("Accepting request: ${connection.id}");
-            },
+            onTap: () => notifier.acceptConnection(connection.id, context),
           ),
         ],
       ),

@@ -119,12 +119,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final extraData = state.extra as Map<String, dynamic>;
 
-          final connection = extraData['connection'] as MyConnectionStateModel;
+          // REMOVE THE CAST HERE. Keep it as dynamic/Object.
+          final connectionData = extraData['connectionData'] ?? extraData['connection'];
           final String currentUserId = extraData['currentUserId'] as String;
+          final status = extraData['status'] as String;
 
           return BusinessCardScreen(
-            connection: connection,
+            connectionData: connectionData,
             currentUserId: currentUserId,
+            status: status,
           );
         },
       )
