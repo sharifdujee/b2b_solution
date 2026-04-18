@@ -1,4 +1,4 @@
-enum ConnectionFilterOption { Connected, Pending, Find }
+enum ConnectionFilterOption { Connected, Pending, Find, Requests }
 
 
 class MyConnectionStateModel {

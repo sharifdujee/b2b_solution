@@ -9,6 +9,7 @@ import '../model/connection_state_model.dart';
 import '../model/find_connecion_state_model.dart';
 import '../model/my_connection_api_response.dart';
 import '../model/my_connection_state_model.dart';
+import '../model/send_request_state_model.dart';
 
 class ConnectionNotifier extends StateNotifier<ConnectionFilterOption> {
   final Ref ref;
@@ -60,6 +61,80 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
     } catch (e) {
       state = state.copyWith(isLoading: false);
       _showSnackBar(context, 'An unexpected error occurred', Colors.black);
+    }
+  }
+
+  Future<void> sendRequests() async {
+    // 1. Set loading state
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final response = await networkCaller.getRequest(
+        AppUrl.sendRequests,
+        token: AuthService.token,
+      );
+
+      if (response.isSuccess && response.responseData != null) {
+        // 2. Parse the JSON using your generated factory
+        final sendRequestModel = SendRequestStateModel.fromJson(response.responseData);
+
+        // 3. Update state with the parsed data
+        // Assuming your State class has fields for 'requests' and 'totalCount'
+        state = state.copyWith(
+          isLoading: false,
+          sendRequestsList: sendRequestModel.result.data,
+          totalRequests: sendRequestModel.result.meta.total,
+        );
+
+        log("sendRequests list fetched successfully. Count: ${sendRequestModel.result.meta.total}");
+      } else {
+        state = state.copyWith(isLoading: false);
+        log("sendRequests list fetch failed: ${response.errorMessage}");
+      }
+
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      log('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<void> removeConnection(String connectionId, BuildContext context) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await networkCaller.deleteRequest(
+        AppUrl.removeConnection(connectionId),
+        AuthService.token,
+        body: {},
+      );
+      state = state.copyWith(isLoading: false);
+      if (response.isSuccess) {
+        fetchBasedOnFilter(isRefresh: true);
+        _showSnackBar(context, 'Connection Removed', Colors.orange);
+      }
+    }catch(e){
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> cancelRequest(String connectionId, BuildContext context) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      log("Cancel Request:");
+      log("id: $connectionId");
+      log("AuthService.token: ${AuthService.token}");
+      log("My ID: ${AuthService.id}");
+      final response = await networkCaller.deleteRequest(
+        AppUrl.cancelRequest(connectionId),
+        AuthService.token,
+        body: {},
+      );
+      state = state.copyWith(isLoading: false);
+      if (response.isSuccess) {
+        fetchBasedOnFilter(isRefresh: true);
+        _showSnackBar(context, 'Request Cancelled', Colors.orange);
+      }
+    }catch(e){
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -126,6 +201,8 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
       await _fetchPending(page, isRefresh);
     } else if (filter == ConnectionFilterOption.Find) {
       await _fetchDiscover(page, isRefresh);
+    }else if (filter == ConnectionFilterOption.Requests) {
+      await sendRequests();
     }
   }
 

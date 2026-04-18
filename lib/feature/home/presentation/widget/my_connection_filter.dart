@@ -4,15 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../model/my_connection_state_model.dart';
-import '../../provider/my_connection_filter_provider.dart'; // Assuming you use this for sizing
-
+import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionFilter extends ConsumerWidget {
   const MyConnectionFilter({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the state from your NotifierProvider
     final activeFilter = ref.watch(connectionFilterProvider);
     final counts = ref.watch(connectionCountsProvider);
 
@@ -22,30 +20,42 @@ class MyConnectionFilter extends ConsumerWidget {
           bottom: BorderSide(color: AppColor.grey300, width: 1.h),
         ),
       ),
-      child: Row(
-        children: [
-          _buildTab(
-            ref,
-            label: 'Connected',
-            count: counts[ConnectionFilterOption.Connected] ?? 0,
-            targetFilter: ConnectionFilterOption.Connected,
-            isSelected: activeFilter == ConnectionFilterOption.Connected,
-          ),
-          _buildTab(
-            ref,
-            label: 'Pending',
-            count: counts[ConnectionFilterOption.Pending] ?? 0,
-            targetFilter: ConnectionFilterOption.Pending,
-            isSelected: activeFilter == ConnectionFilterOption.Pending,
-          ),
-          _buildTab(
-            ref,
-            count: counts[ConnectionFilterOption.Find] ?? 0,
-            label: 'Find',
-            targetFilter: ConnectionFilterOption.Find,
-            isSelected: activeFilter == ConnectionFilterOption.Find,
-          ),
-        ],
+      // Added SingleChildScrollView for horizontal scrolling
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            _buildTab(
+              ref,
+              label: 'Connected',
+              count: counts[ConnectionFilterOption.Connected],
+              targetFilter: ConnectionFilterOption.Connected,
+              isSelected: activeFilter == ConnectionFilterOption.Connected,
+            ),
+            _buildTab(
+              ref,
+              label: 'Pending',
+              count: counts[ConnectionFilterOption.Pending],
+              targetFilter: ConnectionFilterOption.Pending,
+              isSelected: activeFilter == ConnectionFilterOption.Pending,
+            ),
+            _buildTab(
+              ref,
+              label: 'Find',
+              targetFilter: ConnectionFilterOption.Find,
+              isSelected: activeFilter == ConnectionFilterOption.Find,
+            ),
+            _buildTab(
+              ref,
+              label: 'Requests',
+              count: counts[ConnectionFilterOption.Requests],
+              targetFilter: ConnectionFilterOption.Requests,
+              isSelected: activeFilter == ConnectionFilterOption.Requests,
+            )
+          ],
+        ),
       ),
     );
   }
@@ -53,23 +63,21 @@ class MyConnectionFilter extends ConsumerWidget {
   Widget _buildTab(
       WidgetRef ref, {
         required String label,
-        required int? count,
+        int? count,
         required ConnectionFilterOption targetFilter,
         required bool isSelected,
       }) {
+    final displayText = (count != null) ? '$label ($count)' : label;
 
-    final displayText = count != null ? '$label ($count)' : label;
-
-    return Expanded(
-      child: GestureDetector(
-        // Calling the method defined in your Notifier class
-        onTap: () => ref.read(connectionFilterProvider.notifier).updateFilter(targetFilter),
-        behavior: HitTestBehavior.opaque,
+    return GestureDetector(
+      onTap: () => ref.read(connectionFilterProvider.notifier).updateFilter(targetFilter),
+      behavior: HitTestBehavior.opaque,
+      child: IntrinsicWidth(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 14.h),
+              padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
               child: Text(
                 displayText,
                 textAlign: TextAlign.center,
@@ -80,11 +88,10 @@ class MyConnectionFilter extends ConsumerWidget {
                 ),
               ),
             ),
-            // Use AnimatedContainer for a smooth color transition
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               height: 3.h,
-              width: double.infinity,
+              width: double.infinity, // Now "infinity" means "the width of the IntrinsicWidth"
               decoration: BoxDecoration(
                 color: isSelected ? AppColor.primary : Colors.transparent,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(2.r)),

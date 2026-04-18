@@ -1,6 +1,3 @@
-import 'package:b2b_solution/core/gloabal/custom_text.dart';
-import 'package:b2b_solution/core/gloabal/custom_text_form_field.dart';
-import 'package:b2b_solution/feature/home/provider/my_connection_filter_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,30 +5,46 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
+import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../../../core/service/auth_service.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../model/my_connection_state_model.dart';
+import '../../provider/my_connection_filter_provider.dart';
 import '../widget/my_connection_card.dart';
 import '../widget/my_connection_filter.dart';
 
-class MyConnectionScreen extends ConsumerWidget {
+class MyConnectionScreen extends ConsumerStatefulWidget {
   const MyConnectionScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyConnectionScreen> createState() => _MyConnectionScreenState();
+}
+
+class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    // 1. Initial Fetch on Mount: Ensures data loads when screen first opens
+    Future.microtask(() {
+      ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final connectionState = ref.watch(myConnectionListProvider);
     final currentFilter = ref.watch(connectionFilterProvider);
 
-    // 1. Determine which list to show based on the active tab
-    final List<dynamic> displayItems = (currentFilter == ConnectionFilterOption.Find)
-        ? connectionState.discoverItems
-        : connectionState.items;
-
-    // 2. Initial fetch logic: if the current list is empty, fetch data
-    if (displayItems.isEmpty && !connectionState.isLoading && connectionState.hasMore) {
-      Future.microtask(() {
+    // 2. Optimized Listener: Fired ONLY when the filter/tab changes
+    ref.listen(connectionFilterProvider, (previous, next) {
+      if (previous != next) {
         ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
-      });
-    }
+      }
+    });
+
+    final List<dynamic> displayItems = _getDisplayItems(connectionState, currentFilter);
 
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -39,50 +52,12 @@ class MyConnectionScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Header & Search (Fixed Section)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: Column(
-                children: [
-                  Row(children: [
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.w),
-                    ),
-                    SizedBox(width: 8.w),
-                    CustomText(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20.sp,
-                      text: "My Connections",
-                      color: AppColor.black,
-                    )
-                  ]),
-                  SizedBox(height: 24.h),
-                  CustomTextFormField(
-                    onChanged: (value) {},
-                    prefixIcon: Padding(
-                      padding: EdgeInsets.all(12.r),
-                      child: SvgPicture.asset(IconPath.search, height: 20.h, width: 20.w),
-                    ),
-                    hintText: "Search",
-                    hintTextColor: AppColor.grey400,
-                    textColor: AppColor.black,
-                    borderRadius: 50.r,
-                  ),
-                  SizedBox(height: 24.h),
-                  const MyConnectionFilter(),
-                ],
-              ),
-            ),
-
-            /// Scrollable List Area (Dynamic Section)
+            _buildFixedHeader(context),
             Expanded(
               child: _buildListContent(
-                ref,
                 connectionState.isLoading,
                 displayItems,
                 connectionState.hasMore,
-                currentFilter,
               ),
             ),
           ],
@@ -91,59 +66,94 @@ class MyConnectionScreen extends ConsumerWidget {
     );
   }
 
-  /// Consolidated List Content Logic
-  Widget _buildListContent(
-      WidgetRef ref,
-      bool isLoading,
-      List<dynamic> items,
-      bool hasMore,
-      ConnectionFilterOption currentFilter) {
-
-    // Show full screen loader only on the first load
-    if (isLoading && items.isEmpty) {
-      return _buildLoadingState();
+  /// Selects the correct list based on the active tab
+  List<dynamic> _getDisplayItems(dynamic state, ConnectionFilterOption filter) {
+    switch (filter) {
+      case ConnectionFilterOption.Find:
+        return state.discoverItems;
+      case ConnectionFilterOption.Requests:
+        return state.sendRequestsList;
+      default:
+        return state.items;
     }
+  }
 
-    // Show empty state if no data returned
-    if (items.isEmpty) {
-      return _buildEmptyState();
-    }
+  Widget _buildFixedHeader(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      child: Column(
+        children: [
+          Row(children: [
+            IconButton(
+              onPressed: () => context.pop(),
+              icon: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.w),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            SizedBox(width: 8.w),
+            CustomText(
+              fontWeight: FontWeight.w700,
+              fontSize: 20.sp,
+              text: "My Connections",
+              color: AppColor.black,
+            )
+          ]),
+          SizedBox(height: 24.h),
+          CustomTextFormField(
+            onChanged: (value) {
+              // TODO: Implement debounced search here
+            },
+            prefixIcon: Padding(
+              padding: EdgeInsets.all(12.r),
+              child: SvgPicture.asset(IconPath.search, height: 20.h, width: 20.w),
+            ),
+            hintText: "Search",
+            hintTextColor: AppColor.grey400,
+            textColor: AppColor.black,
+            borderRadius: 50.r,
+          ),
+          SizedBox(height: 24.h),
+          const MyConnectionFilter(),
+        ],
+      ),
+    );
+  }
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (ScrollNotification scrollInfo) {
-        // Trigger pagination when reaching the bottom (200px threshold)
-        if (!isLoading &&
-            hasMore &&
-            scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
-          ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: false);
-        }
-        return false;
-      },
-      child: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
+  Widget _buildListContent(bool isLoading, List<dynamic> items, bool hasMore) {
+    // Show loading only when the list is actually empty to prevent screen flickering
+    if (isLoading && items.isEmpty) return _buildLoadingState();
+
+    // Empty state handling
+    if (items.isEmpty) return _buildEmptyState();
+
+    return RefreshIndicator(
+      color: AppColor.primary,
+      onRefresh: () => ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          // Pagination logic
+          if (!isLoading && hasMore &&
+              notification.metrics.pixels >= notification.metrics.maxScrollExtent - 300) {
+            ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: false);
+          }
+          return false;
         },
-        child: ListView.builder(
+        child: ListView.separated(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-          // Add +1 to itemCount to show the loading indicator at the bottom
           itemCount: items.length + (hasMore ? 1 : 0),
+          separatorBuilder: (_, __) => SizedBox(height: 16.h),
           itemBuilder: (context, index) {
             if (index < items.length) {
-              final item = items[index];
-
               return MyConnectionCard(
-                connectionData: item,
-                // Replace this String with your actual Auth Provider's User ID
-                currentUserId: "677d2427a925f9df9468e27c",
-              );
-            } else {
-              // Bottom Loading Indicator for Pagination
-              return Padding(
-                padding: EdgeInsets.symmetric(vertical: 20.h),
-                child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                connectionData: items[index],
+                currentUserId: AuthService.id.toString(),
               );
             }
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: CircularProgressIndicator.adaptive(strokeWidth: 2)),
+            );
           },
         ),
       ),
@@ -152,26 +162,25 @@ class MyConnectionScreen extends ConsumerWidget {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people_outline, size: 48.sp, color: AppColor.grey400),
-          SizedBox(height: 12.h),
-          CustomText(
-            text: "No connections found",
-            color: AppColor.grey400,
-            fontSize: 14.sp,
-          ),
-        ],
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.people_outline, size: 64.sp, color: AppColor.grey300),
+            SizedBox(height: 16.h),
+            CustomText(
+              text: "No connections found",
+              color: AppColor.grey400,
+              fontSize: 14.sp,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: AppColor.primary,
-      ),
-    );
+    return const Center(child: CircularProgressIndicator(color: AppColor.primary));
   }
 }

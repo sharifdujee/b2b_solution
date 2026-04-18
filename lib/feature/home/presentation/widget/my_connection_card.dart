@@ -7,10 +7,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../model/find_connecion_state_model.dart';
 import '../../model/my_connection_state_model.dart';
+import '../../model/send_request_state_model.dart'; // Ensure this is imported
 import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionCard extends ConsumerWidget {
-  // Can be MyConnectionStateModel or FindDatum
   final dynamic connectionData;
   final String currentUserId;
 
@@ -23,27 +23,31 @@ class MyConnectionCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentFilter = ref.watch(connectionFilterProvider);
-    final connectionState = ref.watch(myConnectionListProvider);
 
     // --- Data Extraction Logic ---
     final bool isFindModel = connectionData is FindDatum;
+    final bool isRequestModel = connectionData is SendRequestResultDatum;
 
-    // Extract relevant display info based on the model type
-    final String fullName = isFindModel
-        ? (connectionData.businessName ?? connectionData.fullName)
-        : (connectionData.getDisplayUser(currentUserId)?.businessName ?? connectionData.getDisplayUser(currentUserId)?.fullName ?? "Unknown");
+    // Helper to get the correct user data based on type
+    final dynamic displayUser;
+    if (isFindModel) {
+      displayUser = connectionData;
+    } else if (isRequestModel) {
+      // For Requests, the data is in the receiver object
+      displayUser = connectionData.receiver;
+    } else {
+      // For Connected/Pending, we use your existing helper method
+      displayUser = (connectionData as MyConnectionStateModel).getDisplayUser(currentUserId);
+    }
 
-    final String? profileImage = isFindModel
-        ? connectionData.profileImage
-        : connectionData.getDisplayUser(currentUserId)?.profileImage;
+    // Now safely extract fields from the 'displayUser' we identified
+    final String fullName = displayUser?.businessName ?? displayUser?.fullName ?? "Unknown";
+    final String? profileImage = displayUser?.profileImage;
+    final String position = displayUser?.position ?? "Business Member";
 
-    final String position = isFindModel
-        ? (connectionData.position ?? "Business Member")
-        : (connectionData.getDisplayUser(currentUserId)?.position ?? "Business Member");
-
-    final String categories = isFindModel
-        ? connectionData.businessCategory.join(", ")
-        : (connectionData.getDisplayUser(currentUserId)?.businessCategory.join(", ") ?? "No categories listed");
+    final String categories = (displayUser?.businessCategory is List)
+        ? (displayUser.businessCategory as List).join(", ")
+        : "No categories listed";
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -90,8 +94,8 @@ class MyConnectionCard extends ConsumerWidget {
                   color: AppColor.grey800,
                   maxLines: 2,
                 ),
-                // Only show Accept/Reject if it's a connection model in Pending state
-                if (!isFindModel && currentFilter == ConnectionFilterOption.Pending)
+                // Show Accept/Reject only for the Pending tab
+                if (!isFindModel && !isRequestModel && currentFilter == ConnectionFilterOption.Pending)
                   _buildPendingActions(ref, context),
               ],
             ),
@@ -100,6 +104,8 @@ class MyConnectionCard extends ConsumerWidget {
       ),
     );
   }
+
+  // ... rest of your helper methods (Avatar, InfoRow, etc.) remain the same
 
   Widget _buildAvatar(String? imageUrl) {
     return Container(
@@ -144,7 +150,6 @@ class MyConnectionCard extends ConsumerWidget {
       bg: AppColor.primary,
       txtColor: AppColor.black,
       onTap: () {
-        // Map the enum to a simple string status for the next screen
         String statusHint;
         switch (filter) {
           case ConnectionFilterOption.Find:
@@ -156,12 +161,15 @@ class MyConnectionCard extends ConsumerWidget {
           case ConnectionFilterOption.Connected:
             statusHint = 'CONNECTED';
             break;
+          case ConnectionFilterOption.Requests:
+            statusHint = 'REQUEST';
+            break;
         }
 
         context.push(
           "/businessCardScreen",
           extra: {
-            'connectionData': connectionData, // The MyConnectionStateModel or FindDatum
+            'connectionData': connectionData,
             'currentUserId': currentUserId,
             'status': statusHint,
           },
@@ -169,6 +177,7 @@ class MyConnectionCard extends ConsumerWidget {
       },
     );
   }
+
   Widget _buildPendingActions(WidgetRef ref, BuildContext context) {
     final notifier = ref.read(myConnectionListProvider.notifier);
     final connection = connectionData as MyConnectionStateModel;

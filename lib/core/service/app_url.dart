@@ -70,6 +70,11 @@ class AppUrl {
 
   static String myConnectionCount = "$_baseUrl/connection/count";
 
+  static String sendRequests = "$_baseUrl/connection/sent-requests";
+
+  static String cancelRequest(String connectionId) => "$_baseUrl/connection/cancel/$connectionId";
+
+  static String removeConnection(String connectionId) => "$_baseUrl/connection/remove/$connectionId";
 
   ///end add by lisan
 
