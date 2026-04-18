@@ -85,7 +85,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 children: [
                   SizedBox(width: 20.w),
                   GestureDetector(
-                    onTap: () => controller.markAllAsRead(),
+                    onTap: () => controller.toggleAllReadStatus(
+                      state.notifications.every((n) => n.isRead == true),
+                    ),
                     child: CustomText(
                       text: "Mark All as Read",
                       fontSize: 12.sp,
@@ -117,7 +119,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     return Container(
                       decoration: BoxDecoration(
                         color: isUnread
-                            ? AppColor.primary.withOpacity(0.05)
+                            ? AppColor.primary.withValues(alpha: 0.05)
                             : AppColor.white,
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
@@ -162,7 +164,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                         ),
                         onTap: () {
                           if (isUnread) {
-                            //controller.markAsReadLocally(notification.id!);
+                            controller.markAsRead(notification.id!);
                           }
                         },
                       ),
