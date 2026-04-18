@@ -1,5 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../model/chat_message.dart';
 import '../../provider/provider/message_provider.dart';
@@ -20,6 +21,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  File? _selectedImage;
 
   @override
   void dispose() {
@@ -28,13 +30,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  void _onImageSelected(File image) {
+    setState(() => _selectedImage = image);
+    _scrollToBottom();
+  }
+
+  void _clearSelectedImage() {
+    setState(() => _selectedImage = null);
+  }
+
   void _sendMessage() {
     final text = _msgController.text.trim();
-    if (text.isEmpty) return;
-    ref
-        .read(messagesProvider.notifier)
-        .sendMessage(widget.conversationId, text);
+
+    if (text.isEmpty && _selectedImage == null) return;
+
+    if (_selectedImage != null) {
+      // Handles image upload + caption
+      ref.read(messagesProvider.notifier).sendImageMessage(
+        widget.conversationId,
+        _selectedImage!,
+        text,
+      );
+    } else {
+      // Handles plain text
+      ref.read(messagesProvider.notifier).sendMessage(widget.conversationId, text);
+    }
+
     _msgController.clear();
+    _clearSelectedImage();
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -54,8 +77,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (convo == null) return const Scaffold();
 
     final messages = convo.messages;
-
-    // Group messages by date
     final grouped = _groupByDate(messages);
 
     return Scaffold(
@@ -63,10 +84,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top bar ────────────────────────────────────────────────────
             ChatTopBar(conversation: convo),
 
-            // ── Messages ───────────────────────────────────────────────────
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
@@ -74,16 +93,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 itemCount: grouped.length,
                 itemBuilder: (context, index) {
                   final item = grouped[index];
-                  if (item is String) {
-                    return DateDivider(label: item);
-                  }
+                  if (item is String) return DateDivider(label: item);
+
                   final msg = item as ChatMessage;
                   final prevItem = index > 0 ? grouped[index - 1] : null;
                   final prevMsg = prevItem is ChatMessage ? prevItem : null;
+
                   final showAvatar = !msg.isMe &&
-                      (prevMsg == null ||
-                          prevMsg.isMe ||
-                          prevItem is String);
+                      (prevMsg == null || prevMsg.isMe || prevItem is String);
+
                   return MessageBubble(
                     message: msg,
                     showAvatar: showAvatar,
@@ -93,10 +111,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
 
-            // ── Input bar ──────────────────────────────────────────────────
             ChatInputBar(
               controller: _msgController,
               onSend: _sendMessage,
+              selectedImage: _selectedImage,
+              onImagePicked: _onImageSelected,
+              onClearImage: _clearSelectedImage,
             ),
           ],
         ),
@@ -104,7 +124,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  /// Returns a flat list of String (date divider) | ChatMessage
   List<dynamic> _groupByDate(List<ChatMessage> messages) {
     final result = <dynamic>[];
     String? lastDate;
@@ -129,12 +148,3 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 }
-
-
-
-
-
-
-
-
-
