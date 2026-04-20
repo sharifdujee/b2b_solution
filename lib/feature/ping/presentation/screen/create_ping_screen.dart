@@ -280,6 +280,7 @@ class CreatePingScreen extends ConsumerWidget{
                   }
                   // 2. Trigger API
                   await controller.sendPing();
+                  context.pop();
 
                 },
               )

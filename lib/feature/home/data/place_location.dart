@@ -2,17 +2,36 @@ import 'dart:math';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-enum FoodCategory { snacks, soups, drinks, salads }
+enum FoodCategory {
+  snacks,
+  soups,
+  drinks,
+  salads,
+  appetizers,
+  mainCourse,
+  desserts,
+  bakery,
+  dairy,
+  frozenFood,
+  meatPoultry
+}
 
 enum RadiusOption { km5, km10, km15, km20 }
 
 extension FoodCategoryX on FoodCategory {
   String get label {
     switch (this) {
-      case FoodCategory.snacks:  return 'Snacks';
-      case FoodCategory.soups:   return 'Soups';
-      case FoodCategory.drinks:  return 'Drinks';
-      case FoodCategory.salads:  return 'Salads';
+      case FoodCategory.snacks:       return 'Snacks';
+      case FoodCategory.soups:        return 'Soups';
+      case FoodCategory.drinks:       return 'Drinks';
+      case FoodCategory.salads:       return 'Salads';
+      case FoodCategory.appetizers:   return 'Appetizers';
+      case FoodCategory.mainCourse:   return 'Main Course';
+      case FoodCategory.desserts:     return 'Desserts';
+      case FoodCategory.bakery:       return 'Bakery';
+      case FoodCategory.dairy:        return 'Dairy';
+      case FoodCategory.frozenFood:   return 'Frozen Food';
+      case FoodCategory.meatPoultry:  return 'Meat & Poultry';
     }
   }
 

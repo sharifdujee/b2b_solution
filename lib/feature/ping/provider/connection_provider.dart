@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../../core/service/app_url.dart';
 import '../../../core/service/auth_service.dart';

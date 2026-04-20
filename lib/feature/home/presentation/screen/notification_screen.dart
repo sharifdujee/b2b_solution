@@ -2,31 +2,46 @@ import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/utils/local_assets/icon_path.dart';
-import '../../provider/notification_procider.dart';
+import '../../provider/notification_provider.dart';
 
-
-class NotificationScreen extends ConsumerWidget {
+class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends ConsumerState<NotificationScreen> {
+  String selectedFilter = "all";
+
+  @override
+  void initState() {
+    super.initState();
+    // Initial fetch
+    Future.microtask(() =>
+        ref.read(notificationProvider.notifier).fetchNotifications(filter: selectedFilter)
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(notificationProvider);
+    final controller = ref.read(notificationProvider.notifier);
 
     return Scaffold(
       backgroundColor: AppColor.white,
-      body: SingleChildScrollView(
-        // Added bottom padding to ensure content isn't cut off
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 48.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // --- Custom AppBar with Filter ---
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => context.pop(),
@@ -39,71 +54,156 @@ class NotificationScreen extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                     color: AppColor.black,
                   ),
+                  const Spacer(),
+
+
+
+                  // --- Filter Menu ---
+                  PopupMenuButton<String>(
+                    initialValue: selectedFilter,
+                    icon: Icon(Icons.tune, color: AppColor.primary, size: 24.r),
+                    onSelected: (value) {
+                      setState(() => selectedFilter = value);
+                      controller.fetchNotifications(filter: value);
+                    },
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                    itemBuilder: (context) => [
+                      _buildMenuItem("all", "All Notifications", Icons.clear_all),
+                      _buildMenuItem("false", "Unread", Icons.mark_as_unread),
+                      _buildMenuItem("true", "Read", Icons.done_all),
+                    ],
+                  ),
                 ],
               ),
-              SizedBox(height: 8.h),
-              Divider(color: AppColor.grey50),
-              SizedBox(height: 24.h),
+            ),
+            Divider(color: AppColor.grey50, height: 1),
 
-              // --- FIXED SECTION ---
-              ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: state.length,
-                itemBuilder: (context, index) {
-                  final notification = state[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: notification.isRead ? AppColor.white : AppColor.secondary.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(width: 2, color: notification.isRead ? AppColor.grey50 : AppColor.primary.withValues(alpha: 0.5))
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(width: 20.w),
+                  GestureDetector(
+                    onTap: () => controller.toggleAllReadStatus(
+                      state.notifications.every((n) => n.isRead == true),
                     ),
-                    margin: EdgeInsets.only(bottom: 12.h),
-                    child: Padding(
-                      padding: EdgeInsets.all(12.r),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20.r,
-                            backgroundColor: AppColor.primary.withValues(alpha: 0.1),
-                            child: notification.isRead? Icon(Icons.notifications_none, color: AppColor.primary, size: 20.r) : Icon(Icons.notifications_active, color: AppColor.primary, size: 20.r),
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                CustomText(
-                                  text: notification.title,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14.sp,
-                                  color: AppColor.black,
-                                ),
-                                SizedBox(height: 4.h),
-                                CustomText(
-                                  text: notification.subTitle,
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: AppColor.grey400,
-                                ),
-                              ],
-                            ),
-                          ),
-                          CustomText(
-                            text: notification.formattedTime,
-                            fontSize: 10.sp,
-                            color: AppColor.grey400,
-                          ),
-                        ],
-                      ),
+                    child: CustomText(
+                      text: "Mark All as Read",
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      color: AppColor.primary,
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            // --- Body Content ---
+            Expanded(
+              child: state.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : state.notifications.isEmpty
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                onRefresh: () => controller.fetchNotifications(filter: selectedFilter),
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                  itemCount: state.notifications.length,
+                  itemBuilder: (context, index) {
+                    final notification = state.notifications[index];
+
+                    // Dynamic styling based on read status
+                    final isUnread = notification.isRead == false;
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: isUnread
+                            ? AppColor.primary.withValues(alpha: 0.05)
+                            : AppColor.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                            width: 1,
+                            color: isUnread ? AppColor.primary.withOpacity(0.2) : AppColor.grey50
+                        ),
+                      ),
+                      margin: EdgeInsets.only(bottom: 12.h),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.all(12.r),
+                        leading: CircleAvatar(
+                          radius: 20.r,
+                          backgroundColor: AppColor.primary.withOpacity(0.1),
+                          child: Icon(
+                            isUnread ? Icons.notifications_active : Icons.notifications_none,
+                            color: AppColor.primary,
+                            size: 20.r,
+                          ),
+                        ),
+                        title: CustomText(
+                          text: notification.title ?? "No Title",
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                          color: AppColor.black,
+                        ),
+                        subtitle: Padding(
+                          padding: EdgeInsets.only(top: 4.h),
+                          child: CustomText(
+                            text: notification.body ?? "",
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w400,
+                            color: AppColor.grey400,
+                            maxLines: 2,
+                          ),
+                        ),
+                        trailing: CustomText(
+                          text: notification.createdAt != null
+                              ? DateFormat('hh:mm a').format(notification.createdAt!)
+                              : "",
+                          fontSize: 10.sp,
+                          color: AppColor.grey400,
+                        ),
+                        onTap: () {
+                          if (isUnread) {
+                            controller.markAsRead(notification.id!);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildMenuItem(String value, String label, IconData icon) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20.sp, color: selectedFilter == value ? AppColor.primary : AppColor.grey400),
+          SizedBox(width: 8.w),
+          Text(label, style: TextStyle(
+              color: selectedFilter == value ? AppColor.primary : AppColor.black,
+              fontWeight: selectedFilter == value ? FontWeight.bold : FontWeight.normal
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.notifications_off_outlined, size: 64.r, color: AppColor.grey300),
+          SizedBox(height: 16.h),
+          CustomText(text: "No notifications found", color: AppColor.grey400),
+        ],
       ),
     );
   }

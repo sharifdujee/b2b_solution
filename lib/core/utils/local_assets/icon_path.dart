@@ -58,6 +58,11 @@ class IconPath {
   static const mail = "$_basePath/mail-01.png";
   static const chat = "$_basePath/bubble-chat.png";
 
+  static const red_mug = "$_basePath/red_mug.svg";
+  static const emergency = "$_basePath/emergency.svg";
+
+  static const colorProfile = "$_basePath/colorProfile.png";
+
 
 
   /// add by ios

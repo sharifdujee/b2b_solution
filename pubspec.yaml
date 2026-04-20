@@ -46,6 +46,8 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   shared_preferences: ^2.5.5
   logger: ^2.7.0
+  intl: ^0.20.2
+  geocoding: ^4.0.0
 
 dev_dependencies:
   flutter_test:
