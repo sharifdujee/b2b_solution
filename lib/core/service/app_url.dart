@@ -10,7 +10,7 @@ class AppUrl {
 
 
   /// local socket url
-  static const String socketUrl = "ws://10.0.30.184:4009";
+  static const String socketUrl = "ws://206.162.244.144:6014";
 
   /// auth section
 
@@ -89,6 +89,9 @@ class AppUrl {
   static const String changePassword = "$_baseUrl/auth/change-password";
   static const String editProfile = "$_baseUrl/users/update-profile";
   static const String editProfilePicture = "$_baseUrl/users/update-profile-image";
+
+
+  static const String getConversation = "$_baseUrl/chat/conversations";
 
   /// post section
   static const String createPost = "$_baseUrl/post/create";

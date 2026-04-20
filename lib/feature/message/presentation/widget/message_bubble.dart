@@ -8,46 +8,45 @@ import '../../model/chat_message.dart';
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final bool showAvatar;
-  final String avatarUrl;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.showAvatar,
-    required this.avatarUrl,
   });
 
   String _formatTime(DateTime dt) {
-    final hour = dt.hour;
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
     final minute = dt.minute.toString().padLeft(2, '0');
-    return '$hour.$minute';
-  }
-
-  String _statusText(MessageStatus s) {
-    switch (s) {
-      case MessageStatus.sent: return 'Sent';
-      case MessageStatus.delivered: return 'Delivered';
-      case MessageStatus.read: return 'Read';
-    }
+    final period = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   @override
   Widget build(BuildContext context) {
     final isMe = message.isMe;
-    final hasImage = message.imageUrl != null && message.imageUrl!.isNotEmpty;
-    final hasText = message.text.isNotEmpty;
+    // Check if there are any files and if the type is IMAGE (or just check list length)
+    final hasImage = message.fileUrl.isNotEmpty;
+    final hasText = message.content.isNotEmpty;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.only(bottom: 12.h),
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // --- PARTNER AVATAR ---
           if (!isMe) ...[
             showAvatar
                 ? CircleAvatar(
               radius: 16.r,
-              backgroundImage: NetworkImage(avatarUrl),
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: message.sender.profileImage != null
+                  ? NetworkImage(message.sender.profileImage!)
+                  : null,
+              child: message.sender.profileImage == null
+                  ? Icon(Icons.person, size: 16.sp, color: Colors.grey)
+                  : null,
             )
                 : SizedBox(width: 32.w),
             SizedBox(width: 8.w),
@@ -55,8 +54,7 @@ class MessageBubble extends StatelessWidget {
 
           Flexible(
             child: Container(
-              constraints: BoxConstraints(maxWidth: 260.w),
-              // Reduced vertical padding if there's an image to let the image hit the edges
+              constraints: BoxConstraints(maxWidth: 280.w),
               padding: EdgeInsets.all(hasImage ? 4.r : 12.r),
               decoration: BoxDecoration(
                 color: isMe ? const Color(0xFF2D6A4F) : AppColor.white,
@@ -84,7 +82,8 @@ class MessageBubble extends StatelessWidget {
                       padding: EdgeInsets.only(bottom: hasText ? 6.h : 0),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.r),
-                        child: _buildImage(message.imageUrl!),
+                        // Taking the first image from the fileUrl list
+                        child: _buildImage(message.fileUrl.first.toString()),
                       ),
                     ),
 
@@ -93,7 +92,7 @@ class MessageBubble extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                       child: Text(
-                        message.text,
+                        message.content,
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: isMe ? Colors.white : Colors.black87,
@@ -102,17 +101,15 @@ class MessageBubble extends StatelessWidget {
                       ),
                     ),
 
-                  // --- TIMESTAMP & STATUS ---
+                  // --- TIMESTAMP ---
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w),
+                    padding: EdgeInsets.only(left: 6.w, right: 6.w, top: 4.h),
                     child: Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Text(
-                        isMe
-                            ? '${_formatTime(message.timestamp)} · ${_statusText(message.status)}'
-                            : _formatTime(message.timestamp),
+                        _formatTime(message.createdAt),
                         style: TextStyle(
-                          fontSize: 10.sp, // Slightly smaller for dense bubbles
+                          fontSize: 10.sp,
                           color: isMe
                               ? Colors.white.withValues(alpha: 0.7)
                               : Colors.grey.shade500,
@@ -125,13 +122,21 @@ class MessageBubble extends StatelessWidget {
             ),
           ),
 
+          // --- MY AVATAR (Optional) ---
           if (isMe) ...[
             SizedBox(width: 8.w),
-            CircleAvatar(
+            showAvatar
+                ? CircleAvatar(
               radius: 16.r,
-              backgroundColor: Colors.grey.shade300,
-              child: Icon(Icons.person, size: 18.sp, color: Colors.grey.shade600),
-            ),
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: message.sender.profileImage != null
+                  ? NetworkImage(message.sender.profileImage!)
+                  : null,
+              child: message.sender.profileImage == null
+                  ? Icon(Icons.person, size: 16.sp, color: Colors.grey)
+                  : null,
+            )
+                : SizedBox(width: 32.w),
           ],
         ],
       ),
@@ -139,20 +144,16 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildImage(String url) {
-    // Support for both Local Files (during upload) and Network URLs
     if (url.startsWith('http') || url.startsWith('https')) {
       return Image.network(
         url,
         fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: 150.h,
-            width: double.infinity,
-            color: Colors.grey.shade200,
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
-        },
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 150.h,
+          width: double.infinity,
+          color: Colors.grey.shade300,
+          child: const Icon(Icons.broken_image, color: Colors.grey),
+        ),
       );
     } else {
       return Image.file(

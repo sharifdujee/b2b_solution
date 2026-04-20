@@ -5,10 +5,12 @@ import 'package:b2b_solution/core/service/app_url.dart';
 import 'package:b2b_solution/core/service/network_caller.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../../core/service/auth_service.dart';
+import '../model/connected_state_model.dart';
 import '../model/connection_state_model.dart';
 import '../model/find_connecion_state_model.dart';
 import '../model/my_connection_api_response.dart';
 import '../model/my_connection_state_model.dart';
+import '../model/pending_connection_state_model.dart';
 import '../model/send_request_state_model.dart';
 
 class ConnectionNotifier extends StateNotifier<ConnectionFilterOption> {
@@ -212,10 +214,33 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
     await _executeApiRequest(url, page, isRefresh);
   }
 
+  // In MyConnectionListNotifier class:
+
   Future<void> _fetchPending(int page, bool isRefresh) async {
-    status = 'PENDING';
-    final url = AppUrl.pendingConnections(page, _limit);
-    await _executeApiRequest(url, page, isRefresh);
+    try {
+      final response = await networkCaller.getRequest(
+          AppUrl.pendingConnections(page, _limit),
+          token: AuthService.token
+      );
+
+      if (response.isSuccess && response.responseData != null) {
+        final pendingResponse = PendingConnectionModel.fromJson(response.responseData);
+        final List<PendingConnection> newItems = pendingResponse.result?.data ?? [];
+        state = state.copyWith(
+          pendingItems: isRefresh
+              ? newItems
+              : [...(state.pendingItems ?? []), ...newItems],
+          currentPage: page + 1,
+          isLoading: false,
+          hasMore: newItems.length >= _limit,
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      log("Pending Fetch Error: $e");
+    }
   }
 
   Future<void> _fetchDiscover(int page, bool isRefresh) async {
@@ -249,14 +274,22 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
 
   // --- Helper Methods ---
 
+// ... inside MyConnectionListNotifier class
+
+  // Updated Helper Method to use the new Connected model
   Future<void> _executeApiRequest(String url, int page, bool isRefresh) async {
     try {
       final response = await networkCaller.getRequest(url, token: AuthService.token);
+
       if (response.isSuccess && response.responseData != null) {
-        final apiResponse = MyConnectionApiResponse.fromJson(response.responseData);
-        final List<MyConnectionStateModel> newItems = apiResponse.result?.data ?? [];
+        // Use the new ConnectedConnectionModel instead of MyConnectionApiResponse
+        final apiResponse = ConnectedConnectionModel.fromJson(response.responseData);
+
+        // Extract data from the new model structure
+        final List<ConnectedConnection> newItems = apiResponse.result?.data ?? [];
 
         state = state.copyWith(
+          // Ensure your ConnectionStateData 'items' field is List<ConnectedConnection>
           items: isRefresh ? newItems : [...state.items, ...newItems],
           currentPage: page + 1,
           isLoading: false,
@@ -264,9 +297,11 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
         );
       } else {
         state = state.copyWith(isLoading: false);
+        log("Connected Fetch Error: ${response.errorMessage}");
       }
     } catch (e) {
       state = state.copyWith(isLoading: false);
+      log("Connected Fetch Exception: $e");
     }
   }
 
@@ -303,10 +338,16 @@ final filteredConnectionsProvider = Provider<List<dynamic>>((ref) {
   final filter = ref.watch(connectionFilterProvider);
   final connectionState = ref.watch(myConnectionListProvider);
 
-  if (filter == ConnectionFilterOption.Find) {
-    return connectionState.discoverItems;
-  } else {
-    return connectionState.items;
+  switch (filter) {
+    case ConnectionFilterOption.Find:
+      return connectionState.discoverItems;
+    case ConnectionFilterOption.Pending:
+      return connectionState.pendingItems ?? []; // Return the new pending list
+    case ConnectionFilterOption.Requests:
+      return connectionState.sendRequestsList ?? [];
+    case ConnectionFilterOption.Connected:
+    default:
+      return connectionState.items;
   }
 });
 

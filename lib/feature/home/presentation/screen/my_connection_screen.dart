@@ -67,12 +67,17 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
   }
 
   /// Selects the correct list based on the active tab
+  /// Selects the correct list based on the active tab
   List<dynamic> _getDisplayItems(dynamic state, ConnectionFilterOption filter) {
     switch (filter) {
       case ConnectionFilterOption.Find:
         return state.discoverItems;
       case ConnectionFilterOption.Requests:
         return state.sendRequestsList;
+      case ConnectionFilterOption.Pending:
+        return state.pendingItems ?? [];
+      case ConnectionFilterOption.Connected:
+        return state.items;
       default:
         return state.items;
     }

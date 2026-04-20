@@ -10,9 +10,9 @@ import '../widget/date_divider.dart';
 import '../widget/message_bubble.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  final String conversationId;
+  final String roomId;
 
-  const ChatScreen({super.key, required this.conversationId});
+  const ChatScreen({super.key, required this.roomId});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -41,19 +41,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _sendMessage() {
     final text = _msgController.text.trim();
+    // In a real app, get this from your AuthProvider
+    const String currentUserId = "69c233654cf6dafe440358a1";
 
     if (text.isEmpty && _selectedImage == null) return;
 
     if (_selectedImage != null) {
-      // Handles image upload + caption
       ref.read(messagesProvider.notifier).sendImageMessage(
-        widget.conversationId,
+        widget.roomId,
         _selectedImage!,
         text,
+        currentUserId,
       );
     } else {
-      // Handles plain text
-      ref.read(messagesProvider.notifier).sendMessage(widget.conversationId, text);
+      ref.read(messagesProvider.notifier).sendMessage(
+          widget.roomId,
+          text,
+          currentUserId
+      );
     }
 
     _msgController.clear();
@@ -63,20 +68,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final convo = ref.watch(conversationProvider(widget.conversationId));
-    if (convo == null) return const Scaffold();
+    // Uses the room ID to find the conversation result
+    final convo = ref.watch(conversationProvider(widget.roomId));
 
-    final messages = convo.messages;
+    if (convo == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final messages = ref.watch(messagesProvider.select(
+            (state) => state.roomMessages[widget.roomId] ?? []
+    ));
+
     final grouped = _groupByDate(messages);
 
     return Scaffold(
@@ -84,6 +92,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // Updated to pass ConversationResult
             ChatTopBar(conversation: convo),
 
             Expanded(
@@ -105,7 +114,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   return MessageBubble(
                     message: msg,
                     showAvatar: showAvatar,
-                    avatarUrl: convo.avatarUrl,
                   );
                 },
               ),
@@ -127,8 +135,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   List<dynamic> _groupByDate(List<ChatMessage> messages) {
     final result = <dynamic>[];
     String? lastDate;
-    for (final msg in messages) {
-      final dateLabel = _dateLabel(msg.timestamp);
+
+    final sortedMessages = List<ChatMessage>.from(messages)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    for (final msg in sortedMessages) {
+      final dateLabel = _dateLabel(msg.createdAt);
       if (dateLabel != lastDate) {
         result.add(dateLabel);
         lastDate = dateLabel;
@@ -143,6 +155,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final msgDay = DateTime(dt.year, dt.month, dt.day);
     final diff = today.difference(msgDay).inDays;
+
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     return '${dt.day}/${dt.month}/${dt.year}';

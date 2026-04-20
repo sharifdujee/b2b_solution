@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
+import 'package:b2b_solution/core/service/app_url.dart';
 import 'package:b2b_solution/core/service/auth_service.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/service/socket_service.dart';
+import '../../model/connected_state_model.dart';
 import '../../model/find_connecion_state_model.dart';
-import '../../model/my_connection_state_model.dart';
+import '../../model/pending_connection_state_model.dart';
 import '../../model/send_request_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 
@@ -18,12 +21,14 @@ class BusinessCardScreen extends ConsumerWidget {
   final dynamic connectionData;
   final String currentUserId;
   final String status;
+  final String? connectedUserId;
 
   const BusinessCardScreen({
     super.key,
     required this.connectionData,
     required this.currentUserId,
     required this.status,
+    this.connectedUserId,
   });
 
   Future<String> getAddressFromLatLng(double lat, double lng) async {
@@ -46,6 +51,8 @@ class BusinessCardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bool isFindModel = connectionData is FindDatum;
     final bool isRequestModel = connectionData is SendRequestResultDatum;
+    final bool isPendingModel = connectionData is PendingConnection;
+    final bool isConnectedModel = connectionData is ConnectedConnection;
 
     String fullName = "N/A";
     String businessName = "N/A";
@@ -56,7 +63,7 @@ class BusinessCardScreen extends ConsumerWidget {
     double lat = 0.0;
     double lng = 0.0;
 
-    // --- Data Extraction Logic ---
+    // --- Unified Data Extraction ---
     if (isFindModel) {
       final data = connectionData as FindDatum;
       fullName = data.fullName;
@@ -76,33 +83,30 @@ class BusinessCardScreen extends ConsumerWidget {
       email = receiver.email;
       lat = receiver.businessLatitude;
       lng = receiver.businessLongitude;
-    } else {
-      final connection = connectionData as MyConnectionStateModel;
-      final user = connection.getDisplayUser(currentUserId);
-      fullName = user?.fullName ?? fullName;
-      email = user?.email ?? email;
-      businessName = user?.businessName ?? businessName;
-      businessImage = user?.businessImage;
-      position = user?.position ?? position;
-      memberSince = connection.createdAt;
-      lat = user?.businessLatitude ?? 0.0;
-      lng = user?.businessLongitude ?? 0.0;
+    } else if (isPendingModel) {
+      final data = connectionData as PendingConnection;
+      final partner = data.getDisplayPartner(currentUserId);
+      fullName = partner?.fullName ?? "Unknown";
+      businessName = partner?.businessName ?? "N/A";
+      businessImage = partner?.businessImage;
+      position = partner?.position ?? position;
+      lat = partner?.businessLatitude ?? 0.0;
+      lng = partner?.businessLongitude ?? 0.0;
+      memberSince = data.createdAt;
+    } else if (isConnectedModel) {
+      final data = connectionData as ConnectedConnection;
+      final partner = data.getDisplayPartner(currentUserId);
+      fullName = partner?.fullName ?? "Unknown";
+      businessName = partner?.businessName ?? "N/A";
+      businessImage = partner?.businessImage;
+      position = partner?.position ?? position;
+      lat = partner?.businessLatitude ?? 0.0;
+      lng = partner?.businessLongitude ?? 0.0;
+      memberSince = data.createdAt;
     }
 
     final connectionState = ref.watch(myConnectionListProvider);
     final bool isLoading = connectionState.isLoading;
-
-    MyConnectionStateModel? activeConnection;
-    if (isFindModel) {
-      activeConnection = connectionState.items.where(
-              (e) => e.receiverId == (connectionData as FindDatum).id ||
-              e.senderId == (connectionData as FindDatum).id
-      ).firstOrNull;
-    } else if (!isRequestModel) {
-      activeConnection = connectionState.items.where(
-              (element) => element.id == (connectionData as MyConnectionStateModel).id
-      ).firstOrNull ?? (connectionData as MyConnectionStateModel);
-    }
 
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -133,15 +137,102 @@ class BusinessCardScreen extends ConsumerWidget {
               SizedBox(height: 14.h),
               _buildDetailRow(IconPath.mail, "Email", email),
               SizedBox(height: 42.h),
-              _buildUniversalActions(ref, activeConnection, isFindModel ? (connectionData as FindDatum).id : null, context, isLoading),
+              _buildUniversalActions(ref, context, isLoading),
               SizedBox(height: 16.h),
-              if (status == "CONNECTED") _buildMessageButton(),
+              if (status == "CONNECTED") _buildMessageButton(context),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildUniversalActions(WidgetRef ref, BuildContext context, bool isLoading) {
+    final notifier = ref.read(myConnectionListProvider.notifier);
+
+    if (status == "REQUEST") {
+      final String requestId = (connectionData as SendRequestResultDatum).receiver.id;
+      return CustomButton(
+        onPressed: isLoading ? null : () {
+          notifier.cancelRequest(requestId, context);
+          context.pop();
+        },
+        text: "Cancel Request",
+        backgroundColor: AppColor.error,
+        textColor: AppColor.white,
+      );
+    }
+
+    if (status == "PENDING") {
+      final data = connectionData as PendingConnection;
+      final bool isReceiver = data.receiverId == currentUserId;
+
+      if (isReceiver) {
+        return Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                text: "Reject",
+                backgroundColor: AppColor.error.withValues(alpha: 0.1),
+                textColor: AppColor.error,
+                onPressed: isLoading ? null : () {
+                  final id = AuthService.id == data.sender!.id ? data.sender!.id : data.sender!.id;
+                  notifier.rejectConnection(id, context);
+                  context.pop();
+                },
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: CustomButton(
+                text: "Accept",
+                backgroundColor: AppColor.primary,
+                onPressed: isLoading ? null : () {
+                  final id = AuthService.id == data.sender!.id ? data.sender!.id : data.sender!.id;
+                  notifier.acceptConnection(id, context);
+                  context.pop();
+                },
+              ),
+            ),
+          ],
+        );
+      } else {
+        return CustomButton(
+          text: "Request Sent",
+          backgroundColor: AppColor.grey100,
+          textColor: AppColor.grey400,
+          onPressed: null,
+        );
+      }
+    }
+
+    if (status == "CONNECTED") {
+      final data = connectionData as ConnectedConnection;
+      final String partnerId = data.getPartnerId(currentUserId);
+
+      return CustomButton(
+        text: "Remove Connection",
+        backgroundColor: AppColor.error,
+        onPressed: isLoading ? null : () {
+          notifier.removeConnection(partnerId, context);
+          context.pop();
+        },
+      );
+    }
+
+    if (status == "FIND") {
+      final String findId = (connectionData as FindDatum).id;
+      return CustomButton(
+        text: "Connect",
+        backgroundColor: AppColor.primary,
+        onPressed: isLoading ? null : () => notifier.sendConnectionRequest(findId, context),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  // --- UI Components ---
 
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -195,93 +286,6 @@ class BusinessCardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildUniversalActions(WidgetRef ref, MyConnectionStateModel? item, String? findId, BuildContext context, bool isLoading) {
-    final notifier = ref.read(myConnectionListProvider.notifier);
-
-    // 1. Handling "Cancel Request" logic for Sent Requests
-    if (status == "REQUEST") {
-      final String requestId = (connectionData as SendRequestResultDatum).receiver.id;
-      return CustomButton(
-        onPressed: isLoading ? null : (){
-          notifier.cancelRequest(requestId, context);
-          context.pop();
-        },
-        text: "Cancel Request",
-        backgroundColor: AppColor.error,
-        textColor: AppColor.white,
-      );
-    }
-
-    // 2. Handling "Connect" for new profiles
-    if (item == null && findId != null) {
-      return CustomButton(
-        text: "Connect",
-        backgroundColor: AppColor.primary,
-        onPressed: isLoading ? null : () => notifier.sendConnectionRequest(findId, context),
-      );
-    }
-
-    // 3. Handling "Accept/Reject" for incoming requests
-    if (status == "PENDING" && item?.receiverId == currentUserId) {
-      return Row(
-        children: [
-          Expanded(
-              child: CustomButton(
-                  text: "Reject",
-                  backgroundColor: AppColor.emergencyBadgeText,
-                  onPressed: isLoading ? null : () => notifier.rejectConnection(item!.id, context)
-              )
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-              child: CustomButton(
-                  text: "Accept",
-                  backgroundColor: AppColor.primary,
-                  onPressed: isLoading ? null : () => notifier.acceptConnection(item!.id, context)
-              )
-          ),
-        ],
-      );
-    }
-
-    // 4. Default Request Sent / Connected states
-    if (status == "PENDING") {
-      return CustomButton(
-          text: "Request Sent",
-          backgroundColor: AppColor.grey100,
-          textColor: AppColor.grey400,
-          onPressed: null
-      );
-    }
-
-    if (status == "CONNECTED") {
-
-      return CustomButton(
-          text: "Remove Connection",
-          backgroundColor: AppColor.error,
-          onPressed: () {
-            String removeId = "";
-            if(AuthService.id != item!.senderId){
-              removeId = item!.senderId;
-            }
-            else{
-              removeId = item!.receiverId;
-            }
-            isLoading? null:
-            notifier.removeConnection(removeId, context);
-            log("item ID: ${item!.receiverId}");
-            context.pop();
-          }
-      );
-    }
-
-    return CustomButton(
-        text: "Connect",
-        backgroundColor: AppColor.primary,
-        onPressed: isLoading ? null : () => notifier.sendConnectionRequest(item?.id ?? findId!, context)
-    );
-  }
-
   Widget _buildDetailRow(String icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,21 +303,34 @@ class BusinessCardScreen extends ConsumerWidget {
     return Container(height: 1.h, width: double.infinity, color: AppColor.grey100);
   }
 
-  Widget _buildMessageButton() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 14.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColor.primary),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(IconPath.chat, height: 24.h, width: 24.w, color: AppColor.primary),
-          SizedBox(width: 8.w),
-          CustomText(text: "Message", color: AppColor.primary, fontWeight: FontWeight.w500),
-        ],
+  Widget _buildMessageButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        log("connected User id: $connectedUserId");
+
+        if (connectedUserId != null) {
+          final SocketService socketService = SocketService();
+          socketService.connect(AppUrl.socketUrl, AuthService.token.toString());
+          socketService.joinRoom(connectedUserId!);
+          log("Joined room with: $connectedUserId");
+          context.push("/chatScreen");
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 14.h),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColor.primary),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(IconPath.chat, height: 24.h, width: 24.w, color: AppColor.primary),
+            SizedBox(width: 8.w),
+            CustomText(text: "Message", color: AppColor.primary, fontWeight: FontWeight.w500),
+          ],
+        ),
       ),
     );
   }

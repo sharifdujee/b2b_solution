@@ -1,12 +1,16 @@
+import 'connected_state_model.dart';
 import 'find_connecion_state_model.dart';
-import 'my_connection_state_model.dart';
-import 'send_request_state_model.dart'; // Import the new model
+import 'send_request_state_model.dart';
+import 'pending_connection_state_model.dart';
 
 class ConnectionStateData {
-  final List<MyConnectionStateModel> items;
+  // 1. Updated 'items' to use the new ConnectedConnection model
+  final List<ConnectedConnection> items;
   final List<FindDatum> discoverItems;
-  final List<SendRequestResultDatum> sendRequestsList; // New field
-  final int totalRequests; // New count field
+  final List<SendRequestResultDatum> sendRequestsList;
+  final List<PendingConnection> pendingItems;
+
+  final int totalRequests;
   final int connectedCount;
   final bool isLoading;
   final int currentPage;
@@ -15,8 +19,9 @@ class ConnectionStateData {
   ConnectionStateData({
     required this.items,
     required this.discoverItems,
-    this.sendRequestsList = const [], // Initialized as empty list
-    this.totalRequests = 0,           // Initialized as zero
+    this.sendRequestsList = const [],
+    this.pendingItems = const [],
+    this.totalRequests = 0,
     this.connectedCount = 0,
     this.isLoading = false,
     this.currentPage = 1,
@@ -24,9 +29,10 @@ class ConnectionStateData {
   });
 
   ConnectionStateData copyWith({
-    List<MyConnectionStateModel>? items,
+    List<ConnectedConnection>? items, // Updated type here
     List<FindDatum>? discoverItems,
     List<SendRequestResultDatum>? sendRequestsList,
+    List<PendingConnection>? pendingItems,
     int? totalRequests,
     int? connectedCount,
     bool? isLoading,
@@ -37,6 +43,7 @@ class ConnectionStateData {
       items: items ?? this.items,
       discoverItems: discoverItems ?? this.discoverItems,
       sendRequestsList: sendRequestsList ?? this.sendRequestsList,
+      pendingItems: pendingItems ?? this.pendingItems,
       totalRequests: totalRequests ?? this.totalRequests,
       connectedCount: connectedCount ?? this.connectedCount,
       isLoading: isLoading ?? this.isLoading,

@@ -37,7 +37,6 @@ class MyConnectionFilter extends ConsumerWidget {
             _buildTab(
               ref,
               label: 'Pending',
-              count: counts[ConnectionFilterOption.Pending],
               targetFilter: ConnectionFilterOption.Pending,
               isSelected: activeFilter == ConnectionFilterOption.Pending,
             ),
@@ -50,7 +49,6 @@ class MyConnectionFilter extends ConsumerWidget {
             _buildTab(
               ref,
               label: 'Requests',
-              count: counts[ConnectionFilterOption.Requests],
               targetFilter: ConnectionFilterOption.Requests,
               isSelected: activeFilter == ConnectionFilterOption.Requests,
             )

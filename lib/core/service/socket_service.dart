@@ -86,8 +86,9 @@ class SocketService {
       _reconnectTimer?.cancel();
 
       log("Attempting to connect to socket... $socketUrl");
+      log("x-Token : ${AuthService.token}");
       _socket = await WebSocket.connect(socketUrl, headers: {
-        'x-token': AuthService.token,
+        'token': AuthService.token,
         'content-type': 'application/json'
       }).timeout(const Duration(seconds: 10),
         onTimeout: (){
@@ -191,18 +192,18 @@ class SocketService {
     }
   }
 
-  void joinRoom(String bookingId) {
+  void joinRoom(String connectedUserId) {
     if (_socket == null || !isConnected) {
       log("Cannot join room: WebSocket not connected");
       return;
     }
 
     // remember for reconnect replay
-    _lastJoinedBookingId = bookingId;
+    _lastJoinedBookingId = connectedUserId;
 
     final message = jsonEncode({
       "type": "member-subscribe",
-      "bookingId": bookingId,
+      "bookingId": connectedUserId,
     });
 
     try {
@@ -222,6 +223,5 @@ class SocketService {
   void setOnMessageReceived(Function(String) callback) {
     onMessageReceived = callback;
   }
-
 
 }
