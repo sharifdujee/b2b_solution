@@ -6,7 +6,7 @@ class AppUrl {
   /// vps
   static const String _baseUrl = "http://206.162.244.144:6014/api/v1";
 
-  ///loalal
+  ///local
 
 
   /// local socket url
@@ -24,7 +24,7 @@ class AppUrl {
   static const String updateProfile = "$_baseUrl/auth/me/update";
 
   static String nearbyPings(double lat, double lng) {
-    return "${_baseUrl}/ping?latitude=$lat&longitude=$lng";
+    return "$_baseUrl/ping?latitude=$lat&longitude=$lng";
   }
 
 
@@ -168,13 +168,13 @@ class AppUrl {
       "$_baseUrl/event//non-invited-users/$eventId";
   static const String inviteUser = "$_baseUrl/event/invite";
   static const String getMyInvitedEvent = "$_baseUrl/event/join-history";
-  static const String acceptRejectinvitation = "$_baseUrl/event/accept-reject-invite";
+  static const String acceptRejectToInvitation = "$_baseUrl/event/accept-reject-invite";
 
   /// story flow
   static const String createStory = "$_baseUrl/story/create";
   static const String getAllStory = "$_baseUrl/story/available";
 
-  static get apiBaseUrl => null;
+
 
   static String storyPreview(String userId) => "$_baseUrl//story/user/$userId";
 
