@@ -10,7 +10,7 @@ class AppUrl {
 
 
   /// local socket url
-  static const String socketUrl = "ws://10.0.30.184:4009";
+  static const String socketUrl = "ws://206.162.244.144:6014";
 
   /// auth section
 
@@ -57,10 +57,24 @@ class AppUrl {
   static String rejectPing(String pingId) => "$_baseUrl/ping/reject/$pingId";
 
   static String myConnections(int page, int limit) => "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
-  static String findUsers(int page, int limit) => "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
+  static String findUsers(int page, int limit) => "$_baseUrl/connection/find?page=$page&limit=$limit";
   static String pendingConnections(int page, int limit) => "$_baseUrl/connection/pending-request?page=$page&limit=$limit";
 
+  static String notifications (int page, int limit,String isRead) => "$_baseUrl/notify/my?limit=$limit&page=$page&isRead=$isRead";
+  static String markAllAsReadNotification = "$_baseUrl/notify/mark-all";
+  static String singleNotificationRead(String notificationId) => "$_baseUrl/notify/single/$notificationId";
 
+  static String sendConnectionRequest(String connectionId) => "$_baseUrl/connection/send-request/$connectionId";
+  static String acceptConnection(String connectionId) => "$_baseUrl/connection/response/$connectionId";
+  static String rejectConnection(String connectionId) => "$_baseUrl/connection/response/$connectionId";
+
+  static String myConnectionCount = "$_baseUrl/connection/count";
+
+  static String sendRequests = "$_baseUrl/connection/sent-requests";
+
+  static String cancelRequest(String connectionId) => "$_baseUrl/connection/cancel/$connectionId";
+
+  static String removeConnection(String connectionId) => "$_baseUrl/connection/remove/$connectionId";
 
   ///end add by lisan
 
@@ -75,6 +89,9 @@ class AppUrl {
   static const String changePassword = "$_baseUrl/auth/change-password";
   static const String editProfile = "$_baseUrl/users/update-profile";
   static const String editProfilePicture = "$_baseUrl/users/update-profile-image";
+
+
+  static const String getConversation = "$_baseUrl/chat/conversations";
 
   /// post section
   static const String createPost = "$_baseUrl/post/create";

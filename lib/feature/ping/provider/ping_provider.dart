@@ -44,6 +44,7 @@ class PingListNotifier extends StateNotifier<AsyncValue<PingPaginationState>> {
 
   Future<void> acceptPing(String pingId) async {
     state = const AsyncValue.loading();
+    log('Auth Token: ${AuthService.token}');
 
     try {
       final response = await networkCaller.patchRequest(
@@ -142,7 +143,7 @@ class PingListNotifier extends StateNotifier<AsyncValue<PingPaginationState>> {
   }
 
   Future<void> _fetchActivePings(int page, bool isLoadMore) async {
-    final url = AppUrl.getPing(500);
+    final url = AppUrl.getPing(20);
     await _executeApiRequest(url, page, isLoadMore, supportsPagination: false);
   }
 

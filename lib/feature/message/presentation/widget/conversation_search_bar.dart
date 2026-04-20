@@ -1,31 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../provider/provider/message_provider.dart';
 
-class ConversationSearchBar extends StatefulWidget {
-  final MessagesNotifier notifier;
-
-  const ConversationSearchBar({
-    super.key,
-    required this.notifier,
-  });
+// Changed to ConsumerStatefulWidget to access "ref"
+class ConversationSearchBar extends ConsumerStatefulWidget {
+  const ConversationSearchBar({super.key});
 
   @override
-  State<ConversationSearchBar> createState() => _ConversationSearchBarState();
+  ConsumerState<ConversationSearchBar> createState() => _ConversationSearchBarState();
 }
 
-class _ConversationSearchBarState extends State<ConversationSearchBar> {
+class _ConversationSearchBarState extends ConsumerState<ConversationSearchBar> {
   final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-
-    _searchController.addListener(() {
-      setState(() {}); // rebuild to show/hide clear button
-    });
-  }
 
   @override
   void dispose() {
@@ -49,7 +36,10 @@ class _ConversationSearchBarState extends State<ConversationSearchBar> {
           Expanded(
             child: TextField(
               controller: _searchController,
-              onChanged: widget.notifier.search,
+              // Use ref.read to access the notifier and call search
+              onChanged: (value) {
+                ref.read(messagesProvider.notifier).search(value);
+              },
               style: TextStyle(fontSize: 14.sp),
               decoration: InputDecoration(
                 hintText: 'Search...',
@@ -63,17 +53,25 @@ class _ConversationSearchBarState extends State<ConversationSearchBar> {
               ),
             ),
           ),
-          if (_searchController.text.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _searchController.clear();
-                widget.notifier.search('');
-              },
-              child: Padding(
-                padding: EdgeInsets.only(right: 10.w),
-                child: Icon(Icons.close, size: 18.sp, color: Colors.grey),
-              ),
-            ),
+
+          // ValueListenableBuilder is more efficient than calling setState()
+          // on every keystroke just for the clear button
+          ValueListenableBuilder(
+            valueListenable: _searchController,
+            builder: (context, value, child) {
+              if (value.text.isEmpty) return const SizedBox.shrink();
+              return GestureDetector(
+                onTap: () {
+                  _searchController.clear();
+                  ref.read(messagesProvider.notifier).search('');
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(right: 10.w),
+                  child: Icon(Icons.close, size: 18.sp, color: Colors.grey),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

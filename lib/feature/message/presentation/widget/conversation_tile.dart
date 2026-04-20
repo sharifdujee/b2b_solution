@@ -6,12 +6,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../model/conversation_data_model.dart';
 
-
 class ConversationTile extends ConsumerWidget {
-  final Conversation conversation;
+  // Pass the individual result item instead of the whole model
+  final ConversationResult conversation;
   final VoidCallback onTap;
 
-  const ConversationTile({super.key,
+  const ConversationTile({
+    super.key,
     required this.conversation,
     required this.onTap,
   });
@@ -19,9 +20,11 @@ class ConversationTile extends ConsumerWidget {
   String _formatTime(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
+
     if (diff.inDays >= 1) {
-      return '${dt.day}/${dt.month}';
+      return '${dt.day}/${dt.month}/${dt.year.toString().substring(2)}';
     }
+
     final hour = dt.hour;
     final minute = dt.minute.toString().padLeft(2, '0');
     final period = hour >= 12 ? 'PM' : 'AM';
@@ -34,34 +37,41 @@ class ConversationTile extends ConsumerWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
         child: Row(
           children: [
-            // Avatar
+            // Avatar with Fallback
             CircleAvatar(
               radius: 26.r,
-              backgroundImage: NetworkImage(conversation.avatarUrl),
+              backgroundImage: conversation.partner.profileImage != null
+                  ? NetworkImage(conversation.partner.profileImage!)
+                  : null,
               backgroundColor: Colors.grey.shade200,
+              child: conversation.partner.profileImage == null
+                  ? Icon(Icons.person, color: Colors.grey, size: 30.r)
+                  : null,
             ),
 
             SizedBox(width: 12.w),
 
-            // Name + message
+            // Name + Message
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.name,
+                    conversation.partner.fullName,
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    conversation.lastMessage,
+                    conversation.lastMessage.content,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -80,39 +90,39 @@ class ConversationTile extends ConsumerWidget {
 
             SizedBox(width: 8.w),
 
-            // Time + badge
-            //Time should be in one lined
+            // Time + Unread Badge
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 CustomText(
-                    text: _formatTime(conversation.lastTime),
+                  text: _formatTime(conversation.updatedAt),
                   fontSize: 11.sp,
                   color: Colors.grey.shade500,
                 ),
-
                 SizedBox(height: 6.h),
                 if (conversation.unreadCount > 0)
                   Container(
-                    width: 20.w,
-                    height: 20.h,
+                    padding: EdgeInsets.all(4.w),
+                    constraints: BoxConstraints(minWidth: 20.w, minHeight: 20.h),
                     decoration: BoxDecoration(
-                      color: AppColor.secondary.withValues(alpha: 0.3), // green accent
-                      shape: BoxShape.circle
+                      color: AppColor.secondary.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Text(
                         '${conversation.unreadCount}',
                         style: TextStyle(
-                          fontSize: 11.sp,
+                          fontSize: 10.sp,
                           color: AppColor.secondary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   )
                 else
-                  SizedBox(height: 16.h),
+                // Keeps layout consistent when there is no badge
+                  SizedBox(height: 20.h),
               ],
             ),
           ],

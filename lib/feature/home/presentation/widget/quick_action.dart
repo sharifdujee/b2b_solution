@@ -1,4 +1,5 @@
 import 'package:b2b_solution/feature/home/presentation/widget/quick_action_item.dart';
+import 'package:b2b_solution/feature/navigation/presentation/screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,11 +31,11 @@ class QuickActions extends ConsumerWidget {
             },
           ),
           QuickActionItem(
-            label: "My Collections",
+            label: "My Connections",
             icon: IconPath.userGroup,
-            isSelected: selectedLabel == "My Collections",
+            isSelected: selectedLabel == "My Connections",
             onTap: () {
-              ref.read(selectedQuickActionProvider.notifier).state = "My Collections";
+              ref.read(selectedQuickActionProvider.notifier).state = "My Connections";
               context.push('/myConnectionScreen');
             },
           ),
@@ -47,6 +48,17 @@ class QuickActions extends ConsumerWidget {
               context.push('/vendorsScreen');
             },
           ),
+
+          //Comment this in meeting if needed
+          // QuickActionItem(
+          //   label: "Profile",
+          //   icon: IconPath.colorProfile,
+          //   isSelected: selectedLabel == "Porfile",
+          //   onTap: () {
+          //     ref.read(selectedQuickActionProvider.notifier).state = "Profile";
+          //     ref.read(selectedIndexProvider.notifier).state = 3;
+          //   },
+          // ),
         ],
       ),
     );

@@ -19,6 +19,7 @@ import '../home/presentation/screen/business_card_details_screen.dart';
 import '../home/presentation/screen/my_connection_screen.dart';
 import '../home/presentation/screen/notification_screen.dart';
 import '../home/presentation/screen/vendors_screen.dart';
+import '../message/presentation/screen/chat_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
@@ -78,6 +79,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/resetVerificationCodeScreen', builder: (context, state) => ResetVerificationCodeScreen()),
 
 
+
       GoRoute(path: '/businessLocation', builder: (context, state) => BusinessLocationMapView()),
       GoRoute(
         path: "/createNewPasswordScreen",
@@ -113,18 +115,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       GoRoute(path: "/pingScreen" ,builder: (context, state) => const PingScreen()),
 
+      GoRoute(path: "/chatScreen", builder: (context, state) => const ChatScreen(roomId: '',)),
+
 
       GoRoute(
         path: '/businessCardScreen',
         builder: (context, state) {
           final extraData = state.extra as Map<String, dynamic>;
 
-          final connection = extraData['connection'] as MyConnectionStateModel;
+          // REMOVE THE CAST HERE. Keep it as dynamic/Object.
+          final connectionData = extraData['connectionData'] ?? extraData['connection'];
           final String currentUserId = extraData['currentUserId'] as String;
+          final status = extraData['status'] as String;
 
           return BusinessCardScreen(
-            connection: connection,
+            connectionData: connectionData,
             currentUserId: currentUserId,
+            status: status,
+            connectedUserId: extraData['connectedUserId'],
           );
         },
       )
