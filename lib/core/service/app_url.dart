@@ -76,6 +76,8 @@ class AppUrl {
 
   static String removeConnection(String connectionId) => "$_baseUrl/connection/remove/$connectionId";
 
+  static String changePassword = "$_baseUrl/auth/change-pass";
+
   ///end add by lisan
 
 
@@ -86,7 +88,6 @@ class AppUrl {
 
   static const String sendOtp = "$_baseUrl/auth/send-otp";
   static const String otpVerification = "$_baseUrl/auth/verify-otp";
-  static const String changePassword = "$_baseUrl/auth/change-password";
   static const String editProfile = "$_baseUrl/users/update-profile";
   static const String editProfilePicture = "$_baseUrl/users/update-profile-image";
 

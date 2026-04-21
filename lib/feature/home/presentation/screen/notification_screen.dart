@@ -33,6 +33,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     final state = ref.watch(notificationProvider);
     final controller = ref.read(notificationProvider.notifier);
 
+    final hasUnreadNotifications = state.notifications.any((n) => n.isRead == false);
+
     return Scaffold(
       backgroundColor: AppColor.white,
       body: SafeArea(
@@ -78,26 +80,26 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             ),
             Divider(color: AppColor.grey50, height: 1),
 
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(width: 20.w),
-                  GestureDetector(
-                    onTap: () => controller.toggleAllReadStatus(
-                      state.notifications.every((n) => n.isRead == true),
+            if (hasUnreadNotifications && !state.isLoading)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end, // Align to right
+                  children: [
+                    GestureDetector(
+                      onTap: () => controller.toggleAllReadStatus(),
+                      child: CustomText(
+                        text: "Mark All as Read",
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w500, // Slightly bolder for better tap target
+                        color: AppColor.primary,
+                      ),
                     ),
-                    child: CustomText(
-                      text: "Mark All as Read",
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
-                      color: AppColor.primary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            if (!hasUnreadNotifications || state.isLoading)
+              SizedBox(height: 8.h),
 
             // --- Body Content ---
             Expanded(

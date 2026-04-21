@@ -37,11 +37,6 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   final ImagePicker _picker = ImagePicker();
   Timer? _timer;
 
-  // --- Helpers ---
-  bool _isValidEmail(String email) {
-    return RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-        .hasMatch(email);
-  }
 
   void resetErrorMessage() {
     state = state.copyWith(errorMessage: null);
@@ -91,11 +86,10 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         await AuthService.saveRole(result['role'] ?? '');
         return true;
       } else {
-        state = state.copyWith(errorMessage: response.errorMessage ?? "Verification failed");
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: "An error occurred during verification");
+      state = state.copyWith(isLoading: false);
       return false;
     }
   }
@@ -139,39 +133,16 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   void toggleVisibility() => state = state.copyWith(obscurePassword: !state.obscurePassword);
   void toggleConfirmPasswordVisibility() => state = state.copyWith(obscureConfirmPassword: !state.obscureConfirmPassword);
 
-  // --- Validation ---
-  bool validateForm() {
-    state = state.copyWith(errorMessage: null);
-    final email = emailController.text.trim();
-    final password = passwordController.text;
-    final confirmPassword = confirmPasswordController.text;
 
-    if (legalNameController.text.isEmpty || email.isEmpty || password.isEmpty || nameController.text.isEmpty) {
-      state = state.copyWith(errorMessage: "Please fill in all required fields");
-      return false;
-    }
-    if (!_isValidEmail(email)) {
-      state = state.copyWith(errorMessage: "Please enter a valid email address");
-      return false;
-    }
-    if (password.length < 8) {
-      state = state.copyWith(errorMessage: "Password must be at least 8 characters");
-      return false;
-    }
-    if (password != confirmPassword) {
-      state = state.copyWith(errorMessage: "Passwords do not match");
-      return false;
-    }
-    if (state.selectRole == null) {
-      state = state.copyWith(errorMessage: "Please select a role");
-      return false;
-    }
-    return true;
+  void updateFoodCategories(List<String> categories) {
+    state = state.copyWith(foodCategory: categories);
+
+    foodCategoryController.text = categories.join(", ");
   }
 
   // --- Signup Logic ---
   Future<bool> signup() async {
-    if (!validateForm()) return false;
+    log("Sign up pressed");
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
@@ -227,12 +198,11 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         return true;
       } else {
         final decodedData = jsonDecode(response.body);
-        state = state.copyWith(errorMessage: decodedData['message'] ?? "Signup failed. Please try again.");
+        log("decodedData : $decodedData");
         return false;
       }
     } catch (e) {
       log("Signup Error: $e");
-      state = state.copyWith(isLoading: false, errorMessage: "Network error. Please check your connection.");
       return false;
     }
   }

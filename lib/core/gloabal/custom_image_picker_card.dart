@@ -9,30 +9,38 @@ class CustomImagePickerCard extends StatelessWidget {
   final String title;
   final String? imagePath;
   final VoidCallback onPickImage;
+  // 1. Added optional errorText parameter
+  final String? errorText;
 
   const CustomImagePickerCard({
     super.key,
     required this.title,
     this.imagePath,
     required this.onPickImage,
+    this.errorText, // Initialize here
   });
 
   @override
   Widget build(BuildContext context) {
     bool hasImage = imagePath != null && imagePath!.isNotEmpty;
+    bool hasError = errorText != null; // Check if there is an error
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: onPickImage, // Single tap listener for the whole area
+          onTap: onPickImage,
           child: Container(
             width: double.infinity,
             height: 200.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC), // Slight off-white background
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              // 2. Change border color to Red if hasError is true
+              border: Border.all(
+                color: hasError ? Colors.red : const Color(0xFFE2E8F0),
+                width: hasError ? 1.5 : 1,
+              ),
               image: hasImage
                   ? DecorationImage(
                 image: FileImage(File(imagePath!)),
@@ -40,11 +48,22 @@ class CustomImagePickerCard extends StatelessWidget {
               )
                   : null,
             ),
-            child: hasImage
-                ? const SizedBox.shrink() // Clean view: Tap on image triggers onPickImage
-                : _buildPlaceholder(),   // Placeholder view for empty state
+            child: hasImage ? const SizedBox.shrink() : _buildPlaceholder(),
           ),
         ),
+        // 3. Display the error message below the card if it exists
+        if (hasError)
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 4.w),
+            child: Text(
+              errorText!,
+              style: GoogleFonts.poppins(
+                fontSize: 12.sp,
+                color: Colors.red,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -71,10 +90,9 @@ class CustomImagePickerCard extends StatelessWidget {
           ),
         ),
         SizedBox(height: 16.h),
-        // The button only exists as a visual guide in the placeholder
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric( vertical: 10.h),
+          padding: EdgeInsets.symmetric(vertical: 10.h),
           margin: EdgeInsets.symmetric(horizontal: 20.h),
           decoration: BoxDecoration(
             color: AppColor.primary,

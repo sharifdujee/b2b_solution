@@ -157,7 +157,7 @@ class _SwipeButtonState extends State<SwipeButton> {
     return LayoutBuilder(builder: (context, constraints) {
       double maxWidth = constraints.maxWidth;
       double buttonSize = 54.0.h;
-      double maxDrag = maxWidth - buttonSize - 10; // 10 for padding
+      double maxDrag = maxWidth - buttonSize - 10;
 
       return Container(
         height: 60.h,
@@ -190,7 +190,14 @@ class _SwipeButtonState extends State<SwipeButton> {
                 onHorizontalDragEnd: (details) {
                   if (_dragValue >= maxDrag * 0.8) {
                     setState(() => _dragValue = maxDrag);
+
                     widget.onSwipeComplete();
+
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) {
+                        setState(() => _dragValue = 0.0);
+                      }
+                    });
                   } else {
                     setState(() => _dragValue = 0.0);
                   }

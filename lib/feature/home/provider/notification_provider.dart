@@ -64,32 +64,26 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     }
   }
 
-// --- Toggle All Notifications ---
-  Future<void> toggleAllReadStatus(bool status) async {
+  // --- Toggle All Notifications ---
+  Future<void> toggleAllReadStatus() async {
+    // Check if there are any unread notifications first to prevent unnecessary calls
+    final hasUnread = state.notifications.any((n) => n.isRead == false);
+    if (!hasUnread) return;
+
+    // Set loading to true
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
       var response = await networkCaller.patchRequest(
         AppUrl.markAllAsReadNotification,
         token: AuthService.token,
-        body: {'isRead': status},
+        // Pass 'true' because the intent is always to mark them as read
+        body: {'isRead': true},
       );
 
-      if (response.isSuccess && response.responseData != null) {
-        // Instead of manual mapping, we use the model's fromJson on the response result
-        final result = response.responseData['result'];
-        if (result != null) {
-          final List<NotificationData> fetchedList = (result['data'] as List)
-              .map((e) => NotificationData.fromJson(e))
-              .toList();
-          final Meta meta = Meta.fromJson(result['meta']);
-
-          state = state.copyWith(
-            notifications: fetchedList,
-            pagination: meta,
-            isLoading: false,
-          );
-        }
+      if (response.isSuccess) {
+        // Option A: Refresh from server to get fresh meta/pagination
+        await fetchNotifications();
       } else {
         state = state.copyWith(
           isLoading: false,
@@ -97,7 +91,10 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         );
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+          isLoading: false,
+          errorMessage: "An unexpected error occurred: $e"
+      );
     }
   }
 

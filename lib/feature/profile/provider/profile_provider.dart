@@ -79,6 +79,8 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
+
+
   Future<void> pickProfileImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(

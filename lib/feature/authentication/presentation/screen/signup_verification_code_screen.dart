@@ -106,10 +106,29 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                     length: 4,
                     defaultPinTheme: defaultPinTheme,
                     focusedPinTheme: focusedPinTheme,
-                    errorPinTheme: emptyPinTheme,
+                    errorPinTheme: emptyPinTheme.copyWith(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: Colors.red,
+                          width: 2,
+                        ),
+                      ),
+                    ),
                     controller: controller.pinController,
                     pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
                     showCursor: true,
+                    // --- ADD VALIDATOR HERE ---
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Code is required';
+                      }
+                      if (value.length < 4) {
+                        return 'Please enter the full 4-digit code';
+                      }
+                      return null;
+                    },
                     cursor: Container(
                       width: 2,
                       height: 30.h,
@@ -119,28 +138,6 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                if (state.errorMessage != null) ...[
-                  SizedBox(height: 16.h),
-                  Center(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 12.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColor.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: CustomText(
-                        text: state.errorMessage!,
-                        color: AppColor.error,
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w500,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
 
                 SizedBox(height: 24.h),
 

@@ -105,31 +105,7 @@ class LoginScreen extends ConsumerWidget {
                 ),
               ),
 
-              // --- Validation / Error Message UI ---
-              if (state.errorMessage != null) ...[
-                SizedBox(height: 20.h),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline, color: Colors.red, size: 20.sp),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: CustomText(
-                          text: state.errorMessage!,
-                          fontSize: 13.sp,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+
 
               SizedBox(height: 32.h),
               CustomButton(
@@ -139,6 +115,7 @@ class LoginScreen extends ConsumerWidget {
                     : () async {
                   final success = await controller.login();
                   if (success && context.mounted) {
+
                     context.pushReplacement('/nav');
                   }
                 }),

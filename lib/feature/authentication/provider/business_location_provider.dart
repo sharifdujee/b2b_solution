@@ -2,16 +2,20 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../core/service/map_service.dart';
 import '../models/location_suggestion_data_model.dart';
 import 'state/business_location_state.dart';
 
 class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
-  BusinessLocationNotifier() : super(const BusinessLocationState());
-
+  final MapService _mapService;
   Timer? _debounce;
 
+  BusinessLocationNotifier(this._mapService) : super(const BusinessLocationState());
+
+  /// Logic to handle typing in the search bar
   void onSearchChanged(String query) {
-    state = state.copyWith(searchQuery: query, clearSelected: true);
+    state = state.copyWith(searchQuery: query);
+
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     if (query.trim().isEmpty) {
@@ -20,79 +24,57 @@ class BusinessLocationNotifier extends StateNotifier<BusinessLocationState> {
     }
 
     state = state.copyWith(isSearching: true);
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      _fetchSuggestions(query.trim());
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      final results = await _mapService.fetchSuggestions(query.trim());
+      state = state.copyWith(suggestions: results, isSearching: false);
     });
   }
 
-  Future<void> _fetchSuggestions(String query) async {
-    // API Implementation Tip: Use Google Places Autocomplete API here
-    await Future.delayed(const Duration(milliseconds: 300));
+  /// Logic when a user clicks an item from the search results
+  Future<void> selectSuggestion(LocationSuggestion suggestion) async {
+    state = state.copyWith(isSearching: true, suggestions: []);
 
-    final mock = [
-      LocationSuggestion(
-        placeId: '1',
-        mainText: '$query Street',
-        secondaryText: 'London, UK',
-        latLng: const LatLng(51.5074, -0.1278),
-      ),
-      // ... add more mock or real data
-    ];
+    final latLng = await _mapService.getPlaceDetails(suggestion.placeId);
 
-    if (mounted) {
-      state = state.copyWith(suggestions: mock, isSearching: false);
+    if (latLng != null) {
+      state = state.copyWith(
+        selectedLocation: suggestion.copyWith(latLng: latLng),
+        cameraPosition: latLng,
+        searchQuery: '${suggestion.mainText}, ${suggestion.secondaryText}',
+        isSearching: false,
+      );
+    } else {
+      state = state.copyWith(isSearching: false);
     }
   }
 
-  void selectSuggestion(LocationSuggestion suggestion) {
-    // If suggestion doesn't have LatLng, you'd call Place Details API here
-    final latLng = suggestion.latLng ?? state.cameraPosition;
-
-    state = state.copyWith(
-      selectedLocation: suggestion,
-      suggestions: [],
-      cameraPosition: latLng,
-      searchQuery: '${suggestion.mainText}, ${suggestion.secondaryText}',
-      isSearching: false,
-    );
-  }
-
-  /// When user taps the map, we update the position and "Reverse Geocode"
+  /// Logic when the user taps directly on the map
   Future<void> onMapTap(LatLng position) async {
-    state = state.copyWith(
-      cameraPosition: position,
-      isSearching: true,
-    );
+    state = state.copyWith(cameraPosition: position, isSearching: true);
 
-    // Mock Reverse Geocoding (Getting address from Lat/Lng)
-    // Real implementation: Use geocoding package or Google Geocoding API
-    await Future.delayed(const Duration(milliseconds: 500));
+    final suggestion = await _mapService.getAddressFromLatLng(position);
 
-    final tappedLocation = LocationSuggestion(
-      placeId: 'manual',
-      mainText: 'Pinned Location',
-      secondaryText: '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
-      latLng: position,
-    );
-
-    state = state.copyWith(
-      selectedLocation: tappedLocation,
-      isSearching: false,
-      suggestions: [],
-    );
+    if (suggestion != null) {
+      state = state.copyWith(
+        selectedLocation: suggestion,
+        isSearching: false,
+      );
+    } else {
+      state = state.copyWith(isSearching: false);
+    }
   }
 
   void clearSearch() {
     _debounce?.cancel();
-    state = state.copyWith(
-      suggestions: [],
-      searchQuery: '',
-      isSearching: false,
-    );
+    state = state.copyWith(suggestions: [], searchQuery: '', isSearching: false);
   }
 }
 
+/// Updated Provider to inject MapService
 final businessLocationProvider =
 StateNotifierProvider.autoDispose<BusinessLocationNotifier, BusinessLocationState>(
-      (ref) => BusinessLocationNotifier(),
+      (ref) {
+    final mapService = ref.watch(mapServiceProvider);
+    return BusinessLocationNotifier(mapService);
+  },
 );

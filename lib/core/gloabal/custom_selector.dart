@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../design_system/app_color.dart';
 import 'custom_text.dart';
 
@@ -16,9 +14,10 @@ class CustomSelectField<T> extends StatelessWidget {
   final bool showSearchBar;
   final bool showActionButtons;
   final TextEditingController? controller;
-
-  // ADDED: Optional onChanged parameter
   final void Function(dynamic)? onChanged;
+
+  // Added validator parameter
+  final String? Function(dynamic)? validator;
 
   const CustomSelectField({
     super.key,
@@ -32,61 +31,88 @@ class CustomSelectField<T> extends StatelessWidget {
     this.showSearchBar = false,
     this.showActionButtons = true,
     this.controller,
-    this.onChanged, // Initialize here
+    this.onChanged,
+    this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
-    String displayText = hintText;
+    return FormField<dynamic>(
+      initialValue: isMultiSelect ? initialSelectedItems : value,
+      validator: validator,
+      builder: (FormFieldState<dynamic> fieldState) {
+        // Source of truth for display is either the state value or the initial value
+        final effectiveValue = fieldState.value;
 
-    if (isMultiSelect && initialSelectedItems != null && initialSelectedItems!.isNotEmpty) {
-      displayText = initialSelectedItems!.map(itemLabelBuilder).join(", ");
-    } else if (value != null) {
-      displayText = itemLabelBuilder(value as T);
-    }
+        String displayText = hintText;
+        if (isMultiSelect && effectiveValue is List && effectiveValue.isNotEmpty) {
+          displayText = effectiveValue.map((e) => itemLabelBuilder(e as T)).join(", ");
+        } else if (!isMultiSelect && effectiveValue != null) {
+          displayText = itemLabelBuilder(effectiveValue as T);
+        }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(text: label, fontSize: 16.sp, fontWeight: FontWeight.w600),
-        SizedBox(height: 12.h),
-        GestureDetector(
-          onTap: () => _openSelectDialog(context),
-          child: Container(
-            height: 50.h,
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: BoxDecoration(
-              color: AppColor.white,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: AppColor.grey100),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: CustomText(
-                    text: displayText,
-                    color: displayText == hintText ? AppColor.grey400 : AppColor.black,
-                    fontSize: 14.sp,
-                    maxLines: 1,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CustomText(text: label, fontSize: 16.sp, fontWeight: FontWeight.w600),
+            SizedBox(height: 12.h),
+            GestureDetector(
+              onTap: () => _openSelectDialog(context, fieldState),
+              child: Container(
+                height: 50.h,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                decoration: BoxDecoration(
+                  color: AppColor.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: fieldState.hasError ? Colors.red : AppColor.grey100,
+                    width: fieldState.hasError ? 1.5 : 1,
                   ),
                 ),
-                Icon(Icons.keyboard_arrow_down, color: AppColor.grey400, size: 20.sp),
-              ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: CustomText(
+                        text: displayText,
+                        color: displayText == hintText ? AppColor.grey400 : AppColor.black,
+                        fontSize: 14.sp,
+                        maxLines: 1,
+                      ),
+                    ),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: fieldState.hasError ? Colors.red : AppColor.grey400,
+                      size: 20.sp,
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+            // Display error text if validation fails
+            if (fieldState.hasError)
+              Padding(
+                padding: EdgeInsets.only(top: 6.h, left: 4.w),
+                child: CustomText(
+                  text: fieldState.errorText ?? "",
+                  color: Colors.red,
+                  fontSize: 12.sp,
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
-  void _openSelectDialog(BuildContext context) async {
+  void _openSelectDialog(BuildContext context, FormFieldState<dynamic> fieldState) async {
     final result = await showDialog(
       context: context,
       builder: (context) => _SelectDialog<T>(
         items: items,
-        initialValue: value,
-        initialSelectedItems: initialSelectedItems,
+        // Ensure the dialog starts with the current form field state
+        initialValue: isMultiSelect ? null : fieldState.value,
+        initialSelectedItems: isMultiSelect ? List<T>.from(fieldState.value ?? []) : null,
         title: hintText,
         itemLabelBuilder: itemLabelBuilder,
         isMultiSelect: isMultiSelect,
@@ -96,16 +122,19 @@ class CustomSelectField<T> extends StatelessWidget {
     );
 
     if (result != null) {
-      // 1. Update Controller if it exists
+      // 1. Update FormField internal state
+      fieldState.didChange(result);
+
+      // 2. Update external Controller
       if (controller != null) {
         if (isMultiSelect && result is List) {
-          controller!.text = (result as List<T>).map(itemLabelBuilder).join(", ");
+          controller!.text = (result as List).map((e) => itemLabelBuilder(e as T)).join(", ");
         } else {
           controller!.text = itemLabelBuilder(result as T);
         }
       }
 
-      // 2. TRIGGER ONCHANGED: Pass the result back to the caller
+      // 3. Trigger external callback
       if (onChanged != null) {
         onChanged!(result);
       }
@@ -113,7 +142,7 @@ class CustomSelectField<T> extends StatelessWidget {
   }
 }
 
-// Internal Dialog remains the same, but returns the generic type T or List<T>
+// Internal Dialog Implementation
 class _SelectDialog<T> extends StatefulWidget {
   final List<T> items;
   final T? initialValue;
@@ -179,8 +208,8 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
     bool isAllSelected = selectedItems.length == widget.items.length;
 
     return AlertDialog(
-      backgroundColor: AppColor.white,
-      surfaceTintColor: AppColor.white,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
       insetPadding: EdgeInsets.symmetric(horizontal: 20.w),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
       title: Column(
@@ -196,20 +225,17 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
             TextField(
               controller: _searchController,
               onChanged: (val) => setState(() {
-                filteredItems = widget.items.where((i) =>
-                    widget.itemLabelBuilder(i).toLowerCase().contains(val.toLowerCase())).toList();
+                filteredItems = widget.items
+                    .where((i) => widget
+                    .itemLabelBuilder(i)
+                    .toLowerCase()
+                    .contains(val.toLowerCase()))
+                    .toList();
               }),
               decoration: InputDecoration(
                 hintText: "Search",
                 hintStyle: TextStyle(color: AppColor.grey400, fontSize: 14.sp),
                 prefixIcon: Icon(Icons.search, color: AppColor.grey400),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.close, color: AppColor.grey400, size: 20.sp),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => filteredItems = widget.items);
-                  },
-                ),
                 contentPadding: EdgeInsets.zero,
                 filled: true,
                 fillColor: Colors.white,
@@ -219,7 +245,7 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25.r),
-                  borderSide: BorderSide(color: AppColor.grey100),
+                  borderSide: BorderSide(color: AppColor.primary),
                 ),
               ),
             ),
@@ -243,11 +269,7 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                 title: CustomText(text: "Select All", color: AppColor.grey500, fontSize: 14.sp),
                 onTap: () {
                   setState(() {
-                    if (isAllSelected) {
-                      selectedItems.clear();
-                    } else {
-                      selectedItems = List.from(widget.items);
-                    }
+                    isAllSelected ? selectedItems.clear() : selectedItems = List.from(widget.items);
                   });
                 },
               ),
@@ -272,11 +294,11 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                         : null,
                     title: CustomText(
                       text: widget.itemLabelBuilder(item),
-                      color: isSelected ? AppColor.black : AppColor.grey500,
+                      color: isSelected ? Colors.black : AppColor.grey500,
                       fontSize: 14.sp,
                     ),
                     trailing: !widget.isMultiSelect && isSelected
-                        ? Icon(Icons.check, color: const Color(0xFFFFC107), size: 20.sp)
+                        ? const Icon(Icons.check, color: Color(0xFFFFC107))
                         : null,
                     onTap: () => _toggle(item),
                   );
@@ -287,7 +309,8 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
         ),
       ),
       actionsPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 20.h),
-      actions: widget.showActionButtons ? [
+      actions: widget.showActionButtons
+          ? [
         Row(
           children: [
             Expanded(
@@ -298,10 +321,10 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 ),
                 onPressed: () => Navigator.pop(context),
-                child: CustomText(
-                    text: "Cancel",
-                    color: const Color(0xFFFFC107),
-                    fontWeight: FontWeight.bold
+                child: const CustomText(
+                  text: "Cancel",
+                  color: Color(0xFFFFC107),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -315,19 +338,22 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 ),
                 onPressed: () => Navigator.pop(
-                    context,
-                    widget.isMultiSelect ? selectedItems : (selectedItems.isNotEmpty ? selectedItems.first : null)
+                  context,
+                  widget.isMultiSelect
+                      ? selectedItems
+                      : (selectedItems.isNotEmpty ? selectedItems.first : null),
                 ),
-                child: CustomText(
-                    text: "Done",
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold
+                child: const CustomText(
+                  text: "Done",
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ],
         )
-      ] : null,
+      ]
+          : null,
     );
   }
 }

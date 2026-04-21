@@ -1,10 +1,17 @@
+import 'package:b2b_solution/core/service/app_url.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../../../core/service/auth_service.dart';
+import '../../../core/service/network_caller.dart';
 import '../model/change_password_state_model.dart';
 
 class ChangePasswordNotifier extends StateNotifier<ChangePasswordStateModel> {
   ChangePasswordNotifier() : super(ChangePasswordStateModel());
+
+
+  final NetworkCaller networkCaller = NetworkCaller();
+
 
   // Update Methods
   void updateOldPassword(String value) =>
@@ -28,21 +35,25 @@ class ChangePasswordNotifier extends StateNotifier<ChangePasswordStateModel> {
 
   // Logic to call the API
   Future<bool> changePassword() async {
-    if (state.newPassword != state.confirmPassword) {
-      state = state.copyWith(errorMessage: "Passwords do not match");
-      return false;
-    }
-
-    if (state.newPassword.length < 6) {
-      state = state.copyWith(errorMessage: "Password too short");
-      return false;
-    }
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Simulate API Call
-      await Future.delayed(const Duration(seconds: 2));
+      final response = await networkCaller.patchRequest(
+          AppUrl.changePassword,
+          token: AuthService.token,
+          body: {
+            "oldPassword": state.oldPassword,
+            "newPassword": state.newPassword,
+          }
+      );
+      if (!response.isSuccess) {
+        state = state.copyWith(isLoading: false, errorMessage: response.errorMessage);
+        return false;
+      }
+      state = state.copyWith(errorMessage: null);
+
+
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
