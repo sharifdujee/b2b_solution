@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:b2b_solution/core/service/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,6 +23,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   File? _selectedImage;
+  bool _isLoadingMore = false;
 
   @override
   void dispose() {
@@ -42,7 +44,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _sendMessage() {
     final text = _msgController.text.trim();
     // In a real app, get this from your AuthProvider
-    const String currentUserId = "69c233654cf6dafe440358a1";
+    final String? currentUserId = AuthService.id;
 
     if (text.isEmpty && _selectedImage == null) return;
 
@@ -51,13 +53,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         widget.roomId,
         _selectedImage!,
         text,
-        currentUserId,
+        currentUserId!,
       );
     } else {
       ref.read(messagesProvider.notifier).sendMessage(
           widget.roomId,
           text,
-          currentUserId
+          currentUserId!
       );
     }
 
@@ -70,6 +72,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    // Load more when scrolled near the top
+    if (_scrollController.position.pixels <= 100 &&
+        !_isLoadingMore) {
+      _loadMoreMessages();
+    }
+  }
+
+  void _loadMoreMessages() {
+    final meta = ref.read(messagesProvider).roomMeta?[widget.roomId];
+    if (meta == null) return;
+
+    final currentPage = meta.page;
+    if (currentPage >= meta.totalPages) return; // no more pages
+
+    setState(() => _isLoadingMore = true);
+
+    ref.read(messagesProvider.notifier)
+        .loadRoomMessages(widget.roomId, page: currentPage + 1)
+        .then((_) => setState(() => _isLoadingMore = false));
   }
 
   @override

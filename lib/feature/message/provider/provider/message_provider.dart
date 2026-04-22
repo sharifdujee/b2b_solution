@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:b2b_solution/core/service/app_url.dart';
 import 'package:b2b_solution/core/service/auth_service.dart';
 import 'package:b2b_solution/core/service/network_caller.dart';
+import 'package:b2b_solution/feature/message/model/room_message_data_model.dart' hide Sender;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
@@ -265,6 +266,69 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 
   void joinRoom(String roomId) {
     _socketService.joinRoom(roomId);
+    loadRoomMessages(roomId, page: 1);
+  }
+
+  Future<void> loadRoomMessages(String roomId, {int page = 1}) async {
+    if (page == 1) {
+      state = state.copyWith(isLoadingMessages: true);
+    }
+
+    try {
+      final response = await networkCaller.getRequest(
+        '${AppUrl.baseUrl}/chat/messages/$roomId?limit=20&sortOrder=desc&sortBy=createdAt&page=$page',
+        token: 'Bearer ${AuthService.token}',
+      );
+
+      if (response.isSuccess) {
+        log("the api response message is ${response.responseData}");
+        final model = RoomMessageDataModel.fromJson(response.responseData);
+        final currentUserId = AuthService.id ?? '';
+
+        final fetchedMessages = model.result.data.map((d) => ChatMessage(
+          id: d.id,
+          content: d.content,
+          fileUrl: d.fileUrl.map((e) => e.toString()).toList(),
+          senderId: d.senderId,
+          roomId: d.roomId,
+          messageType: d.messageType,
+          createdAt: d.createdAt,
+          sender: Sender(
+            id: d.sender.id,
+            fullName: d.sender.fullName,
+            profileImage: d.sender.profileImage,
+            businessName: d.sender.businessName,
+          ),
+          isMe: d.senderId == currentUserId, updatedAt: DateTime.now(),
+        )).toList();
+
+        // API returns desc, reverse to get chronological order
+        final chronological = fetchedMessages.reversed.toList();
+
+        final updatedMap = Map<String, List<ChatMessage>>.from(state.roomMessages);
+
+        if (page == 1) {
+          updatedMap[roomId] = chronological;
+        } else {
+          // Prepend older messages (higher page = older)
+          final existing = List<ChatMessage>.from(updatedMap[roomId] ?? []);
+          updatedMap[roomId] = [...chronological, ...existing];
+        }
+
+        // Store pagination meta
+        final updatedMeta = Map<String, MessageMeta>.from(state.roomMeta ?? {});
+        updatedMeta[roomId] = model.result.meta;
+
+        state = state.copyWith(
+          roomMessages: updatedMap,
+          roomMeta: updatedMeta,
+          isLoadingMessages: false,
+        );
+      }
+    } catch (e) {
+      log('loadRoomMessages error: $e');
+      state = state.copyWith(isLoadingMessages: false);
+    }
   }
 
   void sendMessage(String roomId, String text, String currentUserId) {
@@ -364,3 +428,6 @@ final conversationProvider = Provider.family<ConversationResult?, String>((
     return null;
   }
 });
+
+
+/// implement get room message function
