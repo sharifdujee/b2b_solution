@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -208,6 +209,11 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
     }
   }
 
+
+  void updateSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query);
+  }
+
   Future<void> _fetchConnected(int page, bool isRefresh) async {
     status = 'CONNECTED';
     final url = AppUrl.getMyAllConnection(page, _limit);
@@ -334,23 +340,67 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
   }
 }
 
+
 final filteredConnectionsProvider = Provider<List<dynamic>>((ref) {
   final filter = ref.watch(connectionFilterProvider);
   final connectionState = ref.watch(myConnectionListProvider);
+  final query = connectionState.searchQuery.trim().toLowerCase();
+  final String myId = AuthService.id.toString();
 
-  switch (filter) {
-    case ConnectionFilterOption.Find:
-      return connectionState.discoverItems;
-    case ConnectionFilterOption.Pending:
-      return connectionState.pendingItems ?? []; // Return the new pending list
-    case ConnectionFilterOption.Requests:
-      return connectionState.sendRequestsList ?? [];
-    case ConnectionFilterOption.Connected:
-    default:
-      return connectionState.items;
+  // 1. Return tab-specific list if no search query
+  if (query.isEmpty) {
+    switch (filter) {
+      case ConnectionFilterOption.Find:
+        return connectionState.discoverItems;
+      case ConnectionFilterOption.Pending:
+        return connectionState.pendingItems ?? [];
+      case ConnectionFilterOption.Requests:
+        return connectionState.sendRequestsList ?? [];
+      default:
+        return connectionState.items;
+    }
   }
-});
 
+  // 2. Global Search: Aggregate all lists
+  final allItems = [
+    ...connectionState.items,
+    ...(connectionState.pendingItems ?? []),
+    ...connectionState.discoverItems,
+    ...(connectionState.sendRequestsList ?? []),
+  ];
+
+  final seenIds = <String>{};
+
+  return allItems.where((item) {
+    String displayName = "";
+    String displayCompany = "";
+    String uniqueId = "";
+
+    if (item is ConnectedConnection) {
+      final partner = item.getDisplayPartner(myId);
+      uniqueId = item.id;
+      displayName = partner?.fullName ?? "";
+      displayCompany = partner?.businessName ?? "";
+    }
+    else if (item is FindDatum) {
+      uniqueId = item.id ?? "";
+      displayName = item.fullName ?? "";
+      displayCompany = item.businessName ?? "";
+    }
+
+
+    // --- Filter Logic ---
+    if (uniqueId.isEmpty || seenIds.contains(uniqueId)) return false;
+
+    final bool matches = displayName.toLowerCase().contains(query) ||
+        displayCompany.toLowerCase().contains(query);
+
+    if (matches) {
+      seenIds.add(uniqueId);
+    }
+    return matches;
+  }).toList();
+});
 final connectionCountsProvider = Provider<Map<ConnectionFilterOption, int>>((ref) {
   final connectionState = ref.watch(myConnectionListProvider);
   return {

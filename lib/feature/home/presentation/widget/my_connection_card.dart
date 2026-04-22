@@ -157,7 +157,7 @@ class MyConnectionCard extends ConsumerWidget {
     final connection = connectionData as PendingConnection;
 
     // Use string IDs directly to avoid null check errors
-    final partnerUserId = AuthService.id == connection.senderId ? connection.receiverId : connection.senderId;
+    final partnerUserId = AuthService.id == connection.sender?.id ? connection.receiver?.id : connection.sender?.id;
 
     if (AuthService.id == connection.senderId) {
       return Padding(
@@ -175,14 +175,14 @@ class MyConnectionCard extends ConsumerWidget {
             text: "Reject",
             bg: AppColor.error,
             txtColor: AppColor.white,
-            onTap: () => notifier.rejectConnection(partnerUserId, context),
+            onTap: () => notifier.rejectConnection(partnerUserId!, context),
           ),
           SizedBox(width: 8.w),
           _actionButton(
             text: "Accept",
             bg: AppColor.secondary,
             txtColor: AppColor.white,
-            onTap: () => notifier.acceptConnection(partnerUserId, context),
+            onTap: () => notifier.acceptConnection(partnerUserId!, context),
           ),
         ],
       ),

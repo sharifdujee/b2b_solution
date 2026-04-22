@@ -26,7 +26,6 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. Initial Fetch on Mount: Ensures data loads when screen first opens
     Future.microtask(() {
       ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
     });
@@ -106,13 +105,13 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
           SizedBox(height: 24.h),
           CustomTextFormField(
             onChanged: (value) {
-              // TODO: Implement debounced search here
+              ref.read(myConnectionListProvider.notifier).updateSearchQuery(value);
             },
             prefixIcon: Padding(
               padding: EdgeInsets.all(12.r),
               child: SvgPicture.asset(IconPath.search, height: 20.h, width: 20.w),
             ),
-            hintText: "Search",
+            hintText: "Search connections...",
             hintTextColor: AppColor.grey400,
             textColor: AppColor.black,
             borderRadius: 50.r,

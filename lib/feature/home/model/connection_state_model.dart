@@ -9,6 +9,7 @@ class ConnectionStateData {
   final List<FindDatum> discoverItems;
   final List<SendRequestResultDatum> sendRequestsList;
   final List<PendingConnection> pendingItems;
+  final searchQuery;
 
   final int totalRequests;
   final int connectedCount;
@@ -21,6 +22,7 @@ class ConnectionStateData {
     required this.discoverItems,
     this.sendRequestsList = const [],
     this.pendingItems = const [],
+    this.searchQuery,
     this.totalRequests = 0,
     this.connectedCount = 0,
     this.isLoading = false,
@@ -32,6 +34,7 @@ class ConnectionStateData {
     List<ConnectedConnection>? items, // Updated type here
     List<FindDatum>? discoverItems,
     List<SendRequestResultDatum>? sendRequestsList,
+    String? searchQuery,
     List<PendingConnection>? pendingItems,
     int? totalRequests,
     int? connectedCount,
