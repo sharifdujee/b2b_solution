@@ -185,10 +185,14 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
 
 
   var status = '';
+  TextEditingController searchQueryController = TextEditingController();
 
   Future<void> fetchBasedOnFilter({bool isRefresh = false}) async {
     final filter = ref.read(connectionFilterProvider);
     final page = isRefresh ? 1 : state.currentPage;
+
+    final currentQuery = state.searchQuery;
+    log("search : $currentQuery");
 
     if (isRefresh) {
       state = state.copyWith(items: [], currentPage: 1, hasMore: true, isLoading: true);
@@ -197,14 +201,13 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
       state = state.copyWith(isLoading: true);
     }
 
-    // Direct function calls instead of switch-case
     if (filter == ConnectionFilterOption.Connected) {
-      await _fetchConnected(page, isRefresh);
+      await _fetchConnected(page, currentQuery, isRefresh);
     } else if (filter == ConnectionFilterOption.Pending) {
-      await _fetchPending(page, isRefresh);
+      await _fetchPending(page, currentQuery, isRefresh);
     } else if (filter == ConnectionFilterOption.Find) {
-      await _fetchDiscover(page, isRefresh);
-    }else if (filter == ConnectionFilterOption.Requests) {
+      await _fetchDiscover(page, currentQuery, isRefresh);
+    } else if (filter == ConnectionFilterOption.Requests) {
       await sendRequests();
     }
   }
@@ -214,7 +217,7 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
     state = state.copyWith(searchQuery: query);
   }
 
-  Future<void> _fetchConnected(int page, bool isRefresh) async {
+  Future<void> _fetchConnected(int page, String searchQuery,bool isRefresh) async {
     status = 'CONNECTED';
     final url = AppUrl.getMyAllConnection(page, _limit);
     await _executeApiRequest(url, page, isRefresh);
@@ -222,7 +225,7 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
 
   // In MyConnectionListNotifier class:
 
-  Future<void> _fetchPending(int page, bool isRefresh) async {
+  Future<void> _fetchPending(int page, String searchQuery,bool isRefresh) async {
     try {
       final response = await networkCaller.getRequest(
           AppUrl.pendingConnections(page, _limit),
@@ -249,11 +252,11 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
     }
   }
 
-  Future<void> _fetchDiscover(int page, bool isRefresh) async {
+  Future<void> _fetchDiscover(int page, String searchQuery,bool isRefresh) async {
     status = 'FIND';
     try {
       final response = await networkCaller.getRequest(
-        AppUrl.findUsers(page, _limit),
+        AppUrl.findUsers(page, searchQuery,_limit),
         token: AuthService.token,
       );
 
@@ -344,63 +347,33 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
 final filteredConnectionsProvider = Provider<List<dynamic>>((ref) {
   final filter = ref.watch(connectionFilterProvider);
   final connectionState = ref.watch(myConnectionListProvider);
-  final query = connectionState.searchQuery.trim().toLowerCase();
-  final String myId = AuthService.id.toString();
+  final query = connectionState.searchQuery.toLowerCase();
 
-  // 1. Return tab-specific list if no search query
-  if (query.isEmpty) {
-    switch (filter) {
-      case ConnectionFilterOption.Find:
-        return connectionState.discoverItems;
-      case ConnectionFilterOption.Pending:
-        return connectionState.pendingItems ?? [];
-      case ConnectionFilterOption.Requests:
-        return connectionState.sendRequestsList ?? [];
-      default:
-        return connectionState.items;
-    }
+  List<dynamic> baseList;
+  switch (filter) {
+    case ConnectionFilterOption.Find:
+      baseList = connectionState.discoverItems;
+      break;
+    case ConnectionFilterOption.Pending:
+      baseList = connectionState.pendingItems ?? [];
+      break;
+    case ConnectionFilterOption.Requests:
+      baseList = connectionState.sendRequestsList ?? [];
+      break;
+    default:
+      baseList = connectionState.items;
   }
 
-  // 2. Global Search: Aggregate all lists
-  final allItems = [
-    ...connectionState.items,
-    ...(connectionState.pendingItems ?? []),
-    ...connectionState.discoverItems,
-    ...(connectionState.sendRequestsList ?? []),
-  ];
+  if (query.isEmpty) return baseList;
 
-  final seenIds = <String>{};
+  return baseList.where((item) {
+    final String name = (item.name ?? item.fullName ?? item.userName ?? "").toString().toLowerCase();
+    final String company = (item.companyName ?? item.company ?? "").toString().toLowerCase();
 
-  return allItems.where((item) {
-    String displayName = "";
-    String displayCompany = "";
-    String uniqueId = "";
-
-    if (item is ConnectedConnection) {
-      final partner = item.getDisplayPartner(myId);
-      uniqueId = item.id;
-      displayName = partner?.fullName ?? "";
-      displayCompany = partner?.businessName ?? "";
-    }
-    else if (item is FindDatum) {
-      uniqueId = item.id ?? "";
-      displayName = item.fullName ?? "";
-      displayCompany = item.businessName ?? "";
-    }
-
-
-    // --- Filter Logic ---
-    if (uniqueId.isEmpty || seenIds.contains(uniqueId)) return false;
-
-    final bool matches = displayName.toLowerCase().contains(query) ||
-        displayCompany.toLowerCase().contains(query);
-
-    if (matches) {
-      seenIds.add(uniqueId);
-    }
-    return matches;
+    return name.contains(query) || company.contains(query);
   }).toList();
 });
+
 final connectionCountsProvider = Provider<Map<ConnectionFilterOption, int>>((ref) {
   final connectionState = ref.watch(myConnectionListProvider);
   return {
