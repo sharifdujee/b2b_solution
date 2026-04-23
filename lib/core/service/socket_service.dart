@@ -202,8 +202,8 @@ class SocketService {
     _lastJoinedBookingId = connectedUserId;
 
     final message = jsonEncode({
-      "type": "member-subscribe",
-      "bookingId": connectedUserId,
+      "type": "subscribe-room",
+      "roomId": connectedUserId,
     });
 
     try {
@@ -225,3 +225,6 @@ class SocketService {
   }
 
 }
+
+
+///

@@ -25,7 +25,7 @@ class ChatMessage {
     this.isMe = false,
   });
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json, {String? currentUserId}) => ChatMessage(
+/*  factory ChatMessage.fromJson(Map<String, dynamic> json, {String? currentUserId}) => ChatMessage(
     id: json["id"],
     content: json["content"],
     fileUrl: List<dynamic>.from(json["fileUrl"].map((x) => x)),
@@ -37,7 +37,28 @@ class ChatMessage {
     sender: Sender.fromJson(json["sender"]),
     // Logic to determine if the message was sent by the current user
     isMe: json["senderId"] == currentUserId,
-  );
+  );*/
+
+  factory ChatMessage.fromJson(
+      Map<String, dynamic> json, {
+        required String currentUserId,
+        String? fallbackRoomId,
+      }) {
+    return ChatMessage(
+      id: json['id'] ?? '',
+      content: json['content'] ?? '',
+      fileUrl: List<dynamic>.from(json['fileUrl'] ?? []),
+      senderId: json['senderId'] ?? '',
+      roomId: json['roomId'] ?? fallbackRoomId ?? '',
+      messageType: json['messageType'] ?? 'TEXT',
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: json['updatedAt'] != null          // ← null-safe
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.parse(json['createdAt']),      // ← fallback to createdAt
+      sender: Sender.fromJson(json['sender']),
+      isMe: (json['senderId'] ?? '') == currentUserId,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,

@@ -86,10 +86,13 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                       ConversationTile(
                         conversation: convo,
                         onTap: () {
-                          // 1. Mark room as read via notifier
+                          // 1. Mark room as read
                           ref.read(messagesProvider.notifier).markAsRead(convo.roomId);
 
-                          // 2. Navigate to ChatScreen using roomId
+                          // 2. Subscribe/join the room before navigating
+                          ref.read(messagesProvider.notifier).joinRoom(convo.roomId);
+
+                          // 3. Navigate to ChatScreen
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(roomId: convo.roomId),

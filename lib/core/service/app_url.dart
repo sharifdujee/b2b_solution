@@ -181,4 +181,7 @@ class AppUrl {
   static String toggleLikeUnlikeStory(String storyId) =>
       "$_baseUrl/story/like-unlike/$storyId";
 
+  /// message
+  static  String getConversationList(String searchTerm) => "$_baseUrl/chat/conversations?searchTerm=$searchTerm";
+  static const String uploadImage = "$_baseUrl/chat/upload-files";
 }

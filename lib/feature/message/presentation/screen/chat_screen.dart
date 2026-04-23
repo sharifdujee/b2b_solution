@@ -82,9 +82,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     final messages = ref.watch(messagesProvider.select(
-            (state) => state.roomMessages[widget.roomId] ?? []
+            (state) => state.messagesForRoom(widget.roomId)
     ));
-
     final grouped = _groupByDate(messages);
 
     return Scaffold(

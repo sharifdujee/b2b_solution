@@ -71,7 +71,7 @@ class ConversationTile extends ConsumerWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    conversation.lastMessage.content,
+                    _getLastMessagePreview(conversation.lastMessage),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -129,5 +129,23 @@ class ConversationTile extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getLastMessagePreview(LastMessage? lastMessage) {
+    if (lastMessage == null) return 'No messages yet';
+
+    switch (lastMessage.type.toUpperCase()) {
+      case 'MEDIA':
+      case 'IMAGE':
+        return '📷 Photo';
+      case 'VIDEO':
+        return '🎥 Video';
+      case 'FILE':
+        return '📎 File';
+      default:
+        return lastMessage.content.isNotEmpty
+            ? lastMessage.content
+            : 'No messages yet';
+    }
   }
 }

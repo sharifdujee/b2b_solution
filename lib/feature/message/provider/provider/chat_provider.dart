@@ -60,7 +60,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (text.trim().isEmpty) return;
 
     final payload = {
-      "type": "sendMessage",
+      "type": "send-message",
       "roomId": roomId,
       "text": text,
       "createdAt": DateTime.now().toIso8601String(),

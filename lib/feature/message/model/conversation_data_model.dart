@@ -33,7 +33,7 @@ class ConversationResult {
   String roomId;
   String roomType;
   Partner partner;
-  LastMessage lastMessage;
+  LastMessage? lastMessage; // ← nullable
   int unreadCount;
   DateTime updatedAt;
 
@@ -41,7 +41,7 @@ class ConversationResult {
     required this.roomId,
     required this.roomType,
     required this.partner,
-    required this.lastMessage,
+    this.lastMessage, // ← optional
     required this.unreadCount,
     required this.updatedAt,
   });
@@ -50,7 +50,9 @@ class ConversationResult {
     roomId: json["roomId"],
     roomType: json["roomType"],
     partner: Partner.fromJson(json["partner"]),
-    lastMessage: LastMessage.fromJson(json["lastMessage"]),
+    lastMessage: json["lastMessage"] != null
+        ? LastMessage.fromJson(json["lastMessage"])
+        : null, // ← null-safe parse
     unreadCount: json["unreadCount"],
     updatedAt: DateTime.parse(json["updatedAt"]),
   );
@@ -59,7 +61,7 @@ class ConversationResult {
     "roomId": roomId,
     "roomType": roomType,
     "partner": partner.toJson(),
-    "lastMessage": lastMessage.toJson(),
+    "lastMessage": lastMessage?.toJson(),
     "unreadCount": unreadCount,
     "updatedAt": updatedAt.toIso8601String(),
   };

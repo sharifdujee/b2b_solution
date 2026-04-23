@@ -54,7 +54,7 @@ class MessageBubble extends StatelessWidget {
 
           Flexible(
             child: Container(
-              constraints: BoxConstraints(maxWidth: 280.w),
+              // ← Remove constraints entirely, let content define the size
               padding: EdgeInsets.all(hasImage ? 4.r : 12.r),
               decoration: BoxDecoration(
                 color: isMe ? const Color(0xFF2D6A4F) : AppColor.white,
@@ -72,52 +72,53 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // --- IMAGE CONTENT ---
-                  if (hasImage)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: hasText ? 6.h : 0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12.r),
-                        // Taking the first image from the fileUrl list
-                        child: _buildImage(message.fileUrl.first.toString()),
+              child: IntrinsicWidth(   // ← makes width wrap content
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch, // ← timestamp aligns correctly
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // --- IMAGE CONTENT ---
+                    if (hasImage)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: hasText ? 6.h : 0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: _buildImage(message.fileUrl.first.toString()),
+                        ),
                       ),
-                    ),
 
-                  // --- TEXT CONTENT ---
-                  if (hasText)
+                    // --- TEXT CONTENT ---
+                    if (hasText)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        child: Text(
+                          message.content,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: isMe ? Colors.white : Colors.black87,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+
+                    // --- TIMESTAMP ---
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                      child: Text(
-                        message.content,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: isMe ? Colors.white : Colors.black87,
-                          height: 1.4,
+                      padding: EdgeInsets.only(left: 6.w, right: 6.w, top: 4.h),
+                      child: Align(
+                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Text(
+                          _formatTime(message.createdAt),
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: isMe
+                                ? Colors.white.withValues(alpha: 0.7)
+                                : Colors.grey.shade500,
+                          ),
                         ),
                       ),
                     ),
-
-                  // --- TIMESTAMP ---
-                  Padding(
-                    padding: EdgeInsets.only(left: 6.w, right: 6.w, top: 4.h),
-                    child: Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Text(
-                        _formatTime(message.createdAt),
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: isMe
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : Colors.grey.shade500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
