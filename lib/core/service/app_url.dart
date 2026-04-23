@@ -41,7 +41,7 @@ class AppUrl {
       "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
 
   static String getMyConnectionBySearch(int page, int limit, String searchTerm) =>
-      "$_baseUrl/connection/my-connection?page=$page&limit=$limit&search=$searchTerm";
+      "$_baseUrl/connection/my-connection?page=$page&limit=$limit&searchTerm=$searchTerm";
 
   static String createPing = "$_baseUrl/ping/create";
 
@@ -56,8 +56,9 @@ class AppUrl {
   static String acceptPing(String pingId) => "$_baseUrl/ping/accept/$pingId";
   static String rejectPing(String pingId) => "$_baseUrl/ping/reject/$pingId";
 
-  static String myConnections(int page, int limit) => "$_baseUrl/connection/my-connection?page=$page&limit=$limit";
-  static String findUsers(int page, int limit) => "$_baseUrl/connection/find?page=$page&limit=$limit";
+  static String myConnections(int page, String search,int limit) =>
+      "$_baseUrl/connection/my-connection?page=$page&limit=$limit&searchTerm=$search";
+  static String findUsers(int page, String search,int limit) => "$_baseUrl/connection/find?searchTerm=$search&page=$page&limit=$limit";
   static String pendingConnections(int page, int limit) => "$_baseUrl/connection/pending-request?page=$page&limit=$limit";
 
   static String notifications (int page, int limit,String isRead) => "$_baseUrl/notify/my?limit=$limit&page=$page&isRead=$isRead";
@@ -76,6 +77,8 @@ class AppUrl {
 
   static String removeConnection(String connectionId) => "$_baseUrl/connection/remove/$connectionId";
 
+  static String changePassword = "$_baseUrl/auth/change-pass";
+
   ///end add by lisan
 
 
@@ -86,7 +89,6 @@ class AppUrl {
 
   static const String sendOtp = "$_baseUrl/auth/send-otp";
   static const String otpVerification = "$_baseUrl/auth/verify-otp";
-  static const String changePassword = "$_baseUrl/auth/change-password";
   static const String editProfile = "$_baseUrl/users/update-profile";
   static const String editProfilePicture = "$_baseUrl/users/update-profile-image";
 

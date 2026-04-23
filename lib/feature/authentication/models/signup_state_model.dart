@@ -11,7 +11,7 @@ class SignupStateModel {
   final String email;
   final String verificationCode;
   final String position;
-  final String foodCategory;
+  final List<String> foodCategory;
   final String yearsOfOperation;
   final String businessImage;
   final String profileImage;
@@ -39,7 +39,7 @@ class SignupStateModel {
     this.email = '',
     this.verificationCode = '',
     this.position = '',
-    this.foodCategory = '',
+    this.foodCategory = const [],
     this.yearsOfOperation = '',
     this.businessImage = '',
     this.profileImage = '',
@@ -58,6 +58,8 @@ class SignupStateModel {
     this.selectRole = Role.user,
   });
 
+  // ... inside SignupStateModel class
+
   SignupStateModel copyWith({
     String? legalName,
     String? businessName,
@@ -65,7 +67,7 @@ class SignupStateModel {
     String? email,
     String? verificationCode,
     String? position,
-    String? foodCategory,
+    List<String>? foodCategory, // Changed from String? to List<String>?
     String? yearsOfOperation,
     String? businessImage,
     String? profileImage,
@@ -91,7 +93,7 @@ class SignupStateModel {
       email: email ?? this.email,
       verificationCode: verificationCode ?? this.verificationCode,
       position: position ?? this.position,
-      foodCategory: foodCategory ?? this.foodCategory,
+      foodCategory: foodCategory ?? this.foodCategory, // Now types match
       yearsOfOperation: yearsOfOperation ?? this.yearsOfOperation,
       businessImage: businessImage ?? this.businessImage,
       profileImage: profileImage ?? this.profileImage,
@@ -100,7 +102,7 @@ class SignupStateModel {
       confirmPassword: confirmPassword ?? this.confirmPassword,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      businessAddress: businessAddress ?? this.businessAddress, // Added
+      businessAddress: businessAddress ?? this.businessAddress,
       isLoading: isLoading ?? this.isLoading,
       obscurePassword: obscurePassword ?? this.obscurePassword,
       obscureConfirmPassword: obscureConfirmPassword ?? this.obscureConfirmPassword,

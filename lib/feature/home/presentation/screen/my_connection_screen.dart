@@ -26,7 +26,6 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. Initial Fetch on Mount: Ensures data loads when screen first opens
     Future.microtask(() {
       ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
     });
@@ -37,7 +36,6 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
     final connectionState = ref.watch(myConnectionListProvider);
     final currentFilter = ref.watch(connectionFilterProvider);
 
-    // 2. Optimized Listener: Fired ONLY when the filter/tab changes
     ref.listen(connectionFilterProvider, (previous, next) {
       if (previous != next) {
         ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
@@ -66,7 +64,6 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
     );
   }
 
-  /// Selects the correct list based on the active tab
   /// Selects the correct list based on the active tab
   List<dynamic> _getDisplayItems(dynamic state, ConnectionFilterOption filter) {
     switch (filter) {
@@ -106,13 +103,14 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
           SizedBox(height: 24.h),
           CustomTextFormField(
             onChanged: (value) {
-              // TODO: Implement debounced search here
+              ref.read(myConnectionListProvider.notifier).updateSearchQuery(value);
             },
             prefixIcon: Padding(
               padding: EdgeInsets.all(12.r),
               child: SvgPicture.asset(IconPath.search, height: 20.h, width: 20.w),
             ),
-            hintText: "Search",
+            controller: ref.read(myConnectionListProvider.notifier).searchQueryController,
+            hintText: "Search connections...",
             hintTextColor: AppColor.grey400,
             textColor: AppColor.black,
             borderRadius: 50.r,
