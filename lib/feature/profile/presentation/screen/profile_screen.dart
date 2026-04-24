@@ -207,7 +207,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           button2Color: AppColor.secondary,
                           onSecondPressed: () async {
                             context.pop();
-                            await AuthService.logoutUser(context);
+                            await AuthService.logoutUser(context,ref);
                           },
                         );
                       },

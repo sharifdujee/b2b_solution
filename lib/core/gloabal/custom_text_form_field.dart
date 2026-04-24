@@ -57,7 +57,7 @@ class CustomTextFormField extends StatelessWidget {
     this.focusedBorder,
     this.maxLines = 1,
     this.containerColor = const Color(0xffF9FAFB),
-    this.hintTextColor = AppColor.primaryDarker,
+    this.hintTextColor = AppColor.black,
     this.hintTextSize = 15,
     this.suffixText,
     this.suffixTextStyle,
@@ -84,7 +84,7 @@ class CustomTextFormField extends StatelessWidget {
       style: GoogleFonts.poppins(
         fontSize: 16.sp,
         fontWeight: FontWeight.w400,
-        color: textColor ?? (isDarkMode ? AppColor.white : AppColor.primaryDarker),
+        color: textColor ?? (isDarkMode ? AppColor.white : AppColor.black),
       ),
       decoration: InputDecoration(
         filled: true,

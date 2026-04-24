@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../navigation/presentation/screen.dart';
+
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
@@ -115,8 +117,9 @@ class LoginScreen extends ConsumerWidget {
                     : () async {
                   final success = await controller.login();
                   if (success && context.mounted) {
-
+                    ref.read(selectedIndexProvider.notifier).state = 0;
                     context.pushReplacement('/nav');
+                    controller.dispose();
                   }
                 }),
                 text: state.isLoading ? "Logging in..." : "Log in",
@@ -141,14 +144,18 @@ class LoginScreen extends ConsumerWidget {
               SocialLoginButton(
                 text: "Continue with Google",
                 assetPath: IconPath.googleIcon,
-                onTap: () {},
+                onTap: () {
+
+                },
               ),
 
               SizedBox(height: 16.h),
               SocialLoginButton(
                 text: "Continue with Apple",
                 icon: Icons.apple_sharp,
-                onTap: () {},
+                onTap: () {
+
+                },
               ),
 
               SizedBox(height: 32.h),

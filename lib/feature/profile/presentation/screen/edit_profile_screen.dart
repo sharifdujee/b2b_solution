@@ -18,38 +18,63 @@ import '../../../../core/gloabal/custom_text_form_field.dart';
 import '../../provider/profile_provider.dart';
 
 
-class EditProfile extends ConsumerWidget{
+class EditProfile extends ConsumerStatefulWidget {
   const EditProfile({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EditProfile> createState() => _EditProfileState();
+}
+
+class _EditProfileState extends ConsumerState<EditProfile> {
+  // 1. Add a Form Key
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
     final editProfileState = ref.watch(editProfileProvider);
     final editProfileController = ref.read(editProfileProvider.notifier);
-
     final profileState = ref.watch(profileProvider);
-    final notifier = ref.read(profileProvider.notifier);
-
     final user = profileState.userModel;
-    final isLoading = profileState.isLoading;
 
+    // Logic to check if anything has changed compared to the current user data
+    bool hasChanges() {
+      final isTextDirty =
+          editProfileController.legalNameController.text != (user?.legalName ?? "") ||
+              editProfileController.businessNameController.text != (user?.businessName ?? "") ||
+              editProfileController.fullNameController.text != (user?.fullName ?? "") ||
+              editProfileController.positionController.text != (user?.position ?? "") ||
+              editProfileController.businessCategoryController.text != (user?.businessCategory.firstOrNull ?? "") ||
+              editProfileController.operationYearsController.text != (user?.operationYears.toString() ?? "");
 
+      final isImageDirty = editProfileState.profileImage != null ||
+          editProfileState.businessImage != null;
+
+      final isLocationDirty =
+          (editProfileState.latitude != null && editProfileState.latitude != user?.businessLatitude) ||
+              (editProfileState.longitude != null && editProfileState.longitude != user?.businessLongitude);
+
+      return isTextDirty || isImageDirty || isLocationDirty;
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        child: Container(
+        child: Form(
+          key: _formKey,
+          child: Container(
             margin: EdgeInsets.symmetric(horizontal: 20.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 48.h,),
+                SizedBox(height: 48.h),
+                // --- Header ---
                 Row(
                   children: [
                     GestureDetector(
-                        child: Image.asset(IconPath.arrowLeft, height:24.h, width: 24.h,),
-                        onTap: ()=> context.pop()
+                      child: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.h),
+                      onTap: () => context.pop(),
                     ),
-                    SizedBox(width: 12.h,),
+                    SizedBox(width: 12.h),
                     CustomText(
                       text: "Edit Profile",
                       fontSize: 20.sp,
@@ -57,264 +82,163 @@ class EditProfile extends ConsumerWidget{
                     ),
                   ],
                 ),
-                Divider(),
+                const Divider(),
 
-
-
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Email Address",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                // --- Email Address (Read Only) ---
+                SizedBox(height: 16.h),
+                const CustomText(text: "Email Address", fontWeight: FontWeight.w600),
+                SizedBox(height: 12.h),
                 Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
-                    decoration: BoxDecoration(
-                      color: AppColor.magentaSoft,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: CustomText(
-                            text: user?.email ?? "Jhonsmith@gmail.com",
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
-                            color: editProfileState.email.isNotEmpty
-                                ? Colors.black
-                                : AppColor.grey400,
-                          ),
-                        ),
-                      ],
-                    ),
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
+                  decoration: BoxDecoration(
+                    color: AppColor.magentaSoft,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: CustomText(
+                    text: user?.email ?? "Email not found",
+                    fontSize: 14.sp,
+                    color: AppColor.grey400,
+                  ),
                 ),
 
-
-                SizedBox(height: 32.h,),
-                CustomText(
-                  text: "Legal Name",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                // --- Form Fields ---
+                _buildFieldTitle("Legal Name"),
                 CustomTextFormField(
                   controller: editProfileController.legalNameController,
-                  hintText: user?.legalName ?? "Ex. 101010 Ontario inc",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-                  borderRadius: 12.r,
+                  hintText: "Ex. 101010 Ontario inc",
+                  onChanged: (_) => setState(() {}), // Trigger rebuild for hasChanges()
+                  validator: (val) => val == null || val.isEmpty ? "Required" : null,
                 ),
 
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Business Name",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                _buildFieldTitle("Business Name"),
                 CustomTextFormField(
                   controller: editProfileController.businessNameController,
-                  hintText:
-                  user?.businessName ??
-                      "Ex. Subway",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-
-                  borderRadius: 12.r,
+                  hintText: "Ex. Subway",
+                  onChanged: (_) => setState(() {}),
+                  validator: (val) => val == null || val.isEmpty ? "Required" : null,
                 ),
 
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Your Name",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                _buildFieldTitle("Your Name"),
                 CustomTextFormField(
                   controller: editProfileController.fullNameController,
-                  hintText: user?.fullName ?? "Ex. John smith",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-
-                  borderRadius: 12.r,
+                  hintText: "Ex. John Smith",
+                  onChanged: (_) => setState(() {}),
+                  validator: (val) => val == null || val.isEmpty ? "Required" : null,
                 ),
 
-
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Position",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                _buildFieldTitle("Position"),
                 CustomTextFormField(
                   controller: editProfileController.positionController,
-                  hintText: user?.position ?? "Ex. Owner",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-
-                  borderRadius: 12.r,
+                  hintText: "Ex. Owner",
+                  onChanged: (_) => setState(() {}),
                 ),
 
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Food Category",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                _buildFieldTitle("Food Category"),
                 CustomTextFormField(
                   controller: editProfileController.businessCategoryController,
-                  hintText: user?.businessCategory.toString() ?? "Ex. Sandwich",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-
-                  borderRadius: 12.r,
+                  hintText: "Ex. Sandwich",
+                  onChanged: (_) => setState(() {}),
                 ),
 
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Years of Operation",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                _buildFieldTitle("Years of Operation"),
                 CustomTextFormField(
                   controller: editProfileController.operationYearsController,
-                  hintText: user?.operationYears.toString() ?? "2026",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-
-                  borderRadius: 12.r,
+                  hintText: "2024",
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
                 ),
 
-
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Business Location",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                // --- Business Location ---
+                _buildFieldTitle("Business Location"),
                 GestureDetector(
-                  onTap: (){
-                    context.push('/businessLocation');
-                  },
+                  onTap: () => context.push('/businessLocation'),
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-
                     decoration: BoxDecoration(
                       color: AppColor.white,
                       borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: AppColor.primary, width: 1),
+                      border: Border.all(color: AppColor.primary),
                     ),
                     child: CustomText(
-                      text: editProfileState.businessAddress ?? "Select Location",
+                      text: editProfileState.businessAddress  ?? "Select Location",
                       fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
                     ),
                   ),
-
                 ),
 
-
-
-                SizedBox(height: 16.h,),
-
-                CustomText(
-                  text :"Profile image",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-
-                SizedBox(height: 12.h,),
+                // --- Image Pickers ---
+                _buildFieldTitle("Profile image"),
                 CustomImagePickerCard(
                   title: "Profile image",
                   imagePath: editProfileState.profileImage,
-                  onPickImage: () {
-                    _showImageSourceSheet(context, (source) {
-                      editProfileController.pickProfileImage(source);
-                    });
-                  },
+                  networkImage: user?.profileImage,
+                  onPickImage: () => _showImageSourceSheet(context, (s) => editProfileController.pickProfileImage(s)),
                 ),
 
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Upload business image",
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-                SizedBox(height: 12.h,),
+                _buildFieldTitle("Upload business image"),
                 CustomImagePickerCard(
-                  title: "business image",
+                  title: "Business image",
                   imagePath: editProfileState.businessImage,
-                  onPickImage: () {
-                    _showImageSourceSheet(context, (source) {
-                      editProfileController.pickBusinessImage(source);
-                    });
-                  },
+                  networkImage: user?.businessImage,
+                  onPickImage: () => _showImageSourceSheet(context, (s) => editProfileController.pickBusinessImage(s)),
                 ),
 
+                SizedBox(height: 32.h),
 
-
-                SizedBox(height: 24.h,),
+                // --- Save Button ---
                 CustomButton(
-                  backgroundColor: AppColor.primary,
+                  // 3. Disable button if no changes OR if loading
+                  backgroundColor: hasChanges() && !editProfileState.isLoading
+                      ? AppColor.primary
+                      : AppColor.grey400.withValues(alpha: 0.5),
                   borderRadius: 16.r,
-                  text: "Save Changes",
+                  text: editProfileState.isLoading ? "Saving..." : "Save Changes",
                   textColor: Colors.black,
-                  onPressed: () async{
-                    log("Save Change Pressed");
-                    final isSuccess = await editProfileController.saveChanges();
-                    log("Save Change Success: $isSuccess");
-                    if(isSuccess){
-                      showCustomDialog(
-                        context,
-                        imagePath: IconPath.shield,
-                        title: "Success",
-                        buttonText: "ok",
-                        onPressed: () {
-                          context.pop();
-                          context.pop();
-                        },
-                      );
+                  // 4. onPressed is null when disabled
+                  onPressed: (hasChanges() && !editProfileState.isLoading)
+                      ? () async {
+                    if (_formKey.currentState!.validate()) {
+                      final isSuccess = await editProfileController.saveChanges();
+                      if (isSuccess && context.mounted) {
+                        showCustomDialog(
+                          context,
+                          imagePath: IconPath.shield,
+                          title: "Success",
+                          buttonText: "ok",
+                          onPressed: () {
+                            context.pop();
+                            context.pop();
+                          },
+                        );
+                      }
                     }
-                    },
+                  }
+                      : null,
                 ),
-
-
-                SizedBox(height: 48.h,),
+                SizedBox(height: 48.h),
               ],
-            )
+            ),
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildFieldTitle(String text) {
+    return Padding(
+      padding: EdgeInsets.only(top: 16.h, bottom: 12.h),
+      child: CustomText(
+        text: text,
+        fontSize: 16.sp,
+        fontWeight: FontWeight.w600,
+        color: Colors.black,
+      ),
+    );
+  }
+
   void _showImageSourceSheet(BuildContext context, Function(ImageSource) onSourceSelected) {
     showModalBottomSheet(
       context: context,
@@ -386,7 +310,6 @@ class EditProfile extends ConsumerWidget{
     );
   }
 
-// Reusable Source Card Design
   Widget _buildSourceCard(BuildContext context, {
     required IconData icon,
     required String label,
@@ -420,5 +343,6 @@ class EditProfile extends ConsumerWidget{
       ),
     );
   }
-
 }
+
+
