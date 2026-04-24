@@ -19,7 +19,6 @@ import '../home/model/find_connecion_state_model.dart' show FindDatum;
 import '../home/model/my_connection_state_model.dart';
 import '../home/model/pending_connection_state_model.dart';
 import '../home/model/send_request_state_model.dart';
-import '../home/presentation/screen/business_card_details_screen.dart';
 import '../home/presentation/screen/connected_business_card.dart';
 import '../home/presentation/screen/find_business_card_screen.dart';
 import '../home/presentation/screen/my_connection_screen.dart';
