@@ -23,6 +23,7 @@ class AppUrl {
   static const String resetPassword = "$_baseUrl/auth/reset-password";
   static const String getMe = "$_baseUrl/auth/me";
   static const String updateProfile = "$_baseUrl/auth/me/update";
+  static const String deleteUser = "$_baseUrl/auth/delete-account";
 
   static String nearbyPings(double lat, double lng) {
     return "$_baseUrl/ping?latitude=$lat&longitude=$lng";

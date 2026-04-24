@@ -184,8 +184,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           secondButtonText: 'Delete',
                           onPressed: () => context.pop(),
                           onSecondPressed: () {
-                            AuthService.deleteTokenRole();
-                            context.pushReplacement('/loginScreen');
+                            notifier.deleteAccount(context);
+
                           },
                         );
                       },
