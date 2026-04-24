@@ -21,25 +21,9 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileWatcher = ref.watch(profileProvider);
-    final pingState = ref.watch(nearbyPingProvider);
-    final currentType = ref.watch(mapFilterProvider);
-
     final pingListAsync = ref.watch(pingListProvider);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!profileWatcher.isLoading && profileWatcher.userModel != null) {
-        final user = profileWatcher.userModel!;
 
-        // Logic to fetch pings if the nearby list is currently empty
-        if (pingState.pings.isEmpty && !pingState.isLoading && pingState.errorMessage == null) {
-          ref.read(nearbyPingProvider.notifier).fetchPings(
-            user.latitude,
-            user.longitude,
-          );
-        }
-      }
-    });
 
     return Scaffold(
       backgroundColor: AppColor.white,

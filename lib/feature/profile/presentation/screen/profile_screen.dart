@@ -184,7 +184,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           secondButtonText: 'Delete',
                           onPressed: () => context.pop(),
                           onSecondPressed: () {
-                            notifier.deleteAccount(context);
+                            notifier.deleteAccount(context,ref);
 
                           },
                         );

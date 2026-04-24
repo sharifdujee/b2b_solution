@@ -392,7 +392,31 @@ class SignupScreen extends ConsumerWidget {
                         context.push('/signupVerificationCodeScreen');
                       }
                     } else {
-                      // Optional: Scroll to the first error or provide haptic feedback
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.white),
+                              SizedBox(width: 12.w),
+                              const Expanded(
+                                child: Text(
+                                  "Please fix the errors in the form before saving.",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: Colors.redAccent,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+
                       debugPrint("Form is invalid");
                     }
                   },

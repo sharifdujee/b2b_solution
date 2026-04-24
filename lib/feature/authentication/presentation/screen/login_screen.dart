@@ -11,12 +11,24 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../navigation/presentation/screen.dart';
+import '../../models/login_state_model.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<LoginStateModel>(loginProvider, (previous, next) {
+      if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
     final state = ref.watch(loginProvider);
     final controller = ref.read(loginProvider.notifier);
 
@@ -112,16 +124,32 @@ class LoginScreen extends ConsumerWidget {
               SizedBox(height: 32.h),
               CustomButton(
                 borderRadius: 16.r,
-                onPressed: (state.isLoading
+                onPressed: state.isLoading
                     ? null
                     : () async {
                   final success = await controller.login();
+
                   if (success && context.mounted) {
                     ref.read(selectedIndexProvider.notifier).state = 0;
                     context.pushReplacement('/nav');
-                    controller.dispose();
+                  } else if (!success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.errorMessage ?? "Login failed. Please try again.",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                        margin: EdgeInsets.all(20.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
                   }
-                }),
+                },
                 text: state.isLoading ? "Logging in..." : "Log in",
                 backgroundColor: AppColor.primary,
                 textColor: Colors.black,

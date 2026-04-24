@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:b2b_solution/core/service/push_notification_service.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:http_parser/http_parser.dart'; // Added for MediaType
 
@@ -48,17 +49,45 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   }
 
   // --- Timer Logic ---
+  // --- Updated Timer Logic ---
   void startTimer() {
+    // 1. Reset state for a fresh start
     state = state.copyWith(timer: 60, canResend: false, errorMessage: null);
+
+    // 2. Clear any existing timer to prevent multiple loops
     _timer?.cancel();
+
+    // 3. Start periodic timer
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       if (state.timer > 0) {
         state = state.copyWith(timer: state.timer - 1);
       } else {
         state = state.copyWith(canResend: true);
-        _timer?.cancel();
+        timer.cancel();
       }
     });
+  }
+
+  Future<bool> resendOtp() async {
+    // 1. Safety check for the timer
+    if (!state.canResend) return false;
+
+    log("Resending OTP by re-submitting signup data...");
+
+    final bool success = await signup();
+
+    if (success) {
+      startTimer();
+      return true;
+    } else {
+      state = state.copyWith(errorMessage: "Resend failed. Please try again.");
+      return false;
+    }
   }
 
   // --- OTP Verification ---
@@ -144,6 +173,7 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   Future<bool> signup() async {
     log("Sign up pressed");
     state = state.copyWith(isLoading: true, errorMessage: null);
+    final fcmToken = ref.read(fcmTokenProvider);
 
     try {
       Map<String, dynamic> bodyData = {
@@ -158,7 +188,7 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
         'operationYears': int.tryParse(yearsOfOperationController.text.trim()) ?? 0,
         'businessLatitude': double.tryParse(latitudeController.text.trim()) ?? 0.0,
         'businessLongitude': double.tryParse(longitudeController.text.trim()) ?? 0.0,
-        'fcmToken': '',
+        'fcmToken': fcmToken ?? '',
       };
 
       final request = http.MultipartRequest('POST', Uri.parse(AppUrl.createUser));
@@ -210,20 +240,20 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   @override
   void dispose() {
     _timer?.cancel();
-    roleController.dispose();
-    legalNameController.dispose();
-    businessNameController.dispose();
-    nameController.dispose();
-    emailController.dispose();
-    positionController.dispose();
-    foodCategoryController.dispose();
-    yearsOfOperationController.dispose();
-    passwordController.dispose();
-    confirmPasswordController.dispose();
-    latitudeController.dispose();
-    longitudeController.dispose();
-    businessAddressController.dispose();
-    pinController.dispose();
+    roleController.clear();
+    legalNameController.clear();
+    businessNameController.clear();
+    nameController.clear();
+    emailController.clear();
+    positionController.clear();
+    foodCategoryController.clear();
+    yearsOfOperationController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+    latitudeController.clear();
+    longitudeController.clear();
+    businessAddressController.clear();
+    pinController.clear();
     super.dispose();
   }
 }
