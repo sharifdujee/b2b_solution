@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "863480582421",
+    "project_id": "b2b-solution-e95de",
+    "storage_bucket": "b2b-solution-e95de.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863480582421:android:25474f93729408b091d91c",
+        "android_client_info": {
+          "package_name": "com.sagar.b2b.solution"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwTBsjP9qQsEK5xBi6-8LofPQjQ8Q0B68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

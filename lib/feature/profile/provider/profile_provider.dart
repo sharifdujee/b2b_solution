@@ -149,6 +149,30 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
+  /// delete account
+   Future<void> deleteAccount(BuildContext context)async{
+    _isLoading = true;
+    try{
+      var response = await networkCaller.deleteRequest(AppUrl.deleteUser, body: {},  AuthService.token);
+      if(response.isSuccess){
+        log("the api response is ${response.responseData}");
+        AuthService.logoutUser(context);
+      }
+      
+
+    }
+    
+    catch(e){
+      log("the exception is Z${e.toString()}");
+      _errorMessage = "$e";
+      
+    }
+    
+    finally{
+      _isLoading = false;
+    }
+   }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();

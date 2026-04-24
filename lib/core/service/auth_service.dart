@@ -10,9 +10,7 @@ class AuthService {
   static const String _isSetUpKey = "isSetUp";
   static const String _userIdKey = "userId";
   static const String _isProfileSetupKey = "isProfileSetup";
-  static const String _otpKey = "otp";
-  static const String _resetMessageKey = "resetMessage";
-  static const String _forgetTokenKey = "forgetToken";
+
 
   // --- Singleton instance ---
   static late SharedPreferences _preferences;

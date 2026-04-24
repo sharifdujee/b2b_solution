@@ -164,7 +164,10 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
 
   Future<void> rejectConnection(String connectionId, BuildContext context) async {
     state = state.copyWith(isLoading: true);
+
     try {
+      debugPrint("🔵 Rejecting connection ID: $connectionId");
+
       final response = await networkCaller.patchRequest(
         AppUrl.rejectConnection(connectionId),
         token: AuthService.token,
@@ -172,14 +175,39 @@ class MyConnectionListNotifier extends StateNotifier<ConnectionStateData> {
           "status": "REJECTED",
         },
       );
+
+      debugPrint("🟢 Response: ${response.responseData}");
+
       state = state.copyWith(isLoading: false);
 
       if (response.isSuccess) {
         fetchBasedOnFilter(isRefresh: true);
-        _showSnackBar(context, 'Connection Declined', Colors.orange);
+
+        if (context.mounted) {
+          _showSnackBar(context, 'Connection declined', Colors.orange);
+        }
+      } else {
+        if (context.mounted) {
+          _showSnackBar(
+            context,
+            response.errorMessage ?? 'Failed to decline connection',
+            Colors.red,
+          );
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("🔴 Error: $e");
+      debugPrint("📌 StackTrace: $stackTrace");
+
       state = state.copyWith(isLoading: false);
+
+      if (context.mounted) {
+        _showSnackBar(
+          context,
+          'Something went wrong. Please try again.',
+          Colors.red,
+        );
+      }
     }
   }
 
