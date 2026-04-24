@@ -9,8 +9,12 @@ import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
 import '../../../../core/service/auth_service.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
-import '../../../ping/provider/connection_provider.dart'; // Search results provider
+import '../../../ping/provider/connection_provider.dart';
+import '../../model/connected_state_model.dart';
+import '../../model/find_connecion_state_model.dart';
 import '../../model/my_connection_state_model.dart';
+import '../../model/pending_connection_state_model.dart';
+import '../../model/send_request_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 import '../widget/my_connection_card.dart';
 import '../widget/my_connection_filter.dart';
@@ -34,20 +38,16 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(myConnectionListProvider);
-    final searchState = ref.watch(connectionProvider); // Watch the search provider
+    final searchState = ref.watch(connectionProvider);
     final currentFilter = ref.watch(connectionFilterProvider);
 
     ref.listen(connectionFilterProvider, (previous, next) {
       if (previous != next) {
-        // Clear search UI when switching tabs
         ref.read(myConnectionListProvider.notifier).searchQueryController.clear();
-        // Optionally reset search provider state here if needed
-
         ref.read(myConnectionListProvider.notifier).fetchBasedOnFilter(isRefresh: true);
       }
     });
 
-    // Determine which items to show: search results or tab items
     final String searchQuery = ref.read(myConnectionListProvider.notifier).searchQueryController.text;
     final bool isSearching = searchQuery.isNotEmpty;
 
@@ -66,7 +66,7 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
               child: _buildListContent(
                 isSearching ? searchState.isLoading : connectionState.isLoading,
                 displayItems,
-                isSearching ? false : connectionState.hasMore, // Disable pagination during search
+                isSearching ? false : connectionState.hasMore,
               ),
             ),
           ],
@@ -144,7 +144,6 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
     if (isLoading && items.isEmpty) return _buildLoadingState();
 
     final bool isSearching = ref.read(myConnectionListProvider.notifier).searchQueryController.text.isNotEmpty;
-
     final currentFilter = ref.watch(connectionFilterProvider);
     final bool effectiveHasMore = (currentFilter == ConnectionFilterOption.Requests || isSearching)
         ? false
@@ -171,9 +170,11 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
           separatorBuilder: (_, __) => SizedBox(height: 16.h),
           itemBuilder: (context, index) {
             if (index < items.length) {
+              final item = items[index];
               return MyConnectionCard(
-                connectionData: items[index],
+                connectionData: item,
                 currentUserId: AuthService.id.toString(),
+                onTap: () => _navigateToDetails(context, item),
               );
             }
             return const Padding(
@@ -186,6 +187,26 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
     );
   }
 
+  void _navigateToDetails(BuildContext context, dynamic data) {
+    final String currentUserId = AuthService.id.toString();
+
+    if (data is FindDatum) {
+      context.push('/findBusinessCard', extra: data);
+    } else if (data is SendRequestResultDatum) {
+      context.push('/requestBusinessCard', extra: data);
+    } else if (data is PendingConnection) {
+      context.push('/pendingBusinessCard', extra: {
+        'connection': data,
+        'currentUserId': currentUserId,
+      });
+    } else if (data is ConnectedConnection) {
+      context.push('/connectedBusinessCard', extra: {
+        'connection': data,
+        'currentUserId': currentUserId,
+      });
+    }
+  }
+
   Widget _buildEmptyState({bool isSearching = false}) {
     return Center(
       child: SingleChildScrollView(
@@ -193,11 +214,7 @@ class _MyConnectionScreenState extends ConsumerState<MyConnectionScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-                isSearching ? Icons.search_off : Icons.people_outline,
-                size: 64.sp,
-                color: AppColor.grey300
-            ),
+            Icon(isSearching ? Icons.search_off : Icons.people_outline, size: 64.sp, color: AppColor.grey300),
             SizedBox(height: 16.h),
             CustomText(
               text: isSearching ? "No search results found" : "No connections found",

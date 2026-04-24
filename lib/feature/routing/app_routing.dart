@@ -14,10 +14,18 @@ import '../authentication/presentation/screen/reset_password.dart';
 import '../authentication/presentation/screen/reset_verification_code_screen.dart';
 import '../authentication/presentation/screen/role_selection_screen.dart';
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
+import '../home/model/connected_state_model.dart';
+import '../home/model/find_connecion_state_model.dart' show FindDatum;
 import '../home/model/my_connection_state_model.dart';
+import '../home/model/pending_connection_state_model.dart';
+import '../home/model/send_request_state_model.dart';
 import '../home/presentation/screen/business_card_details_screen.dart';
+import '../home/presentation/screen/connected_business_card.dart';
+import '../home/presentation/screen/find_business_card_screen.dart';
 import '../home/presentation/screen/my_connection_screen.dart';
 import '../home/presentation/screen/notification_screen.dart';
+import '../home/presentation/screen/pending_business_card.dart';
+import '../home/presentation/screen/request_business_card_screen.dart';
 import '../home/presentation/screen/vendors_screen.dart';
 import '../message/presentation/screen/chat_screen.dart';
 import '../navigation/presentation/screen.dart';
@@ -119,23 +127,43 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
 
       GoRoute(
-        path: '/businessCardScreen',
+        path: '/findBusinessCard',
         builder: (context, state) {
-          final extraData = state.extra as Map<String, dynamic>;
+          final data = state.extra as FindDatum;
+          return FindBusinessCardScreen(user: data);
+        },
+      ),
 
-          // REMOVE THE CAST HERE. Keep it as dynamic/Object.
-          final connectionData = extraData['connectionData'] ?? extraData['connection'];
-          final String currentUserId = extraData['currentUserId'] as String;
-          final status = extraData['status'] as String;
+      GoRoute(
+        path: '/requestBusinessCard',
+        builder: (context, state) {
+          final data = state.extra as SendRequestResultDatum;
+          return RequestBusinessCardScreen(request: data);
+        },
+      ),
 
-          return BusinessCardScreen(
-            connectionData: connectionData,
-            currentUserId: currentUserId,
-            status: status,
-            connectedUserId: extraData['connectedUserId'],
+// 3. Pending (Incoming) Business Card Route
+      GoRoute(
+        path: '/pendingBusinessCard',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return PendingBusinessCardScreen(
+            connection: extra['connection'] as PendingConnection,
+            currentUserId: extra['currentUserId'] as String,
           );
         },
-      )
+      ),
+
+      GoRoute(
+        path: '/connectedBusinessCard',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ConnectedBusinessCardScreen(
+            connection: extra['connection'] as ConnectedConnection,
+            currentUserId: extra['currentUserId'] as String,
+          );
+        },
+      ),
     ],
   );
 });

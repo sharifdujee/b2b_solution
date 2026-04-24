@@ -1,18 +1,18 @@
-import 'dart:developer';
-import 'package:b2b_solution/core/design_system/app_color.dart';
-import 'package:b2b_solution/core/gloabal/custom_text.dart';
-import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/service/auth_service.dart';
+import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../../ping/model/connection_model.dart';
 import '../../model/connected_state_model.dart' hide ConnectionUser;
 import '../../model/find_connecion_state_model.dart';
 import '../../model/my_connection_state_model.dart';
-import '../../model/send_request_state_model.dart';
 import '../../model/pending_connection_state_model.dart' hide ConnectionUser;
+import '../../model/send_request_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionCard extends ConsumerWidget {
@@ -22,24 +22,23 @@ class MyConnectionCard extends ConsumerWidget {
   const MyConnectionCard({
     super.key,
     required this.connectionData,
-    required this.currentUserId,
+    required this.currentUserId, required void Function() onTap,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentFilter = ref.watch(connectionFilterProvider);
 
-    // --- Data Extraction Logic ---
-    final bool isSearchModel = connectionData is ConnectionModel; // Check for Search Model
+    // --- Type Check Flags ---
     final bool isFindModel = connectionData is FindDatum;
     final bool isRequestModel = connectionData is SendRequestResultDatum;
     final bool isPendingModel = connectionData is PendingConnection;
     final bool isConnectedModel = connectionData is ConnectedConnection;
+    final bool isSearchModel = connectionData is ConnectionModel;
 
+    // --- Resolve Display User ---
     final dynamic displayUser;
-
     if (isSearchModel) {
-      // Use the getDisplayUser helper from your ConnectionModel
       displayUser = (connectionData as ConnectionModel).getDisplayUser(currentUserId);
     } else if (isFindModel) {
       displayUser = connectionData;
@@ -56,10 +55,7 @@ class MyConnectionCard extends ConsumerWidget {
     final String fullName = displayUser?.fullName ?? "Unknown";
     final String businessName = displayUser?.businessName ?? "No Business Name";
     final String? profileImage = displayUser?.profileImage;
-
-    final String position = (displayUser is ConnectionUser)
-        ? "Business Member"
-        : (displayUser?.position ?? "Business Member");
+    final String position = displayUser?.position ?? "Business Professional";
 
     final String categories = (displayUser?.businessCategory is List)
         ? (displayUser.businessCategory as List).join(", ")
@@ -73,7 +69,7 @@ class MyConnectionCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 0),
           ),
@@ -99,16 +95,14 @@ class MyConnectionCard extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    _buildTopAction(currentFilter, context, ref),
+                    _buildTopAction(context),
                   ],
                 ),
                 SizedBox(height: 6.h),
                 _buildInfoRow(IconPath.location05, position),
                 SizedBox(height: 8.h),
                 CustomText(text: categories, fontSize: 12.sp, color: AppColor.grey800, maxLines: 2),
-
-                if (isPendingModel && currentFilter == ConnectionFilterOption.Pending)
-                  _buildPendingActions(ref, context),
+                if (isPendingModel && currentFilter == ConnectionFilterOption.Pending) _buildPendingActions(ref, context),
               ],
             ),
           ),
@@ -117,50 +111,53 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopAction(ConnectionFilterOption filter, BuildContext context, WidgetRef ref) {
+  Widget _buildTopAction(BuildContext context) {
     return _actionButton(
       text: "Details",
       bg: AppColor.primary,
       txtColor: AppColor.white,
-        // Inside _buildTopAction in MyConnectionCard
-        onTap: () {
-          String statusHint = 'CONNECTED';
-          String partnerId = "";
-
-          if (connectionData is ConnectionModel) {
-            final data = connectionData as ConnectionModel;
-            if (data.senderId.isEmpty) {
-              statusHint = 'FIND';
-              partnerId = data.receiverId;
-            } else {
-              statusHint = 'CONNECTED';
-              partnerId = currentUserId == data.senderId ? data.receiverId : data.senderId;
-            }
-          } else if (connectionData is FindDatum) {
-            partnerId = (connectionData as FindDatum).id;
-            statusHint = 'FIND';
-          }
-          // ... rest of your existing logic
-
-          context.push(
-            "/businessCardScreen",
-            extra: {
-              'connectionData': connectionData,
-              'currentUserId': currentUserId,
-              'status': statusHint,
-              'connectedUserId': partnerId,
-            },
-          );
+      onTap: () {
+        // --- NEW NAVIGATION LOGIC ---
+        if (connectionData is FindDatum) {
+          context.push('/findBusinessCard', extra: connectionData);
         }
+        else if (connectionData is SendRequestResultDatum) {
+          context.push('/requestBusinessCard', extra: connectionData);
+        }
+        else if (connectionData is PendingConnection) {
+          context.push('/pendingBusinessCard', extra: {
+            'connection': connectionData,
+            'currentUserId': currentUserId,
+          });
+        }
+        else if (connectionData is ConnectedConnection) {
+          context.push('/connectedBusinessCard', extra: {
+            'connection': connectionData,
+            'currentUserId': currentUserId,
+          });
+        }
+        else if (connectionData is ConnectionModel) {
+          // Logic for general Search Model mapping
+          final searchModel = connectionData as ConnectionModel;
+          if (searchModel.senderId.isEmpty) {
+            // If sender is empty, treat as a "Find" result
+            // Note: You may need to map ConnectionModel to FindDatum if types don't match
+            context.push('/findBusinessCard', extra: searchModel);
+          } else {
+            // Treat as connected
+            context.push('/connectedBusinessCard', extra: {
+              'connection': searchModel,
+              'currentUserId': currentUserId,
+            });
+          }
+        }
+      },
     );
   }
-
 
   Widget _buildPendingActions(WidgetRef ref, BuildContext context) {
     final notifier = ref.read(myConnectionListProvider.notifier);
     final connection = connectionData as PendingConnection;
-
-    // Use string IDs directly to avoid null check errors
     final partnerUserId = AuthService.id == connection.sender?.id ? connection.receiver?.id : connection.sender?.id;
 
     if (AuthService.id == connection.senderId) {
@@ -223,4 +220,3 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 }
-
