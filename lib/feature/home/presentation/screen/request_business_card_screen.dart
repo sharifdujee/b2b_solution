@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +34,9 @@ class RequestBusinessCardScreen extends ConsumerWidget {
           text: "Cancel Request",
           backgroundColor: AppColor.error,
           onPressed: isLoading ? null : () async {
-            await ref.read(myConnectionListProvider.notifier).cancelRequest(request.id, context);
+            log("Cancel Id: ${request.id}");
+            final id = request.receiver.id;
+            await ref.read(myConnectionListProvider.notifier).cancelRequest(id, context);
             if (context.mounted) context.pop();
           },
         ),

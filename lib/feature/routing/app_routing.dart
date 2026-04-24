@@ -16,7 +16,6 @@ import '../authentication/presentation/screen/role_selection_screen.dart';
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
 import '../home/model/connected_state_model.dart';
 import '../home/model/find_connecion_state_model.dart' show FindDatum;
-import '../home/model/my_connection_state_model.dart';
 import '../home/model/pending_connection_state_model.dart';
 import '../home/model/send_request_state_model.dart';
 import '../home/presentation/screen/connected_business_card.dart';

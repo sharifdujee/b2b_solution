@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class ConnectedConnectionModel {
   final bool success;
   final String message;
@@ -61,12 +59,10 @@ class ConnectedConnection {
     sender: json["sender"] == null ? null : ConnectionUser.fromJson(json["sender"]),
   );
 
-  /// Helper: Automatically returns the other person's data
   ConnectionUser? getDisplayPartner(String currentUserId) {
     return senderId == currentUserId ? receiver : sender;
   }
 
-  /// Helper: Automatically returns the other person's ID string
   String getPartnerId(String currentUserId) {
     return senderId == currentUserId ? receiverId : senderId;
   }
@@ -76,6 +72,7 @@ class ConnectionUser {
   final String? legalName;
   final String? businessName;
   final String fullName;
+  final String? email; // Added email field
   final List<String> businessCategory;
   final int? operationYears;
   final String? businessImage;
@@ -88,6 +85,7 @@ class ConnectionUser {
     this.legalName,
     this.businessName,
     required this.fullName,
+    this.email, // Added to constructor
     required this.businessCategory,
     this.operationYears,
     this.businessImage,
@@ -101,6 +99,7 @@ class ConnectionUser {
     legalName: json["legalName"]?.toString(),
     businessName: json["businessName"]?.toString(),
     fullName: json["fullName"]?.toString() ?? "Unknown User",
+    email: json["email"]?.toString(), // Mapped from JSON
     businessCategory: json["businessCategory"] == null
         ? []
         : List<String>.from(json["businessCategory"].map((x) => x.toString())),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_button.dart';
+import '../../../../core/gloabal/custom_dialog.dart' show showCustomDialog;
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/service/app_url.dart';
 import '../../../../core/service/auth_service.dart';
@@ -36,7 +37,7 @@ class ConnectedBusinessCardScreen extends ConsumerWidget {
       fullName: partner?.fullName ?? "Unknown",
       position: partner?.position ?? "Business Professional",
       businessImage: partner?.businessImage,
-      email: partner?.legalName ?? "N/A",
+      email: partner?.email ?? "N/A",
       lat: partner?.businessLatitude ?? 0.0,
       lng: partner?.businessLongitude ?? 0.0,
       memberSince: connection.createdAt,
@@ -44,9 +45,24 @@ class ConnectedBusinessCardScreen extends ConsumerWidget {
         CustomButton(
           text: "Remove Connection",
           backgroundColor: AppColor.error,
-          onPressed: isLoading ? null : () async {
-            await ref.read(myConnectionListProvider.notifier).removeConnection(partnerId, context);
-            if (context.mounted) context.pop();
+          // Trigger the Popup here
+          onPressed: isLoading ? null : () {
+            showCustomDialog(
+              context,
+              imagePath: IconPath.confirmation,
+              title: "Remove Connection?",
+              message: "Are you sure you want to remove ${partner?.fullName} from your connections?",
+              buttonText: "Cancel",
+              button1Color: AppColor.white,
+              secondButtonText: "Remove",
+              isDoubleButton: true,
+              button2Color: AppColor.error, // Red for the remove action
+              onSecondPressed: () async {
+                context.pop();
+                await ref.read(myConnectionListProvider.notifier).removeConnection(partnerId, context);
+                if (context.mounted) context.pop();
+              },
+            );
           },
         ),
         SizedBox(height: 16.h),
