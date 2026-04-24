@@ -28,8 +28,6 @@ class CreatePingScreen extends ConsumerWidget{
 
     final connectionState = ref.watch(connectionProvider);
 
-
-
     return Scaffold(
       backgroundColor: AppColor.white,
       body: Container(
@@ -200,18 +198,34 @@ class CreatePingScreen extends ConsumerWidget{
               SizedBox(height: 16.h,),
               CustomSelectField<ConnectionModel>(
                 label: "Choose Connection",
-                hintText: "Search connections...",
                 isMultiSelect: true,
-                showSearchBar: true,
                 items: connectionState.connections,
-                initialSelectedItems: connectionState.connections
-                    .where((conn) => state.connectedIds.contains(conn.id))
-                    .toList(),
+
+                // This logic maps the state.connectedIds back to the UI objects
+                initialSelectedItems: connectionState.connections.where((conn) {
+                  final currentUserId = AuthService.id ?? "";
+                  final partnerId = conn.senderId == currentUserId ? conn.receiverId : conn.senderId;
+                  return state.connectedIds.contains(partnerId);
+                }).toList(),
+
                 itemLabelBuilder: (conn) {
                   final currentUserId = AuthService.id ?? "";
                   return conn.getDisplayUser(currentUserId)?.fullName ?? "Unknown User";
                 },
-                controller: controller.connectionDisplayController,
+
+                // Validator to ensure either the toggle is on OR someone is picked
+                validator: (val) {
+                  if (!state.myConnectionOnly && state.connectedIds.isEmpty) {
+                    return "Please select at least one connection";
+                  }
+                  return null;
+                },
+
+                onChanged: (selectedList) {
+                  if (selectedList is List<ConnectionModel>) {
+                    controller.updateConnectedIds(selectedList);
+                  }
+                }, hintText: 'select',
               ),
 
               SizedBox(height: 16.h,),
@@ -265,23 +279,52 @@ class CreatePingScreen extends ConsumerWidget{
                 onPressed: state.isLoading
                     ? null
                     : () async {
-                  if (state.itemName.isEmpty) {
+                  // 1. Validation Checks
+                  if (controller.itemNameController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please enter an item name")),
+                      const SnackBar(
+                        content: Text("Please enter an item name"),
+                        backgroundColor: Colors.orange,
+                      ),
                     );
                     return;
                   }
 
                   if (state.connectedIds.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select at least one connection")),
+                      const SnackBar(
+                        content: Text("Please select at least one connection"),
+                        backgroundColor: Colors.orange,
+                      ),
                     );
                     return;
                   }
-                  // 2. Trigger API
-                  await controller.sendPing();
-                  context.pop();
 
+                  // 2. Trigger API Call
+                  final bool isSuccess = await controller.sendPing();
+
+                  if (context.mounted) {
+                    if (isSuccess) {
+                      // Success Feedback
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Ping created successfully!"),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      // Navigate back only on success
+                      context.pop();
+                    } else {
+                      // Error Feedback
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.errorMessage ?? "Failed to create Ping. Please try again."),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
                 },
               )
 

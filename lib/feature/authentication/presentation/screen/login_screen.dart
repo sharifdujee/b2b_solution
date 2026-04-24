@@ -13,22 +13,25 @@ import 'package:go_router/go_router.dart';
 import '../../../navigation/presentation/screen.dart';
 import '../../models/login_state_model.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    // Listen for error messages from the provider
     ref.listen<LoginStateModel>(loginProvider, (previous, next) {
       if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showSnackBar(context, next.errorMessage!, isError: true);
       }
     });
+
     final state = ref.watch(loginProvider);
     final controller = ref.read(loginProvider.notifier);
 
@@ -37,171 +40,207 @@ class LoginScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 48.h),
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Image.asset(IconPath.arrowLeft, height: 24.h),
-              ),
+          // 2. Wrap the content in a Form
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 48.h),
+                GestureDetector(
+                  onTap: () => context.pop(),
+                  child: Image.asset(IconPath.arrowLeft, height: 24.h),
+                ),
+                SizedBox(height: 16.h),
+                CustomText(
+                  text: "Log in",
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+                SizedBox(height: 16.h),
+                CustomText(
+                  text: "Log in to your account",
+                  fontSize: 14.sp,
+                  color: AppColor.grey400,
+                ),
 
-              SizedBox(height: 16.h),
-              CustomText(
-                text: "Log in",
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+                SizedBox(height: 32.h),
+                _buildLabel("Email Address"),
+                CustomTextFormField(
+                  controller: controller.emailController,
+                  hintText: "Email Address",
+                  hintTextColor: AppColor.grey300,
+                  textColor: AppColor.black,
+                  borderRadius: 12.r,
+                  keyboardType: TextInputType.emailAddress,
+                  // 3. Add Email Validation
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return "Email is required";
+                    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (!emailRegex.hasMatch(value)) return "Enter a valid email address";
+                    return null;
+                  },
+                ),
 
-              SizedBox(height: 16.h),
-              CustomText(
-                text: "Log in to your account",
+                SizedBox(height: 16.h),
+                _buildLabel("Password"),
+                CustomTextFormField(
+                  controller: controller.passwordController,
+                  hintText: "Password",
+                  hintTextColor: AppColor.grey300,
+                  obscureText: state.obscurePassword,
+                  textColor: AppColor.black,
+                  borderRadius: 12.r,
+                  // 4. Add Password Validation
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return "Password is required";
+                    if (value.length < 6) return "Password must be at least 6 characters";
+                    return null;
+                  },
+                  suffixIcon: IconButton(
+                    onPressed: () => controller.toggleVisibility(),
+                    icon: Icon(
+                      state.obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: AppColor.grey300,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+                _buildForgotPassword(context),
+
+                SizedBox(height: 32.h),
+                CustomButton(
+                  borderRadius: 16.r,
+                  onPressed: state.isLoading
+                      ? null
+                      : () async {
+                    // 5. Trigger Form Validation
+                    if (_formKey.currentState!.validate()) {
+                      final success = await controller.login();
+                      if (success && context.mounted) {
+                        _showSnackBar(context, "Login Successful!", isError: false);
+                        ref.read(selectedIndexProvider.notifier).state = 0;
+                        context.pushReplacement('/nav');
+                      }
+                    }
+                  },
+                  text: state.isLoading ? "Logging in..." : "Log in",
+                  backgroundColor: AppColor.primary,
+                  textColor: Colors.black,
+                ),
+
+                // ... Social Buttons & Sign Up (Keep existing code) ...
+                _buildSocialSection(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper to build labels
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: CustomText(
+        text: text,
+        fontSize: 14.sp,
+        color: Colors.black,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+  // --- Forgot Password Link ---
+  Widget _buildForgotPassword(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      alignment: Alignment.centerRight,
+      child: GestureDetector(
+        onTap: () => context.push('/resetPassword'),
+        child: CustomText(
+          text: "Forgot Password?",
+          fontSize: 14.sp,
+          color: AppColor.secondary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  // --- Social Login & Sign Up Section ---
+  Widget _buildSocialSection() {
+    return Column(
+      children: [
+        SizedBox(height: 32.h),
+        Row(
+          children: [
+            Expanded(child: Divider(thickness: 1, color: AppColor.grey50)),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: CustomText(
+                text: "Or log in with",
                 fontSize: 14.sp,
                 color: AppColor.grey400,
               ),
-
-              SizedBox(height: 32.h),
-              CustomText(
-                text: "Email Address",
-                fontSize: 14.sp,
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-
-              SizedBox(height: 12.h),
-              CustomTextFormField(
-                controller: controller.emailController,
-                hintText: "Email Address",
-                hintTextColor: AppColor.grey300,
-                textColor: AppColor.black,
-                borderRadius: 12.r,
-                keyboardType: TextInputType.emailAddress,
-              ),
-
-              SizedBox(height: 16.h),
-              CustomText(
-                text: "Password",
-                fontSize: 14.sp,
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-
-              SizedBox(height: 12.h),
-              CustomTextFormField(
-                controller: controller.passwordController,
-                hintText: "Password",
-                hintTextColor: AppColor.grey300,
-                obscureText: state.obscurePassword,
-                textColor: AppColor.black,
-                borderRadius: 12.r,
-                suffixIcon: IconButton(
-                  onPressed: () => controller.toggleVisibility(),
-                  icon: Icon(
-                    state.obscurePassword ? Icons.visibility_off : Icons.visibility,
-                    color: AppColor.grey300,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 24.h),
-              Container(
-                width: double.infinity,
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () => context.push('/resetPassword'),
-                  child: CustomText(
-                    text: "Forgot Password?",
-                    fontSize: 14.sp,
-                    color: AppColor.secondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-
-
-
-              SizedBox(height: 32.h),
-              CustomButton(
-                borderRadius: 16.r,
-                onPressed: state.isLoading
-                    ? null
-                    : () async {
-                  final success = await controller.login();
-
-                  if (success && context.mounted) {
-                    ref.read(selectedIndexProvider.notifier).state = 0;
-                    context.pushReplacement('/nav');
-                  } else if (!success && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          state.errorMessage ?? "Login failed. Please try again.",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: Colors.redAccent,
-                        behavior: SnackBarBehavior.floating,
-                        margin: EdgeInsets.all(20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                },
-                text: state.isLoading ? "Logging in..." : "Log in",
-                backgroundColor: AppColor.primary,
-                textColor: Colors.black,
-              ),
-
-              SizedBox(height: 32.h),
-              // ... Social Login Buttons & Sign Up Row ...
-              Row(
-                children: [
-                  Expanded(child: Divider(thickness: 1, color: AppColor.grey50)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: CustomText(text: "Or log in with", fontSize: 14.sp, color: AppColor.grey400),
-                  ),
-                  Expanded(child: Divider(thickness: 1, color: AppColor.grey50)),
-                ],
-              ),
-
-              SizedBox(height: 32.h),
-              SocialLoginButton(
-                text: "Continue with Google",
-                assetPath: IconPath.googleIcon,
-                onTap: () {
-
-                },
-              ),
-
-              SizedBox(height: 16.h),
-              SocialLoginButton(
-                text: "Continue with Apple",
-                icon: Icons.apple_sharp,
-                onTap: () {
-
-                },
-              ),
-
-              SizedBox(height: 32.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomText(text: "Don't have an account?", fontSize: 14.sp, color: AppColor.grey400),
-                  SizedBox(width: 8.w),
-                  GestureDetector(
-                    onTap: () => context.push('/roleSelectionScreen'),
-                    child: CustomText(text: "Sign Up", fontSize: 14.sp, color: AppColor.secondary),
-                  )
-                ],
-              ),
-              SizedBox(height: 32.h),
-            ],
-          ),
+            ),
+            Expanded(child: Divider(thickness: 1, color: AppColor.grey50)),
+          ],
         ),
+        SizedBox(height: 32.h),
+        SocialLoginButton(
+          text: "Continue with Google",
+          assetPath: IconPath.googleIcon,
+          onTap: () {
+            // TODO: Implement Google Login
+          },
+        ),
+        SizedBox(height: 16.h),
+        SocialLoginButton(
+          text: "Continue with Apple",
+          icon: Icons.apple_sharp,
+          onTap: () {
+            // TODO: Implement Apple Login
+          },
+        ),
+        SizedBox(height: 32.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CustomText(
+              text: "Don't have an account?",
+              fontSize: 14.sp,
+              color: AppColor.grey400,
+            ),
+            SizedBox(width: 8.w),
+            GestureDetector(
+              onTap: () => context.push('/roleSelectionScreen'),
+              child: CustomText(
+                text: "Sign Up",
+                fontSize: 14.sp,
+                color: AppColor.secondary,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          ],
+        ),
+        SizedBox(height: 32.h),
+      ],
+    );
+  }
+
+  // Unified Snackbar Method
+  void _showSnackBar(BuildContext context, String message, {required bool isError}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(20.h),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

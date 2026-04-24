@@ -7,11 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/service/auth_service.dart';
-import '../../model/connected_state_model.dart';
+import '../../../ping/model/connection_model.dart';
+import '../../model/connected_state_model.dart' hide ConnectionUser;
 import '../../model/find_connecion_state_model.dart';
 import '../../model/my_connection_state_model.dart';
 import '../../model/send_request_state_model.dart';
-import '../../model/pending_connection_state_model.dart';
+import '../../model/pending_connection_state_model.dart' hide ConnectionUser;
 import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionCard extends ConsumerWidget {
@@ -29,14 +30,18 @@ class MyConnectionCard extends ConsumerWidget {
     final currentFilter = ref.watch(connectionFilterProvider);
 
     // --- Data Extraction Logic ---
+    final bool isSearchModel = connectionData is ConnectionModel; // Check for Search Model
     final bool isFindModel = connectionData is FindDatum;
     final bool isRequestModel = connectionData is SendRequestResultDatum;
     final bool isPendingModel = connectionData is PendingConnection;
-    final bool isConnectedModel = connectionData is ConnectedConnection; // Added this
+    final bool isConnectedModel = connectionData is ConnectedConnection;
 
     final dynamic displayUser;
 
-    if (isFindModel) {
+    if (isSearchModel) {
+      // Use the getDisplayUser helper from your ConnectionModel
+      displayUser = (connectionData as ConnectionModel).getDisplayUser(currentUserId);
+    } else if (isFindModel) {
       displayUser = connectionData;
     } else if (isRequestModel) {
       displayUser = (connectionData as SendRequestResultDatum).receiver;
@@ -51,7 +56,10 @@ class MyConnectionCard extends ConsumerWidget {
     final String fullName = displayUser?.fullName ?? "Unknown";
     final String businessName = displayUser?.businessName ?? "No Business Name";
     final String? profileImage = displayUser?.profileImage;
-    final String position = displayUser?.position ?? "Business Member";
+
+    final String position = (displayUser is ConnectionUser)
+        ? "Business Member"
+        : (displayUser?.position ?? "Business Member");
 
     final String categories = (displayUser?.businessCategory is List)
         ? (displayUser.businessCategory as List).join(", ")
@@ -114,43 +122,39 @@ class MyConnectionCard extends ConsumerWidget {
       text: "Details",
       bg: AppColor.primary,
       txtColor: AppColor.white,
-      onTap: () {
-        String statusHint = 'CONNECTED';
-        String partnerId = "";
+        // Inside _buildTopAction in MyConnectionCard
+        onTap: () {
+          String statusHint = 'CONNECTED';
+          String partnerId = "";
 
-        switch (filter) {
-          case ConnectionFilterOption.Find: statusHint = 'FIND'; break;
-          case ConnectionFilterOption.Pending: statusHint = 'PENDING'; break;
-          case ConnectionFilterOption.Connected: statusHint = 'CONNECTED'; break;
-          case ConnectionFilterOption.Requests: statusHint = 'REQUEST'; break;
+          if (connectionData is ConnectionModel) {
+            final data = connectionData as ConnectionModel;
+            if (data.senderId.isEmpty) {
+              statusHint = 'FIND';
+              partnerId = data.receiverId;
+            } else {
+              statusHint = 'CONNECTED';
+              partnerId = currentUserId == data.senderId ? data.receiverId : data.senderId;
+            }
+          } else if (connectionData is FindDatum) {
+            partnerId = (connectionData as FindDatum).id;
+            statusHint = 'FIND';
+          }
+          // ... rest of your existing logic
+
+          context.push(
+            "/businessCardScreen",
+            extra: {
+              'connectionData': connectionData,
+              'currentUserId': currentUserId,
+              'status': statusHint,
+              'connectedUserId': partnerId,
+            },
+          );
         }
-
-        if (connectionData is FindDatum) {
-          partnerId = (connectionData as FindDatum).id;
-        } else if (connectionData is PendingConnection) {
-          final data = connectionData as PendingConnection;
-          partnerId = AuthService.id == data.senderId ? data.receiverId : data.senderId;
-        } else if (connectionData is SendRequestResultDatum) {
-          partnerId = (connectionData as SendRequestResultDatum).receiver.id;
-        } else if (connectionData is ConnectedConnection) {
-          final data = connectionData as ConnectedConnection;
-          partnerId = AuthService.id.toString();
-        }
-
-        log("Navigating with partnerId: $partnerId");
-
-        context.push(
-          "/businessCardScreen",
-          extra: {
-            'connectionData': connectionData,
-            'currentUserId': currentUserId,
-            'status': statusHint,
-            'connectedUserId': partnerId,
-          },
-        );
-      },
     );
   }
+
 
   Widget _buildPendingActions(WidgetRef ref, BuildContext context) {
     final notifier = ref.read(myConnectionListProvider.notifier);
@@ -219,3 +223,4 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 }
+

@@ -11,6 +11,7 @@ import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_selector.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../models/signup_state_model.dart';
 import '../../provider/signup_provider.dart';
 
 class SignupScreen extends ConsumerWidget {
@@ -20,6 +21,36 @@ class SignupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+
+    ref.listen<SignupStateModel>(signupProvider, (previous, next) {
+      if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    next.errorMessage!,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    });
+
+
     final state = ref.watch(signupProvider);
     final controller = ref.read(signupProvider.notifier);
 
@@ -253,10 +284,13 @@ class SignupScreen extends ConsumerWidget {
                       title: "Profile Image",
                       imagePath: state.profileImage,
                       errorText: fieldState.errorText,
-                      onPickImage: () async {
-                        await controller.pickProfileImage(ImageSource.gallery);
-                        fieldState.didChange(state.profileImage);
-                      },
+                      onPickImage: () => _showImageSourceSheet(
+                        context,
+                            (source) async {
+                          await controller.pickProfileImage(source);
+                          fieldState.didChange(state.profileImage);
+                        },
+                      ),
                     );
                   },
                 ),
@@ -264,16 +298,19 @@ class SignupScreen extends ConsumerWidget {
                 SizedBox(height: 16.h),
                 _buildSectionTitle("Upload business image"),
                 FormField<String>(
-                  validator: (value) => state.profileImage == null ? "Please upload a profile image" : null,
+                  validator: (value) => state.businessImage == null ? "Please upload a business image" : null,
                   builder: (fieldState) {
                     return CustomImagePickerCard(
-                      title: "business image",
+                      title: "Business image",
                       imagePath: state.businessImage,
                       errorText: fieldState.errorText,
-                      onPickImage: () async {
-                        await controller.pickBusinessImage(ImageSource.gallery);
-                        fieldState.didChange(state.businessImage);
-                      },
+                      onPickImage: () => _showImageSourceSheet(
+                        context,
+                            (source) async {
+                          await controller.pickBusinessImage(source);
+                          fieldState.didChange(state.businessImage);
+                        },
+                      ),
                     );
                   },
                 ),
@@ -381,43 +418,14 @@ class SignupScreen extends ConsumerWidget {
                   onPressed: state.isLoading
                       ? null
                       : () async {
-                    // 1. Trigger the Form validation
                     if (_formKey.currentState!.validate()) {
-
-                      // 2. Only if the form is valid, call the signup logic
                       final success = await controller.signup();
-
                       if (success && context.mounted) {
                         controller.resetErrorMessage();
                         context.push('/signupVerificationCodeScreen');
                       }
                     } else {
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              const Icon(Icons.error_outline, color: Colors.white),
-                              SizedBox(width: 12.w),
-                              const Expanded(
-                                child: Text(
-                                  "Please fix the errors in the form before saving.",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: Colors.redAccent,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
-
-                      debugPrint("Form is invalid");
+                      _showValidationErrorSnackbar(context);
                     }
                   },
                 ),
@@ -457,6 +465,15 @@ class SignupScreen extends ConsumerWidget {
         fontSize: 16.sp,
         fontWeight: FontWeight.w600,
         color: Colors.black,
+      ),
+    );
+  }
+  void _showValidationErrorSnackbar(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text("Please fix the errors in the form before saving."),
+        backgroundColor: Colors.orange.shade800,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -525,18 +542,6 @@ class SignupScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildErrorDisplay(String error) {
-    return Container(
-      margin: EdgeInsets.only(top: 20.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8.r)),
-      child: Row(children: [
-        Icon(Icons.error_outline, color: Colors.red, size: 20.sp),
-        SizedBox(width: 8.w),
-        Expanded(child: CustomText(text: error, fontSize: 13.sp, color: Colors.red)),
-      ]),
-    );
-  }
 
   Widget _buildSourceCard(BuildContext context,
       {required IconData icon, required String label, required VoidCallback onTap}) {

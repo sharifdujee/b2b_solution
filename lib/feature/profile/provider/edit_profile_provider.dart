@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:b2b_solution/core/service/auth_service.dart';
 import 'package:b2b_solution/feature/profile/provider/profile_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -12,16 +13,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/service/app_url.dart';
+import '../../../core/service/map_service.dart';
 import '../model/profile_edit_state_model.dart';
 import '../model/profile_state_model.dart';
 
 class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
   final UserModel? _currentUser;
   final ProfileProvider _profileProvider;
+  final MapService _mapService;
 
-  EditProfileNotifier(this._currentUser, this._profileProvider)
+  EditProfileNotifier(this._currentUser, this._profileProvider, this._mapService)
       : super(ProfileEditStateModel()) {
     _initializeFields();
+    _fetchInitialAddress();
   }
 
   TextEditingController fullNameController = TextEditingController();
@@ -34,6 +38,9 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
   TextEditingController businessLongitude = TextEditingController();
   TextEditingController businessAddressController = TextEditingController();
 
+
+
+
   void _initializeFields() {
     if (_currentUser != null) {
       fullNameController.text = _currentUser!.fullName;
@@ -44,9 +51,41 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
       businessLatitude.text = _currentUser!.businessLatitude?.toString() ?? "";
       businessLongitude.text = _currentUser!.businessLongitude?.toString() ?? "";
 
+      state = state.copyWith(
+        latitude: _currentUser!.businessLatitude,
+        longitude: _currentUser!.businessLongitude,
+      );
       if (_currentUser!.businessCategory.isNotEmpty) {
         businessCategoryController.text = _currentUser!.businessCategory.first;
       }
+    }
+  }
+
+  Future<void> _fetchInitialAddress() async {
+    if (state.latitude != null && state.longitude != null) {
+      final suggestion = await _mapService.getAddressFromLatLng(
+        LatLng(state.latitude!, state.longitude!),
+      );
+      if (suggestion != null) {
+        state = state.copyWith(businessAddress: suggestion.secondaryText);
+        businessAddressController.text = suggestion.secondaryText;
+      }
+    }
+  }
+
+  void updateLocation({required double lat, required double lng, String? address}) async {
+    state = state.copyWith(
+      latitude: lat,
+      longitude: lng,
+      businessAddress: address,
+    );
+    businessLatitude.text = lat.toString();
+    businessLongitude.text = lng.toString();
+
+    // If address is missing (e.g., coming back from a map pin), fetch it
+    if (address == null) {
+      final suggestion = await _mapService.getAddressFromLatLng(LatLng(lat, lng));
+      state = state.copyWith(businessAddress: suggestion?.secondaryText);
     }
   }
 
@@ -64,18 +103,7 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
     super.dispose();
   }
 
-  void updateLocation({required double lat, required double lng, String? address}) {
-    state = state.copyWith(
-      latitude: lat,
-      longitude: lng,
-      businessAddress: address,
-    );
-    businessLatitude.text = lat.toString();
-    businessLongitude.text = lng.toString();
-    if (address != null) {
-      businessAddressController.text = address;
-    }
-  }
+
 
   final ImagePicker _picker = ImagePicker();
   Future<void> _pickImage(ImageSource source, String type) async {
@@ -197,6 +225,7 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
 final editProfileProvider = StateNotifierProvider.autoDispose<EditProfileNotifier, ProfileEditStateModel>((ref) {
   final profileState = ref.watch(profileProvider);
   final profileNotifier = ref.read(profileProvider.notifier);
+  final mapService = ref.read(mapServiceProvider); // Get map service
 
-  return EditProfileNotifier(profileState.userModel, profileNotifier);
+  return EditProfileNotifier(profileState.userModel, profileNotifier, mapService);
 });
