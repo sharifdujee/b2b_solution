@@ -26,6 +26,8 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
+    if (!mounted) return false;
+
     // 1. Reset state before validation
     state = state.copyWith(errorMessage: null, isLoading: false);
 

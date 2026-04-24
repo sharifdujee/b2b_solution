@@ -7,23 +7,25 @@ import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 
 class CustomImagePickerCard extends StatelessWidget {
   final String title;
-  final String? imagePath;
+  final String? imagePath;      // Local file path
+  final String? networkImage;   // URL from the server
   final VoidCallback onPickImage;
-  // 1. Added optional errorText parameter
   final String? errorText;
 
   const CustomImagePickerCard({
     super.key,
     required this.title,
     this.imagePath,
+    this.networkImage, // Initialize optional network image
     required this.onPickImage,
-    this.errorText, // Initialize here
+    this.errorText,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool hasImage = imagePath != null && imagePath!.isNotEmpty;
-    bool hasError = errorText != null; // Check if there is an error
+    bool hasLocalImage = imagePath != null && imagePath!.isNotEmpty;
+    bool hasNetworkImage = networkImage != null && networkImage!.isNotEmpty;
+    bool hasError = errorText != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,25 +35,18 @@ class CustomImagePickerCard extends StatelessWidget {
           child: Container(
             width: double.infinity,
             height: 200.h,
+            clipBehavior: Clip.antiAlias, // Ensures image corners are rounded
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16.r),
-              // 2. Change border color to Red if hasError is true
               border: Border.all(
                 color: hasError ? Colors.red : const Color(0xFFE2E8F0),
                 width: hasError ? 1.5 : 1,
               ),
-              image: hasImage
-                  ? DecorationImage(
-                image: FileImage(File(imagePath!)),
-                fit: BoxFit.cover,
-              )
-                  : null,
             ),
-            child: hasImage ? const SizedBox.shrink() : _buildPlaceholder(),
+            child: _buildImageContent(hasLocalImage, hasNetworkImage),
           ),
         ),
-        // 3. Display the error message below the card if it exists
         if (hasError)
           Padding(
             padding: EdgeInsets.only(top: 8.h, left: 4.w),
@@ -68,14 +63,53 @@ class CustomImagePickerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildImageContent(bool hasLocal, bool hasNetwork) {
+    // Priority 1: Picked Local File
+    if (hasLocal) {
+      return Image.file(
+        File(imagePath!),
+        fit: BoxFit.cover,
+        width: double.infinity,
+      );
+    }
+
+    // Priority 2: Existing Network Image
+    if (hasNetwork) {
+      return Image.network(
+        networkImage!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                  : null,
+              color: AppColor.primary,
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(isError: true),
+      );
+    }
+
+    return _buildPlaceholder();
+  }
+
+  Widget _buildPlaceholder({bool isError = false}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset(IconPath.galleryAdd, height: 44.h, width: 44.w),
+        Image.asset(
+          IconPath.galleryAdd,
+          height: 44.h,
+          width: 44.w,
+          color: isError ? Colors.grey : null,
+        ),
         SizedBox(height: 16.h),
         Text(
-          "Upload $title",
+          isError ? "Error loading image" : "Upload $title",
           style: GoogleFonts.poppins(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
@@ -83,32 +117,34 @@ class CustomImagePickerCard extends StatelessWidget {
           ),
         ),
         Text(
-          "Supports: JPG, PNG",
+          isError ? "Tap to try again" : "Supports: JPG, PNG",
           style: GoogleFonts.poppins(
             fontSize: 14.sp,
             color: const Color(0xFF64748B),
           ),
         ),
-        SizedBox(height: 16.h),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 10.h),
-          margin: EdgeInsets.symmetric(horizontal: 20.h),
-          decoration: BoxDecoration(
-            color: AppColor.primary,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Center(
-            child: Text(
-              "Choose Picture",
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                fontSize: 14.sp,
-                color: Colors.black,
+        if (!isError) ...[
+          SizedBox(height: 16.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 10.h),
+            margin: EdgeInsets.symmetric(horizontal: 20.h),
+            decoration: BoxDecoration(
+              color: AppColor.primary,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Center(
+              child: Text(
+                "Choose Picture",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14.sp,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

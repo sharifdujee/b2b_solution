@@ -1,7 +1,11 @@
 import 'dart:developer';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+
+import '../../feature/profile/provider/profile_provider.dart';
+import '../../feature/splash/provider/splash_provider.dart';
 
 class AuthService {
   // --- Constants for SharedPreferences Keys ---
@@ -89,10 +93,17 @@ class AuthService {
     return _preferences.containsKey(_tokenKey);
   }
 
-  static Future<void> logoutUser(BuildContext context) async {
+  static Future<void> logoutUser(BuildContext context, WidgetRef ref) async {
     try {
+      // 1. Clear physical storage
       await deleteTokenRole();
+
+      // 2. Update the Startup State so the router reacts
+      // This transitions the app state globally
+      ref.read(splashProvider.notifier).setUnauthenticated();
+
       if (context.mounted) {
+        // 3. Navigate to login
         context.go("/loginScreen");
       }
     } catch (e) {
