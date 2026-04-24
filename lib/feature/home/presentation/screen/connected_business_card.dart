@@ -11,6 +11,7 @@ import '../../../../core/service/app_url.dart';
 import '../../../../core/service/auth_service.dart';
 import '../../../../core/service/socket_service.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
+import '../../../message/provider/provider/message_provider.dart';
 import '../../model/connected_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 import '../widget/base_business_card_layout.dart';
@@ -56,7 +57,7 @@ class ConnectedBusinessCardScreen extends ConsumerWidget {
               button1Color: AppColor.white,
               secondButtonText: "Remove",
               isDoubleButton: true,
-              button2Color: AppColor.error, // Red for the remove action
+              button2Color: AppColor.error,
               onSecondPressed: () async {
                 context.pop();
                 await ref.read(myConnectionListProvider.notifier).removeConnection(partnerId, context);
@@ -66,18 +67,28 @@ class ConnectedBusinessCardScreen extends ConsumerWidget {
           },
         ),
         SizedBox(height: 16.h),
-        _buildMessageButton(context, partnerId),
+        _buildMessageButton(context, partnerId,ref),
       ],
     );
   }
 
-  Widget _buildMessageButton(BuildContext context, String partnerId) {
+  Widget _buildMessageButton(BuildContext context, String partnerId, WidgetRef ref) {
     return GestureDetector(
-      onTap: () {
-        final socketService = SocketService();
-        socketService.connect(AppUrl.socketUrl, AuthService.token ?? "");
-        socketService.joinRoom(partnerId);
-        context.push("/chatScreen", extra: partnerId);
+      onTap: () async {
+        final notifier = ref.read(messagesProvider.notifier);
+
+        final String? actualRoomId = await notifier.getOrCreateRoom(partnerId);
+
+        if (actualRoomId != null) {
+          notifier.joinRoom(actualRoomId);
+
+          // 3. Navigate with the correct ID
+          context.push("/chatScreen", extra: actualRoomId);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Could not start conversation")),
+          );
+        }
       },
       child: Container(
         width: double.infinity,

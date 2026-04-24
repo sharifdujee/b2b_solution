@@ -24,6 +24,37 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     _connectAndLoad();
   }
 
+
+  /// Retrieves an existing room ID or creates a new one with the partner
+  Future<String?> getOrCreateRoom(String partnerId) async {
+    try {
+      state = state.copyWith(isLoading: true);
+
+      final response = await networkCaller.postRequest(
+        '${AppUrl.baseUrl}/chat/create-room',
+        body: {
+          'participants': [partnerId],
+          'type': 'DIRECT'
+        },
+        token: 'Bearer ${AuthService.token}',
+      );
+
+      if (response.isSuccess) {
+        final roomId = response.responseData['result']['roomId'].toString();
+
+        return roomId;
+      } else {
+        log("Failed to get/create room: ${response.errorMessage}");
+        return null;
+      }
+    } catch (e) {
+      log("Exception in getOrCreateRoom: $e");
+      return null;
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
   /// image upload functionality
   Future<void> uploadChatImage() async {
     try {

@@ -121,8 +121,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       GoRoute(path: "/pingScreen" ,builder: (context, state) => const PingScreen()),
 
-      GoRoute(path: "/chatScreen", builder: (context, state) => const ChatScreen(roomId: '',)),
-
+      GoRoute(
+          path: "/chatScreen",
+          builder: (context, state) {
+            final roomId = state.extra as String;
+            return ChatScreen(roomId: roomId);
+          }
+      ),
 
       GoRoute(
         path: '/findBusinessCard',
