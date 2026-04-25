@@ -203,7 +203,7 @@ class SocketService {
 
     final message = jsonEncode({
       "type": "subscribe-room",
-      "roomId": connectedUserId,
+      "bookingId": connectedUserId,
     });
 
     try {
@@ -213,6 +213,8 @@ class SocketService {
       log("Error joining room: $e");
     }
   }
+
+
 
   void resetReconnection() {
     _reconnectAttempts = 0;

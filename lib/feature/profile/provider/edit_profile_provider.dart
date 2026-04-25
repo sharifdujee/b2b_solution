@@ -73,33 +73,82 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
     }
   }
 
-  void updateLocation({required double lat, required double lng, String? address}) async {
+
+  void onSearchChanged(String query) async {
+    // Update query and set searching state
+    state = state.copyWith(searchQuery: query, isSearching: true);
+
+    if (query.length > 2) {
+      final suggestions = await _mapService.getPlaceSuggestions(query);
+      state = state.copyWith(suggestions: suggestions, isSearching: false);
+    } else {
+      state = state.copyWith(suggestions: [], isSearching: false);
+    }
+  }
+
+  void clearSearch() {
+    state = state.copyWith(searchQuery: '', suggestions: []);
+  }
+
+  Future<void> selectSuggestion(dynamic suggestion) async {
+    // 1. Update text field and selected object
+    state = state.copyWith(
+      selectedLocation: suggestion,
+      searchQuery: suggestion.mainText,
+      suggestions: [], // Hide list after selection
+    );
+
+    // 2. Get Coordinates from Place ID
+    final coords = await _mapService.getLatLngFromPlaceId(suggestion.placeId);
+    if (coords != null) {
+      state = state.copyWith(
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        cameraPosition: coords, // This tells the UI to move the map
+      );
+    }
+  }
+
+  void onMapTap(LatLng latLng) async {
+    state = state.copyWith(
+      latitude: latLng.latitude,
+      longitude: latLng.longitude,
+      cameraPosition: latLng,
+      selectedLocation: null, // Clear previous specific suggestion
+    );
+
+    // 2. Reverse Geocode to get a readable address for the bottom sheet
+    final suggestion = await _mapService.getAddressFromLatLng(latLng);
+    if (suggestion != null) {
+      state = state.copyWith(selectedLocation: suggestion);
+    }
+  }
+
+// Ensure updateLocation updates the UI Controllers
+  void updateLocation({required double lat, required double lng, String? address}) {
     state = state.copyWith(
       latitude: lat,
       longitude: lng,
       businessAddress: address,
     );
+
+    // CRITICAL: Update the text controllers so the EditProfile screen reflects changes
     businessLatitude.text = lat.toString();
     businessLongitude.text = lng.toString();
-
-    // If address is missing (e.g., coming back from a map pin), fetch it
-    if (address == null) {
-      final suggestion = await _mapService.getAddressFromLatLng(LatLng(lat, lng));
-      state = state.copyWith(businessAddress: suggestion?.secondaryText);
-    }
+    businessAddressController.text = address ?? "";
   }
 
   @override
   void dispose() {
-    fullNameController.dispose();
-    legalNameController.dispose();
-    businessNameController.dispose();
-    businessCategoryController.dispose();
-    operationYearsController.dispose();
-    positionController.dispose();
-    businessLatitude.dispose();
-    businessLongitude.dispose();
-    businessAddressController.dispose();
+    fullNameController.clear();
+    legalNameController.clear();
+    businessNameController.clear();
+    businessCategoryController.clear();
+    operationYearsController.clear();
+    positionController.clear();
+    businessLatitude.clear();
+    businessLongitude.clear();
+    businessAddressController.clear();
     super.dispose();
   }
 

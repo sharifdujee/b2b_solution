@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -25,33 +26,27 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
   }
 
 
-  /// Retrieves an existing room ID or creates a new one with the partner
-  Future<String?> getOrCreateRoom(String partnerId) async {
+
+  Completer<String>? _roomCompleter;
+
+  String? _pendingPartnerId;
+
+
+  Future<String?> getRoomId(String partnerId) async {
+    _roomCompleter = Completer<String>();
+    _pendingPartnerId = partnerId;
+
     try {
-      state = state.copyWith(isLoading: true);
-
-      final response = await networkCaller.postRequest(
-        '${AppUrl.baseUrl}/chat/create-room',
-        body: {
-          'participants': [partnerId],
-          'type': 'DIRECT'
-        },
-        token: 'Bearer ${AuthService.token}',
+      final String actualId = await _roomCompleter!.future.timeout(
+        const Duration(seconds: 5),
       );
-
-      if (response.isSuccess) {
-        final roomId = response.responseData['result']['roomId'].toString();
-
-        return roomId;
-      } else {
-        log("Failed to get/create room: ${response.errorMessage}");
-        return null;
-      }
+      return actualId;
     } catch (e) {
-      log("Exception in getOrCreateRoom: $e");
-      return null;
+      log("⚠️ Timeout: No roomId received from server. Falling back to partnerId.");
+      return partnerId;
     } finally {
-      state = state.copyWith(isLoading: false);
+      _roomCompleter = null;
+      _pendingPartnerId = null;
     }
   }
 
@@ -308,7 +303,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     try {
       final response = await networkCaller.getRequest(
         '${AppUrl.baseUrl}/chat/messages/$roomId?limit=20&sortOrder=desc&sortBy=createdAt&page=$page',
-        token: 'Bearer ${AuthService.token}',
+        token: '${AuthService.token}',
       );
 
       if (response.isSuccess) {

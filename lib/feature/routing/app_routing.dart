@@ -1,6 +1,7 @@
 import 'package:b2b_solution/feature/authentication/presentation/screen/business_location_map_view.dart';
 import 'package:b2b_solution/feature/authentication/presentation/screen/signup_screen.dart';
 import 'package:b2b_solution/feature/home/presentation/screen/map_view_screen.dart';
+import 'package:b2b_solution/feature/profile/presentation/screen/edit_profile_business_loation_screen.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/privacy_policy.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/terms_conditions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,6 +99,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/roleSelectionScreen", builder: (context, state)=> RoleSelectionScreen()),
 
       GoRoute(path: "/editProfile",builder: (context, state)=> EditProfile()),
+      GoRoute(path: "/editProfileBusinessLocation", builder: (context, state)=> EditProfileBusinessLocationScreen()),
       GoRoute(path: "/changePasswordScreen", builder: (context, state)=> ChangePasswordScreen()),
       GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),
       GoRoute(path: "/privacyPolicy", builder: (context, state)=> PrivacyPolicy()),

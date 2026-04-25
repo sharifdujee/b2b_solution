@@ -152,7 +152,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
                 _buildFieldTitle("Business Location"),
                 GestureDetector(
-                  onTap: () => context.push('/businessLocation'),
+                  onTap: () => context.push('/editProfileBusinessLocation'),
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -162,9 +162,9 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                       border: Border.all(color: AppColor.primary),
                     ),
                     child: CustomText(
-                      text: (editProfileState.businessAddress == null && editProfileState.latitude != null)
-                          ? "Fetching address..."
-                          : (editProfileState.businessAddress ?? "Select Location"),
+                      text: editProfileState.businessAddress?.isNotEmpty == true
+                          ? editProfileState.businessAddress!
+                          : (editProfileState.latitude != null ? "Fetching address..." : "Select Location"),
                       fontSize: 14.sp,
                       color: editProfileState.businessAddress != null ? Colors.black : Colors.grey,
                     ),

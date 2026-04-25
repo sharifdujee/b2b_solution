@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -77,16 +79,16 @@ class ConnectedBusinessCardScreen extends ConsumerWidget {
       onTap: () async {
         final notifier = ref.read(messagesProvider.notifier);
 
-        final String? actualRoomId = await notifier.getOrCreateRoom(partnerId);
+        SocketService _socket = SocketService();
+        _socket.joinRoom(partnerId);
+        final String? roomId = await notifier.getRoomId(partnerId);
 
-        if (actualRoomId != null) {
-          notifier.joinRoom(actualRoomId);
-
-          // 3. Navigate with the correct ID
-          context.push("/chatScreen", extra: actualRoomId);
+        if (roomId != null && context.mounted) {
+          notifier.joinRoom(roomId);
+          context.push("/chatScreen", extra: roomId);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Could not start conversation")),
+            const SnackBar(content: Text("Failed to join chat room")),
           );
         }
       },
