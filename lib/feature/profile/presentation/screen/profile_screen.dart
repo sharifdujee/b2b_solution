@@ -210,6 +210,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             await AuthService.logoutUser(context,ref);
                           },
                         );
+                        notifier.dispose();
                       },
                       icon: IconPath.logout,
                       title: "Logout",

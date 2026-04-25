@@ -123,6 +123,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _showSnackBar(context, "Login Successful!", isError: false);
                         ref.read(selectedIndexProvider.notifier).state = 0;
                         context.pushReplacement('/nav');
+                        controller.dispose();
                       }
                     }
                   },

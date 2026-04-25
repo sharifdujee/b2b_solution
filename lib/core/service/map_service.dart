@@ -90,11 +90,18 @@ class MapService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == 'OK' && (data['results'] as List).isNotEmpty) {
-          final result = data['results'][0];
+
+          final results = data['results'] as List;
+
+          var bestResult = results.firstWhere(
+                (res) => !(res['types'] as List).contains('plus_code'),
+            orElse: () => results[0],
+          );
+
           return LocationSuggestion(
-            placeId: result['place_id'],
+            placeId: bestResult['place_id'],
             mainText: "Pinned Location",
-            secondaryText: result['formatted_address'],
+            secondaryText: bestResult['formatted_address'],
             latLng: position,
           );
         }
