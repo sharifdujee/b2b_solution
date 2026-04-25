@@ -74,19 +74,29 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
   }
 
   Future<bool> resendOtp() async {
-    // 1. Safety check for the timer
     if (!state.canResend) return false;
 
-    log("Resending OTP by re-submitting signup data...");
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
+    // Re-run the signup logic to trigger a new OTP from the backend
     final bool success = await signup();
 
     if (success) {
+      // 2. Restart countdown on success
       startTimer();
       return true;
     } else {
-      state = state.copyWith(errorMessage: "Resend failed. Please try again.");
+      state = state.copyWith(
+          isLoading: false,
+          errorMessage: "Resend failed. Please try again."
+      );
       return false;
+    }
+  }
+
+  void initTimer() {
+    if (_timer == null || !_timer!.isActive) {
+      startTimer();
     }
   }
 

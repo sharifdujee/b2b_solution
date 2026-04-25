@@ -150,23 +150,37 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                   onChanged: (_) => setState(() {}),
                 ),
 
+                // Inside your build method in EditProfile screen
                 _buildFieldTitle("Business Location"),
                 GestureDetector(
                   onTap: () => context.push('/editProfileBusinessLocation'),
                   child: Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h), // Slightly more padding
                     decoration: BoxDecoration(
                       color: AppColor.white,
                       borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: AppColor.primary),
+                      border: Border.all(color: AppColor.primary.withOpacity(0.5)),
                     ),
-                    child: CustomText(
-                      text: editProfileState.businessAddress?.isNotEmpty == true
-                          ? editProfileState.businessAddress!
-                          : (editProfileState.latitude != null ? "Fetching address..." : "Select Location"),
-                      fontSize: 14.sp,
-                      color: editProfileState.businessAddress != null ? Colors.black : Colors.grey,
+                    child: Row(
+                      children: [
+                        Icon(Icons.location_on, color: AppColor.primary, size: 20.sp),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: CustomText(
+                            text: (editProfileState.businessAddress != null && editProfileState.businessAddress!.isNotEmpty)
+                                ? editProfileState.businessAddress!
+                                : (editProfileController.businessAddressController.text.isNotEmpty
+                                ? editProfileController.businessAddressController.text
+                                : "Select Business Location"),
+                            fontSize: 14.sp,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            color: editProfileState.latitude != null ? Colors.black : AppColor.grey400,
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 14.sp, color: AppColor.grey400),
+                      ],
                     ),
                   ),
                 ),

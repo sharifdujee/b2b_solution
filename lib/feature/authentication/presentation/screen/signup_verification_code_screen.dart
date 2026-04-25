@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 
 import '../../../../core/gloabal/custom_button.dart';
+import '../../../navigation/presentation/screen.dart';
 
 class SignupVerificationCodeScreen extends ConsumerWidget {
   const SignupVerificationCodeScreen({super.key});
@@ -151,6 +152,7 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                         final success = await controller.verify(controller.pinController.text);
 
                         if (success) {
+                          ref.read(selectedIndexProvider.notifier).state = 0;
                           if (context.mounted) context.push("/nav");
                         } else {
                           _formKey.currentState!.validate();
@@ -165,8 +167,12 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                   Center(
                     child: state.canResend
                         ? GestureDetector(
-                      onTap: () {
-
+                      onTap: () async {
+                        final success = await ref.read(signupProvider.notifier).resendOtp();                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("OTP Resent Successfully")),
+                          );
+                        }
                       },
                       child: CustomText(
                         text: "Resend Code",
@@ -178,14 +184,10 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
                         : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        CustomText(text: "Re-send code in ", /*...*/),
                         CustomText(
-                          text: "Re-send code in ",
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColor.grey400,
-                        ),
-                        CustomText(
-                          text: state.timer.toString(),
+                          // Format as 0:59 for better UX
+                          text: "${state.timer}s",
                           color: AppColor.secondary,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,

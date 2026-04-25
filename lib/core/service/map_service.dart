@@ -77,6 +77,13 @@ class MapService {
     return await getLatLngFromPlaceId(placeId);
   }
 
+  /// Specialized method to get a "normal" address for a Discovered User
+  Future<String> getBusinessAddress(double lat, double lng) async {
+    final location = await getAddressFromLatLng(LatLng(lat, lng));
+    // Returns the clean "Secondary Text" which we filtered to avoid Plus Codes
+    return location?.secondaryText ?? "Address not found";
+  }
+
   /// Performs Reverse Geocoding: takes coordinates and returns a readable address.
   /// Used when the user manually taps or drags a pin on the map.
   Future<LocationSuggestion?> getAddressFromLatLng(LatLng position) async {

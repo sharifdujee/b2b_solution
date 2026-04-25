@@ -67,8 +67,10 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
         LatLng(state.latitude!, state.longitude!),
       );
       if (suggestion != null) {
-        state = state.copyWith(businessAddress: suggestion.secondaryText);
-        businessAddressController.text = suggestion.secondaryText;
+        final cleanAddress = suggestion.secondaryText;
+
+        state = state.copyWith(businessAddress: cleanAddress);
+        businessAddressController.text = cleanAddress;
       }
     }
   }
@@ -124,7 +126,6 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
     }
   }
 
-// Ensure updateLocation updates the UI Controllers
   void updateLocation({required double lat, required double lng, String? address}) {
     state = state.copyWith(
       latitude: lat,
@@ -132,10 +133,9 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
       businessAddress: address,
     );
 
-    // CRITICAL: Update the text controllers so the EditProfile screen reflects changes
     businessLatitude.text = lat.toString();
     businessLongitude.text = lng.toString();
-    businessAddressController.text = address ?? "";
+    businessAddressController.text = address ?? "Location selected";
   }
 
   @override
