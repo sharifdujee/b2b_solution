@@ -15,21 +15,20 @@ class MessageScreen extends ConsumerStatefulWidget {
   ConsumerState<MessageScreen> createState() => _MessageScreenState();
 }
 
+// ... existing imports ...
+
 class _MessageScreenState extends ConsumerState<MessageScreen> {
-  // Logic to initialize socket on screen entry
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to perform side effects after build
+    // It's good practice to ensure data is loaded when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // If your initSocket logic is inside _connectAndLoad in the constructor, 
-      // you might not need this. Otherwise, call it here.
+      ref.read(messagesProvider.notifier).initSocket();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watching the state ensures the list rebuilds when search query or conversations change
     final state = ref.watch(messagesProvider);
     final filtered = state.filtered;
 
@@ -64,50 +63,58 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
               child: Divider(thickness: 1, color: AppColor.grey50),
             ),
 
-            // ── Conversation list ────────────────────────────────────────────
+            // ── Conversation list with RefreshIndicator ─────────────────────
             Expanded(
-              child: state.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filtered.isEmpty
-                  ? Center(
-                child: CustomText(
-                  text: 'No conversations found',
-                  fontSize: 14.sp,
-                  color: Colors.grey,
-                ),
-              )
-                  : ListView.builder(
-                padding: EdgeInsets.symmetric(vertical: 8.h),
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final convo = filtered[index];
-                  return Column(
-                    children: [
-                      ConversationTile(
-                        conversation: convo,
-                        onTap: () {
-                          // 1. Mark room as read
-                          ref.read(messagesProvider.notifier).markAsRead(convo.roomId);
-
-                          // 2. Subscribe/join the room before navigating
-                          ref.read(messagesProvider.notifier).joinRoom(convo.roomId);
-
-                          // 3. Navigate to ChatScreen
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => ChatScreen(roomId: convo.roomId),
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(height: 16.h),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Divider(thickness: 1, color: AppColor.grey50),
-                      ),
-                    ],
-                  );
+              child: RefreshIndicator(
+                color: AppColor.primary, // Customize the loader color
+                backgroundColor: Colors.white,
+                onRefresh: () async {
+                  await ref.read(messagesProvider.notifier).initSocket();
                 },
+                child: state.isLoading && filtered.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : filtered.isEmpty
+                    ? ListView(
+                  children: [
+                    SizedBox(height: 200.h),
+                    Center(
+                      child: CustomText(
+                        text: 'No conversations found',
+                        fontSize: 14.sp,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                )
+                    : ListView.builder(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  physics: const AlwaysScrollableScrollPhysics(), // Important for small lists
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final convo = filtered[index];
+                    return Column(
+                      children: [
+                        ConversationTile(
+                          conversation: convo,
+                          onTap: () {
+                            ref.read(messagesProvider.notifier).markAsRead(convo.roomId);
+                            ref.read(messagesProvider.notifier).joinRoom(convo.roomId);
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ChatScreen(roomId: convo.roomId),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(height: 16.h),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Divider(thickness: 1, color: AppColor.grey50),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ],

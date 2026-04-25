@@ -30,6 +30,7 @@ import '../message/presentation/screen/chat_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
+import '../ping/presentation/screen/create_ping_by_id.dart';
 import '../ping/presentation/screen/create_ping_screen.dart';
 import '../ping/presentation/screen/ping_details.dart';
 import '../ping/presentation/screen/ping_screen.dart';
@@ -113,6 +114,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           return PingDetails(ping: datum);
         },
       ),
+
+      GoRoute(
+        path: '/createPingForUser/:targetPartnerId',
+        name: 'createPingForUser',
+        builder: (context, state) {
+          final String userId = state.pathParameters['targetPartnerId'] ?? '';
+
+          return CreatePingForUserScreen(
+            targetPartnerId: userId,
+          );
+        },
+      ),
+
+
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
       GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen()),

@@ -27,28 +27,6 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 
 
 
-  Completer<String>? _roomCompleter;
-
-  String? _pendingPartnerId;
-
-
-  Future<String?> getRoomId(String partnerId) async {
-    _roomCompleter = Completer<String>();
-    _pendingPartnerId = partnerId;
-
-    try {
-      final String actualId = await _roomCompleter!.future.timeout(
-        const Duration(seconds: 5),
-      );
-      return actualId;
-    } catch (e) {
-      log("⚠️ Timeout: No roomId received from server. Falling back to partnerId.");
-      return partnerId;
-    } finally {
-      _roomCompleter = null;
-      _pendingPartnerId = null;
-    }
-  }
 
   /// image upload functionality
   Future<void> uploadChatImage() async {
@@ -291,7 +269,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
   }
 
   void joinRoom(String roomId) {
-    _socketService.joinRoom(roomId);
+    _socketService.subscribeToRoom(roomId);
     loadRoomMessages(roomId, page: 1);
   }
 
@@ -399,6 +377,17 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 
     // Image upload via HTTP multipart happens here before sending URL via socket
   }*/
+
+
+  /// Connects socket and triggers the conversation list load
+  Future<void> initSocket() async {
+    state = state.copyWith(isLoading: true);
+    final token = AuthService.token ?? '';
+
+    await _socketService.connect(AppUrl.socketUrl, token);
+
+    state = state.copyWith(isLoading: false);
+  }
 
   void markAsRead(String roomId) {
     final currentUserId = AuthService.id ?? '';

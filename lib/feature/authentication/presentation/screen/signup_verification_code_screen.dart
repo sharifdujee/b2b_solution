@@ -16,6 +16,9 @@ import '../../../../core/gloabal/custom_button.dart';
 class SignupVerificationCodeScreen extends ConsumerWidget {
   const SignupVerificationCodeScreen({super.key});
 
+
+  static final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(signupProvider);
@@ -69,138 +72,140 @@ class SignupVerificationCodeScreen extends ConsumerWidget {
     );
 
 
+
+
     return Scaffold(
       backgroundColor: AppColor.white,
       body: SingleChildScrollView(
-        child: Container(
-          margin: EdgeInsets.only(left: 20.w, right: 20.w,top: 48.h,bottom: 48.h),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: ()=>context.pop(),
-                  child: Image.asset(IconPath.arrowLeft,height: 24.h,width: 24.w,),
-                ),
-
-
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "Verification code",
-                  fontSize: 24.sp,
-                  color: AppColor.black,
-                  fontWeight: FontWeight.w600,
-                ),
-
-
-                SizedBox(height: 16.h,),
-                CustomText(
-                  text: "We sent a four digit code to your email address",
-                  fontSize: 14.sp,
-                  color: AppColor.grey400,
-                ),
-
-
-                SizedBox(height: 32.h,),
-                Center(
-                  child: Pinput(
-                    length: 4,
-                    defaultPinTheme: defaultPinTheme,
-                    focusedPinTheme: focusedPinTheme,
-                    errorPinTheme: emptyPinTheme.copyWith(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: Colors.red,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    controller: controller.pinController,
-                    pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
-                    showCursor: true,
-                    // --- ADD VALIDATOR HERE ---
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Code is required';
-                      }
-                      if (value.length < 4) {
-                        return 'Please enter the full 4-digit code';
-                      }
-                      return null;
-                    },
-                    cursor: Container(
-                      width: 2,
-                      height: 30.h,
-                      color: AppColor.primary,
-                    ),
-                    hapticFeedbackType: HapticFeedbackType.lightImpact,
+        child: Form(
+          key: _formKey,
+          child: Container(
+            margin: EdgeInsets.only(left: 20.w, right: 20.w,top: 48.h,bottom: 48.h),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: ()=>context.pop(),
+                    child: Image.asset(IconPath.arrowLeft,height: 24.h,width: 24.w,),
                   ),
-                ),
 
 
-                SizedBox(height: 24.h),
-
-                CustomButton(
-                  text: state.isLoading ? "Verifying..." : "Verify",
-                  backgroundColor: AppColor.primary,
-                  textColor: AppColor.black,
-                  borderRadius: 16.r,
-                  onPressed: () async {
-                    final success = await controller.verify(controller.pinController.text);
-                    if (success){
-                      context.push("/nav");
-                    }
-
-                  }
-                ),
-
-                SizedBox(height: 24.h),
-
-                // Resend Code Timer or Button
-                Center(
-                  child: state.canResend
-                      ? GestureDetector(
-                    onTap: () {
-
-                    },
-                    child: CustomText(
-                      text: "Resend Code",
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.primary,
-                    ),
-                  )
-                      : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CustomText(
-                        text: "Re-send code in ",
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppColor.grey400,
-                      ),
-                      CustomText(
-                        text: state.timer.toString(),
-                        color: AppColor.secondary,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ],
+                  SizedBox(height: 16.h,),
+                  CustomText(
+                    text: "Verification code",
+                    fontSize: 24.sp,
+                    color: AppColor.black,
+                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                SizedBox(height: 12.h,),
-                Center(
-                  child: CustomText(
-                    text: "Can't find the email? Check your spam folder.",
-                    fontWeight: FontWeight.w400,
+
+
+                  SizedBox(height: 16.h,),
+                  CustomText(
+                    text: "We sent a four digit code to your email address",
                     fontSize: 14.sp,
                     color: AppColor.grey400,
-                    textAlign: TextAlign.center,
                   ),
-                ),
 
-              ]
+
+                  SizedBox(height: 32.h,),
+                  Center(
+                    child: Pinput(
+                      length: 4,
+                      defaultPinTheme: defaultPinTheme,
+                      focusedPinTheme: focusedPinTheme,
+                      errorTextStyle: TextStyle(color: AppColor.error, fontSize: 12.sp),
+                      errorPinTheme: defaultPinTheme.copyWith(
+                        decoration: defaultPinTheme.decoration!.copyWith(
+                          border: Border.all(color: AppColor.error, width: 2),
+                        ),
+                      ),
+                      controller: controller.pinController,
+                      pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
+                      showCursor: true,
+                      validator: (value) {
+                        if (value == null || value.length < 4) return "Enter 4 digits";
+
+                        if (state.errorMessage == "Invalid code") return "Incorrect code, please try again";
+
+                        return null;
+                      },
+                      cursor: Container(
+                        width: 2,
+                        height: 30.h,
+                        color: AppColor.primary,
+                      ),
+                      hapticFeedbackType: HapticFeedbackType.lightImpact,
+                    ),
+                  ),
+
+
+                  SizedBox(height: 24.h),
+
+                  CustomButton(
+                    text: state.isLoading ? "Verifying..." : "Verify",
+                    backgroundColor: AppColor.primary,
+                    onPressed: state.isLoading
+                        ? null
+                        : () async {
+                      if (_formKey.currentState!.validate()) {
+                        final success = await controller.verify(controller.pinController.text);
+
+                        if (success) {
+                          if (context.mounted) context.push("/nav");
+                        } else {
+                          _formKey.currentState!.validate();
+                        }
+                      }
+                    },
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // Resend Code Timer or Button
+                  Center(
+                    child: state.canResend
+                        ? GestureDetector(
+                      onTap: () {
+
+                      },
+                      child: CustomText(
+                        text: "Resend Code",
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.primary,
+                      ),
+                    )
+                        : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CustomText(
+                          text: "Re-send code in ",
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                          color: AppColor.grey400,
+                        ),
+                        CustomText(
+                          text: state.timer.toString(),
+                          color: AppColor.secondary,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 12.h,),
+                  Center(
+                    child: CustomText(
+                      text: "Can't find the email? Check your spam folder.",
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14.sp,
+                      color: AppColor.grey400,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                ]
+            ),
           ),
         ),
       ),

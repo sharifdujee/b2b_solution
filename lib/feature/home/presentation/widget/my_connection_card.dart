@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/service/auth_service.dart';
+import '../../../../core/service/map_service.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../../ping/model/connection_model.dart';
 import '../../model/connected_state_model.dart' hide ConnectionUser;
@@ -19,10 +21,16 @@ class MyConnectionCard extends ConsumerWidget {
   final dynamic connectionData;
   final String currentUserId;
 
-  const MyConnectionCard({
+  MyConnectionCard({
     super.key,
     required this.connectionData,
     required this.currentUserId, required void Function() onTap,
+  });
+
+  final addressFromLatLngProvider = FutureProvider.family<String, LatLng>((ref, latLng) async {
+    final mapService = ref.read(mapServiceProvider);
+    final suggestion = await mapService.getAddressFromLatLng(latLng);
+    return suggestion?.secondaryText ?? "Unknown Location";
   });
 
   @override
@@ -56,6 +64,18 @@ class MyConnectionCard extends ConsumerWidget {
     final String businessName = displayUser?.businessName ?? "No Business Name";
     final String? profileImage = displayUser?.profileImage;
     final String position = displayUser?.position ?? "Business Professional";
+    final double? lat = displayUser?.businessLatitude;
+    final double? lng = displayUser?.businessLongitude;
+
+    final addressAsync = (lat != null && lng != null)
+        ? ref.watch(addressFromLatLngProvider(LatLng(lat, lng)))
+        : null;
+
+    final String address = addressAsync?.when(
+      data: (val) => val,
+      loading: () => "Loading address...",
+      error: (err, _) => "Location not available",
+    ) ?? displayUser?.businessAddress ?? "No address listed";
 
     final String categories = (displayUser?.businessCategory is List)
         ? (displayUser.businessCategory as List).join(", ")
@@ -99,7 +119,7 @@ class MyConnectionCard extends ConsumerWidget {
                   ],
                 ),
                 SizedBox(height: 6.h),
-                _buildInfoRow(IconPath.location05, position),
+                _buildInfoRow(IconPath.location05, address),
                 SizedBox(height: 8.h),
                 CustomText(text: categories, fontSize: 12.sp, color: AppColor.grey800, maxLines: 2),
                 if (isPendingModel && currentFilter == ConnectionFilterOption.Pending) _buildPendingActions(ref, context),

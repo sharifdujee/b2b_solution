@@ -48,6 +48,8 @@ class ConnectionUser {
   final String? businessName;
   final String? profileImage;
   final List<String> businessCategory;
+  final double? businessLatitude;
+  final double? businessLongitude;
   final String? position;
 
   ConnectionUser({
@@ -55,6 +57,8 @@ class ConnectionUser {
     this.businessName,
     this.profileImage,
     required this.businessCategory,
+    this.businessLatitude,
+    this.businessLongitude,
     this.position,
   });
 
@@ -64,6 +68,8 @@ class ConnectionUser {
       businessName: json['businessName'],
       profileImage: json['profileImage'],
       position: json['position'],
+        businessLatitude: json['businessLatitude'],
+      businessLongitude: json['businessLongitude'],
       businessCategory: List<String>.from(json['businessCategory'] ?? []),
     );
   }

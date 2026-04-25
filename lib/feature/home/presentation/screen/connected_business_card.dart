@@ -13,7 +13,6 @@ import '../../../../core/service/app_url.dart';
 import '../../../../core/service/auth_service.dart';
 import '../../../../core/service/socket_service.dart';
 import '../../../../core/utils/local_assets/icon_path.dart';
-import '../../../message/provider/provider/message_provider.dart';
 import '../../model/connected_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 import '../widget/base_business_card_layout.dart';
@@ -76,22 +75,56 @@ class ConnectedBusinessCardScreen extends ConsumerWidget {
 
   Widget _buildMessageButton(BuildContext context, String partnerId, WidgetRef ref) {
     return GestureDetector(
-      onTap: () async {
-        final notifier = ref.read(messagesProvider.notifier);
+        onTap: () async {
+          final socketService = SocketService();
 
-        SocketService _socket = SocketService();
-        _socket.joinRoom(partnerId);
-        final String? roomId = await notifier.getRoomId(partnerId);
+          try {
+            if (!socketService.isConnected) {
+              log("Socket not connected. Initializing...");
 
-        if (roomId != null && context.mounted) {
-          notifier.joinRoom(roomId);
-          context.push("/chatScreen", extra: roomId);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to join chat room")),
-          );
-        }
-      },
+              socketService.connect(AppUrl.socketUrl, AuthService.token.toString());
+
+              await Future.delayed(const Duration(milliseconds: 500));
+
+              if (!socketService.isConnected) {
+                throw Exception("Could not establish connection to server.");
+              }
+            }
+
+            socketService.joinRoom(partnerId);
+
+            // Success SnackBar
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text("Connected to chat"),
+                  backgroundColor: AppColor.secondary,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          } catch (e) {
+            log("Socket Join Error: $e");
+
+            // Error SnackBar
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error: ${e.toString()}"),
+                  backgroundColor: AppColor.error,
+                  behavior: SnackBarBehavior.floating,
+                  action: SnackBarAction(
+                    label: "Retry",
+                    textColor: Colors.white,
+                    onPressed: () {
+                      socketService.joinRoom(partnerId);
+                    },
+                  ),
+                ),
+              );
+            }
+          }
+        },
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 14.h),

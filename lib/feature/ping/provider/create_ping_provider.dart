@@ -63,6 +63,10 @@ class CreatePingNotifier extends StateNotifier<CreatePingState> {
     );
   }
 
+  void updateSingleTargetId(String id) {
+    state = state.copyWith(connectedIds: [id], myConnectionOnly: false);
+  }
+
   /// SCENARIO B: Toggle Button (Select All)
   void toggleMyConnectionOnly() {
     final bool isTurningOn = !state.myConnectionOnly;
