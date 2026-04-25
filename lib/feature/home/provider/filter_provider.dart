@@ -91,7 +91,14 @@ final filteredPlacesProvider = FutureProvider<List<PlaceLocation>>((ref) async {
   if (response.isSuccess && response.responseData != null) {
     final result = response.responseData['result'];
     if (result != null && result['data'] is List) {
-      return (result['data'] as List).map((j) => PlaceLocation.fromJson(j)).toList();
+      return (result['data'] as List).map((j) {
+        try {
+          return PlaceLocation.fromJson(j);
+        } catch (e) {
+          log("Error parsing individual item: $e");
+          return null;
+        }
+      }).whereType<PlaceLocation>().toList();
     }
   }
   return [];
