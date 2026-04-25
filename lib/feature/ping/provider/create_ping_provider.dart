@@ -45,22 +45,16 @@ class CreatePingNotifier extends StateNotifier<CreatePingState> {
 
   void updateUrgency(UrgencyLevel level) => state = state.copyWith(urgencyLevel: level);
 
-  /// SCENARIO A: Manual Selection from the Dropdown
-  void updateConnectedIds(List<dynamic> selectedItems) {
-    final currentUserId = AuthService.id;
+  void updateConnectedIds(List<ConnectionModel> selectedConnections) {
+    final currentUserId = AuthService.id ?? "";
 
-    final List<String> partnerIds = selectedItems.whereType<ConnectionModel>().map((conn) {
-      return conn.senderId == currentUserId ? conn.receiverId : conn.senderId;
+    // Extract the partner's ID from each connection
+    final List<String> ids = selectedConnections.map((conn) {
+      return conn.senderId == currentUserId ? conn.receiverId! : conn.senderId!;
     }).toList();
 
-    final allConnections = ref.read(connectionProvider).connections;
-    bool isAllSelected = partnerIds.length == allConnections.length && partnerIds.isNotEmpty;
-
-    state = state.copyWith(
-      connectedIds: partnerIds,
-      myConnectionOnly: isAllSelected,
-      pingTargetType: isAllSelected ? PingTargetType.CONNECTIONS_ONLY : PingTargetType.SPECIFIC,
-    );
+    // Update your state with these IDs
+    state = state.copyWith(connectedIds: ids);
   }
 
   void updateSingleTargetId(String id) {
@@ -70,20 +64,13 @@ class CreatePingNotifier extends StateNotifier<CreatePingState> {
   /// SCENARIO B: Toggle Button (Select All)
   void toggleMyConnectionOnly() {
     final bool isTurningOn = !state.myConnectionOnly;
-    final currentUserId = AuthService.id ?? "";
-    final allConnections = ref.read(connectionProvider).connections;
 
     if (isTurningOn) {
-      final List<String> partnerIds = allConnections.map((conn) {
-        return conn.senderId == currentUserId ? conn.receiverId : conn.senderId;
-      }).toList();
-
       state = state.copyWith(
         myConnectionOnly: true,
-        connectedIds: partnerIds,
+        connectedIds: [],
         pingTargetType: PingTargetType.CONNECTIONS_ONLY,
       );
-
       connectionDisplayController.text = "All connections selected";
     } else {
       state = state.copyWith(

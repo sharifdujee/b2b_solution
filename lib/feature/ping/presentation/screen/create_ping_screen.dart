@@ -104,7 +104,7 @@ class CreatePingScreen extends ConsumerWidget{
               CustomTextFormField(
                 controller: controller.quantityController,
                 hintText: "Quantity (e.g. 50)",
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.number,
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
                 borderRadius: 12.r,
@@ -158,6 +158,7 @@ class CreatePingScreen extends ConsumerWidget{
                 onChanged: (value) {
                     controller.notesController.text = value;
                 },
+                maxLines: 6,
                 hintText: "Write a note",
                 hintTextColor: AppColor.grey400,
                 textColor: AppColor.black,
@@ -225,7 +226,8 @@ class CreatePingScreen extends ConsumerWidget{
                   if (selectedList is List<ConnectionModel>) {
                     controller.updateConnectedIds(selectedList);
                   }
-                }, hintText: 'select',
+                },
+                hintText: 'select',
               ),
 
               SizedBox(height: 16.h,),
@@ -290,7 +292,7 @@ class CreatePingScreen extends ConsumerWidget{
                     return;
                   }
 
-                  if (state.connectedIds.isEmpty) {
+                  if (!state.myConnectionOnly && state.connectedIds.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Please select at least one connection"),
@@ -299,6 +301,7 @@ class CreatePingScreen extends ConsumerWidget{
                     );
                     return;
                   }
+
 
                   // 2. Trigger API Call
                   final bool isSuccess = await controller.sendPing();

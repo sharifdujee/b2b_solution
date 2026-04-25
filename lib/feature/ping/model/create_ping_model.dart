@@ -34,7 +34,9 @@ class CreatePingState {
   });
 
   Map<String, dynamic> toJson() => {
-    "connectedIds": connectedIds,
+    "connectedIds": pingTargetType == PingTargetType.CONNECTIONS_ONLY
+        ? []
+        : connectedIds,
     "itemName": itemName,
     "category": categories,
     "neededWithin": neededWithin,
