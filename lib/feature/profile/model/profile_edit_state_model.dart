@@ -7,7 +7,8 @@ class ProfileEditStateModel {
   final String email;
   final String verificationCode;
   final String position;
-  final String foodCategory;
+  // CHANGED: Changed from String to List<String> for multi-select
+  final List<String> businessCategories;
   final String yearsOfOperation;
   final String businessImage;
   final String profileImage;
@@ -20,13 +21,12 @@ class ProfileEditStateModel {
   final double? longitude;
   final String businessAddress;
 
-  // --- Map & Search UI State (NEW) ---
+  // --- Map & Search UI State ---
   final String searchQuery;
-  final List<dynamic> suggestions; // Using dynamic for Google Place suggestions
-  final dynamic selectedLocation; // Holds the specific suggestion object
+  final List<dynamic> suggestions;
+  final dynamic selectedLocation;
   final bool isSearching;
-  final LatLng cameraPosition; // Used to move the map view
-  // ----------------------------
+  final LatLng cameraPosition;
 
   final bool isLoading;
   final bool obscurePassword;
@@ -42,7 +42,8 @@ class ProfileEditStateModel {
     this.email = '',
     this.verificationCode = '',
     this.position = '',
-    this.foodCategory = '',
+    // CHANGED: Initialized as empty list
+    this.businessCategories = const [],
     this.yearsOfOperation = '',
     this.businessImage = '',
     this.profileImage = '',
@@ -52,7 +53,6 @@ class ProfileEditStateModel {
     this.latitude,
     this.longitude,
     this.businessAddress = '',
-    // Initial map values (e.g., default to a specific city or 0,0)
     this.searchQuery = '',
     this.suggestions = const [],
     this.selectedLocation,
@@ -73,7 +73,8 @@ class ProfileEditStateModel {
     String? email,
     String? verificationCode,
     String? position,
-    String? foodCategory,
+    // CHANGED: Updated type to List<String>
+    List<String>? businessCategories,
     String? yearsOfOperation,
     String? businessImage,
     String? profileImage,
@@ -83,7 +84,6 @@ class ProfileEditStateModel {
     double? latitude,
     double? longitude,
     String? businessAddress,
-    // Added Search/Map fields
     String? searchQuery,
     List<dynamic>? suggestions,
     dynamic selectedLocation,
@@ -104,7 +104,8 @@ class ProfileEditStateModel {
       email: email ?? this.email,
       verificationCode: verificationCode ?? this.verificationCode,
       position: position ?? this.position,
-      foodCategory: foodCategory ?? this.foodCategory,
+      // CHANGED: Mapping the new list
+      businessCategories: businessCategories ?? this.businessCategories,
       yearsOfOperation: yearsOfOperation ?? this.yearsOfOperation,
       businessImage: businessImage ?? this.businessImage,
       profileImage: profileImage ?? this.profileImage,
@@ -114,7 +115,6 @@ class ProfileEditStateModel {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       businessAddress: businessAddress ?? this.businessAddress,
-      // Mapping new fields
       searchQuery: searchQuery ?? this.searchQuery,
       suggestions: suggestions ?? this.suggestions,
       selectedLocation: selectedLocation ?? this.selectedLocation,

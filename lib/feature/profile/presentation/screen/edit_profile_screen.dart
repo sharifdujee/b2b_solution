@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_dialog.dart';
+import 'package:b2b_solution/core/gloabal/custom_selector.dart';
 import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:b2b_solution/core/gloabal/custom_image_picker_card.dart';
 import 'package:b2b_solution/feature/profile/provider/edit_profile_provider.dart';
@@ -134,13 +135,27 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                   hintText: "Ex. Owner",
                   onChanged: (_) => setState(() {}),
                 ),
+                SizedBox(height: 16.h,),
 
-                _buildFieldTitle("Food Category"),
-                CustomTextFormField(
-                  controller: editProfileController.businessCategoryController,
-                  hintText: "Ex. Sandwich",
-                  onChanged: (_) => setState(() {}),
+                CustomSelectField<String>(
+                  label: "Food Category",
+                  hintText: "Select Categories",
+                  items: const [
+                    "Snacks", "Soups", "Salads", "Drinks",
+                    "Appetizers", "Main Course", "Desserts",
+                    "Bakery", "Dairy", "Frozen Food", "Meat & Poultry"
+                  ],
+                  initialSelectedItems: editProfileState.businessCategories,
+                  itemLabelBuilder: (val) => val,
+                  showSearchBar: true,
+                  showActionButtons: true,
+                  isMultiSelect: true,
+                  onChanged: (val) {
+                    final List<String> selectedList = List<String>.from(val as List);
+                    ref.read(editProfileProvider.notifier).updateBusinessCategories(selectedList);
+                  },
                 ),
+
 
                 _buildFieldTitle("Years of Operation"),
                 CustomTextFormField(

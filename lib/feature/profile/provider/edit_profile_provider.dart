@@ -51,14 +51,24 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
       businessLatitude.text = _currentUser!.businessLatitude?.toString() ?? "";
       businessLongitude.text = _currentUser!.businessLongitude?.toString() ?? "";
 
+      final List<String> initialCategories = _currentUser!.businessCategory ?? [];
+
       state = state.copyWith(
         latitude: _currentUser!.businessLatitude,
         longitude: _currentUser!.businessLongitude,
+        businessCategories: initialCategories,
       );
-      if (_currentUser!.businessCategory.isNotEmpty) {
-        businessCategoryController.text = _currentUser!.businessCategory.first;
-      }
+
+      // Visual only
+      businessCategoryController.text = initialCategories.join(', ');
     }
+  }
+
+
+  void updateBusinessCategories(List<String> selectedCategories) {
+    state = state.copyWith(businessCategories: selectedCategories);
+
+    businessCategoryController.text = selectedCategories.join(', ');
   }
 
   Future<void> _fetchInitialAddress() async {
