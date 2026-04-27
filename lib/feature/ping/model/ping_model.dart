@@ -170,7 +170,7 @@ class Meta {
 
   factory Meta.fromJson(Map<String, dynamic> json) => Meta(
     page: (json["page"] as num?)?.toInt() ?? 1,
-    limit: (json["limit"] as num?)?.toInt() ?? 10,
+    limit: (json["limit"] as num?)?.toInt() ?? 20,
     total: (json["total"] as num?)?.toInt() ?? 0,
     totalPages:
     (json["totalPages"] as num?)?.toInt() ?? 1,
