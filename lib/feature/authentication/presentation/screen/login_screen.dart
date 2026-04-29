@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../navigation/presentation/screen.dart';
 import '../../models/login_state_model.dart';
+import '../../provider/social_auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +26,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final socialState = ref.watch(socialAuthProvider);
+    final socialNotifier = ref.read(socialAuthProvider.notifier);
     // Listen for error messages from the provider
     ref.listen<LoginStateModel>(loginProvider, (previous, next) {
       if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
@@ -133,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 // ... Social Buttons & Sign Up (Keep existing code) ...
-                _buildSocialSection(),
+                _buildSocialSection(socialState, socialNotifier),
               ],
             ),
           ),
@@ -172,13 +176,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   // --- Social Login & Sign Up Section ---
-  Widget _buildSocialSection() {
+  Widget _buildSocialSection(
+      dynamic socialState,
+      dynamic socialNotifier,
+      ) {
     return Column(
       children: [
         SizedBox(height: 32.h),
+
         Row(
           children: [
-            Expanded(child: Divider(thickness: 1, color: AppColor.grey50)),
+            Expanded(
+              child: Divider(thickness: 1, color: AppColor.grey50),
+            ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.w),
               child: CustomText(
@@ -187,26 +197,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 color: AppColor.grey400,
               ),
             ),
-            Expanded(child: Divider(thickness: 1, color: AppColor.grey50)),
+            Expanded(
+              child: Divider(thickness: 1, color: AppColor.grey50),
+            ),
           ],
         ),
+
         SizedBox(height: 32.h),
+
+        /// 🔵 Google Login
         SocialLoginButton(
-          text: "Continue with Google",
+          text: socialState.isGoogleLoading
+              ? "Signing in with Google..."
+              : "Continue with Google",
           assetPath: IconPath.googleIcon,
           onTap: () {
-            // TODO: Implement Google Login
+            if (!socialState.isGoogleLoading &&
+                !socialState.isAppleLoading) {
+              socialNotifier.signInWithGoogle(context);
+            }
           },
         ),
+
         SizedBox(height: 16.h),
+
+        /// 🍎 Apple Login
         SocialLoginButton(
-          text: "Continue with Apple",
+          text: socialState.isAppleLoading
+              ? "Signing in with Apple..."
+              : "Continue with Apple",
           icon: Icons.apple_sharp,
           onTap: () {
-            // TODO: Implement Apple Login
+            if (!socialState.isGoogleLoading &&
+                !socialState.isAppleLoading) {
+              socialNotifier.signInWithApple(context);
+            }
           },
         ),
+
         SizedBox(height: 32.h),
+
+        /// 🔽 Sign Up Section
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -224,9 +255,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 color: AppColor.secondary,
                 fontWeight: FontWeight.w600,
               ),
-            )
+            ),
           ],
         ),
+
         SizedBox(height: 32.h),
       ],
     );
