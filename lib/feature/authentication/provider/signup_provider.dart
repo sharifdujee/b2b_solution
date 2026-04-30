@@ -247,6 +247,8 @@ class SignupNotifier extends StateNotifier<SignupStateModel> {
     }
   }
 
+
+
   @override
   void dispose() {
     _timer?.cancel();

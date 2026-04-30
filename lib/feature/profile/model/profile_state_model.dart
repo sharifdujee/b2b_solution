@@ -32,67 +32,68 @@ class ProfileStateModel {
   };
 }
 
-class UserModel{
+class UserModel {
   String id;
   String email;
   String fullName;
-  String businessName;
+  String? businessName; // Optional
   String role;
-  DateTime lastLoginAt;
-  String legalName;
-  double latitude;
-  double longitude;
-  List<String> businessCategory;
-  int operationYears;
-  String position;
-  String profileImage;
-  String businessImage;
-  String loginType;
-  DateTime createdAt;
+  DateTime? lastLoginAt; // Optional
+  String? legalName; // Optional
+  double? latitude; // Optional
+  double? longitude; // Optional
+  List<String>? businessCategory; // Optional
+  int? operationYears; // Optional
+  String? position; // Optional
+  String? profileImage; // Optional
+  String? businessImage; // Optional
+  String? loginType; // Optional
+  DateTime? createdAt; // Optional
   double? businessLatitude;
   double? businessLongitude;
-
 
   UserModel({
     required this.id,
     required this.email,
     required this.fullName,
-    required this.latitude,
-    required this.longitude,
-    required this.businessName,
+    this.latitude,
+    this.longitude,
+    this.businessName,
     required this.role,
-    required this.lastLoginAt,
-    required this.legalName,
-    required this.businessCategory,
-    required this.operationYears,
-    required this.position,
-    required this.profileImage,
-    required this.businessImage,
-    required this.loginType,
-    required this.createdAt,
+    this.lastLoginAt,
+    this.legalName,
+    this.businessCategory,
+    this.operationYears,
+    this.position,
+    this.profileImage,
+    this.businessImage,
+    this.loginType,
+    this.createdAt,
     this.businessLatitude,
     this.businessLongitude,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    id: json["id"],
-    email: json["email"],
-    fullName: json["fullName"],
-    latitude: json["businessLatitude"],
-    longitude: json["businessLongitude"],
+    id: json["id"] ?? "",
+    email: json["email"] ?? "",
+    fullName: json["fullName"] ?? "",
+    latitude: (json["businessLatitude"] as num?)?.toDouble(),
+    longitude: (json["businessLongitude"] as num?)?.toDouble(),
     businessName: json["businessName"],
-    role: json["role"],
-    lastLoginAt: DateTime.parse(json["lastLoginAt"]),
+    role: json["role"] ?? "user",
+    lastLoginAt: json["lastLoginAt"] == null ? null : DateTime.parse(json["lastLoginAt"]),
     legalName: json["legalName"],
-    businessCategory: List<String>.from(json["businessCategory"] ?? []),
+    businessCategory: json["businessCategory"] == null
+        ? []
+        : List<String>.from(json["businessCategory"]),
     operationYears: json["operationYears"],
     position: json["position"],
     profileImage: json["profileImage"],
     businessImage: json["businessImage"],
     loginType: json["loginType"],
-    createdAt: DateTime.parse(json["createdAt"]),
-    businessLatitude: json["businessLatitude"],
-    businessLongitude: json["businessLongitude"],
+    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+    businessLatitude: (json["businessLatitude"] as num?)?.toDouble(),
+    businessLongitude: (json["businessLongitude"] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -101,15 +102,17 @@ class UserModel{
     "fullName": fullName,
     "role": role,
     "businessName": businessName,
-    "lastLoginAt": lastLoginAt.toIso8601String(),
+    "lastLoginAt": lastLoginAt?.toIso8601String(),
     "legalName": legalName,
-    "businessCategory": List<dynamic>.from(businessCategory.map((x) => x)),
+    "businessCategory": businessCategory != null
+        ? List<dynamic>.from(businessCategory!.map((x) => x))
+        : [],
     "operationYears": operationYears,
     "position": position,
     "profileImage": profileImage,
     "businessImage": businessImage,
     "loginType": loginType,
-    "createdAt": createdAt.toIso8601String(),
+    "createdAt": createdAt?.toIso8601String(),
     "businessLatitude": businessLatitude,
     "businessLongitude": businessLongitude,
   };

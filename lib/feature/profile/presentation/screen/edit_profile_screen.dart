@@ -44,7 +44,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
               editProfileController.businessNameController.text != (user?.businessName ?? "") ||
               editProfileController.fullNameController.text != (user?.fullName ?? "") ||
               editProfileController.positionController.text != (user?.position ?? "") ||
-              editProfileController.businessCategoryController.text != (user?.businessCategory.firstOrNull ?? "") ||
+              editProfileController.businessCategoryController.text != (user?.businessCategory ?? "") ||
               editProfileController.operationYearsController.text != (user?.operationYears.toString() ?? "");
 
       final isImageDirty = editProfileState.profileImage != null ||

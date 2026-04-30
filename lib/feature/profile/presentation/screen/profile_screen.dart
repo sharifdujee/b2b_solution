@@ -74,14 +74,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: CircleAvatar(
                             radius: 70.r,
                             backgroundColor: Colors.grey[200],
-                            backgroundImage: (user?.profileImage != null &&
-                                user!.profileImage.isNotEmpty)
-                                ? NetworkImage(user!.profileImage)
+                            backgroundImage: (user?.profileImage != null && user!.profileImage!.isNotEmpty)
+                                ? NetworkImage(user.profileImage!)
                                 : null,
-                            child: (user?.profileImage == null ||
-                                user!.profileImage.isEmpty)
-                                ? Icon(Icons.person, size: 80.r, color: Colors.grey)
-                               :null
+                            child: (user?.profileImage == null || user!.profileImage!.isEmpty)
+                                ? Icon(Icons.person, size: 80.r, color: Colors.grey[400])
+                                : null,
                           )
                         ),
                         Positioned(
