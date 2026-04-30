@@ -69,8 +69,8 @@ class _TopSectionState extends ConsumerState<TopSection> {
                 ),
                 child: CircleAvatar(
                     radius: 30.r,
-                    backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
-                        ? NetworkImage(user!.profileImage.toString())
+                    backgroundImage: (user?.profileImage != null && user!.profileImage!.isNotEmpty)
+                        ? NetworkImage(user.profileImage!)
                         : null,
                     child: (user?.profileImage == null || user!.profileImage!.isEmpty)
                         ? Icon(Icons.person, size: 30.r, color: Colors.grey)
