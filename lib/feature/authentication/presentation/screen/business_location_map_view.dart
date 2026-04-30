@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/design_system/app_color.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../provider/business_location_provider.dart';
+import '../../provider/complete_profile_provider.dart';
 import '../../provider/signup_provider.dart';
 import '../widgets/location_search_bar.dart';
 import '../widgets/suggestion_list.dart';
@@ -232,6 +233,13 @@ class _BusinessLocationMapViewState extends ConsumerState<BusinessLocationMapVie
                   ref.read(signupProvider.notifier).updateLocation(
                     lat: locationState.cameraPosition.latitude,
                     lng: locationState.cameraPosition.longitude,
+                    address: finalAddress,
+                  );
+                  final double lat = locationState.cameraPosition.latitude;
+                  final double lng = locationState.cameraPosition.longitude;
+                  ref.read(completeProfileProvider.notifier).updateLocation(
+                    lat: lat,
+                    lng: lng,
                     address: finalAddress,
                   );
                   context.pop();
