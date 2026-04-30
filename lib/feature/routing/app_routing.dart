@@ -1,4 +1,5 @@
 import 'package:b2b_solution/feature/authentication/presentation/screen/business_location_map_view.dart';
+import 'package:b2b_solution/feature/authentication/presentation/screen/complete_profile_info_screen.dart';
 import 'package:b2b_solution/feature/authentication/presentation/screen/signup_screen.dart';
 import 'package:b2b_solution/feature/home/presentation/screen/map_view_screen.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/edit_profile_business_loation_screen.dart';
@@ -82,6 +83,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/locationAccessScreen", builder: (context, state)=> LocationAccessScreen()),
       GoRoute(path: '/loginScreen', builder: (context, state) => LoginScreen()),
       GoRoute(path: '/signupScreen', builder: (context, state) => SignupScreen()),
+      GoRoute(path: '/completeProfileInfoScreen', builder: (context,state) => CompleteProfileInfoScreen()),
 
       GoRoute(path: '/resetPassword', builder: (context, state) => ResetPassword()),
       GoRoute(path: '/resetVerificationCodeScreen', builder: (context, state) => ResetVerificationCodeScreen()),
