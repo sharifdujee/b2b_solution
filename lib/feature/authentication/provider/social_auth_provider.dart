@@ -19,11 +19,6 @@ import '../../profile/model/profile_state_model.dart';
 import '../../profile/provider/profile_provider.dart';
 
 
-
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
-
 class SocialAuthState {
   final bool isGoogleLoading;
   final bool isAppleLoading;
