@@ -1,6 +1,3 @@
-import 'package:b2b_solution/core/gloabal/custom_button.dart';
-import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
-import 'package:b2b_solution/core/gloabal/custom_image_picker_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,12 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_button.dart';
+import '../../../../core/gloabal/custom_image_picker_card.dart';
 import '../../../../core/gloabal/custom_selector.dart';
 import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/gloabal/custom_text_form_field.dart';
+import '../../../../core/utils/local_assets/icon_path.dart';
 import '../../../navigation/presentation/screen.dart';
-import '../../models/signup_state_model.dart';
-import '../../provider/signup_provider.dart';
+import '../../provider/complete_profile_provider.dart';
+import '../../provider/state/complete_profile_state.dart';
 
 class CompleteProfileInfoScreen extends ConsumerWidget {
   CompleteProfileInfoScreen({super.key});
@@ -22,79 +22,36 @@ class CompleteProfileInfoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(completeProfileProvider);
+    final controller = ref.read(completeProfileProvider.notifier);
 
-    ref.listen<SignupStateModel>(signupProvider, (previous, next) {
-      if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    next.errorMessage!,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+    ref.listen<CompleteProfileState>(completeProfileProvider, (prev, next) {
+      if (next.errorMessage != null && next.errorMessage != prev?.errorMessage) {
+        _showStatusSnackBar(context, next.errorMessage!, isError: true);
       }
     });
 
-
-    final state = ref.watch(signupProvider);
-    final controller = ref.read(signupProvider.notifier);
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 20.w),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 48.h),
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.h),
-                ),
-                SizedBox(height: 16.h),
-                CustomText(
-                  text: "Complete profile info",
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-                SizedBox(height: 16.h),
-                CustomText(
-                  text: "Connect. Trade. Grow. It starts here.",
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: AppColor.grey400,
-                ),
+                SizedBox(height: 20.h),
+                _buildHeader(context),
                 SizedBox(height: 32.h),
 
-                // --- Input Fields ---
+                // --- Business Details ---
                 _buildSectionTitle("Legal Name"),
                 CustomTextFormField(
                   controller: controller.legalNameController,
                   hintText: "Ex. 101010 Ontario inc",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-                  borderRadius: 12.r,
                   onChanged: (_) => controller.resetErrorMessage(),
-                  validator: (value) => value == null || value.isEmpty ? "Legal name required" : null,
+                  validator: (v) => v?.isEmpty ?? true ? "Legal name required" : null,
                 ),
 
                 SizedBox(height: 16.h),
@@ -102,66 +59,27 @@ class CompleteProfileInfoScreen extends ConsumerWidget {
                 CustomTextFormField(
                   controller: controller.businessNameController,
                   hintText: "Ex. Subway",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-                  borderRadius: 12.r,
                   onChanged: (_) => controller.resetErrorMessage(),
-                  validator: (value) => value == null || value.isEmpty ? "Business name required" : null,
+                  validator: (v) => v?.isEmpty ?? true ? "Business name required" : null,
                 ),
 
+                // --- Read-Only User Info ---
                 SizedBox(height: 16.h),
                 _buildSectionTitle("Your Name"),
-                ValueListenableBuilder(
-                  valueListenable: controller.nameController,
-                  builder: (context, TextEditingValue value, child) {
-                    return Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        color: AppColor.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: CustomText(
-                        text: value.text.isEmpty ? "No name entered" : value.text,
-                        color: AppColor.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
+                _buildReadOnlyField(controller.nameController, "No name found"),
 
                 SizedBox(height: 16.h),
                 _buildSectionTitle("Email Address"),
-                ValueListenableBuilder(
-                  valueListenable: controller.emailController,
-                  builder: (context, TextEditingValue value, child) {
-                    return Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        color: AppColor.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: CustomText(
-                        text: value.text.isEmpty ? "No email ware found" : value.text,
-                        color: AppColor.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
+                _buildReadOnlyField(controller.emailController, "No email found"),
 
-
+                // --- Operational Details ---
                 SizedBox(height: 16.h),
                 _buildSectionTitle("Position"),
                 CustomTextFormField(
                   controller: controller.positionController,
                   hintText: "Ex. Owner",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-                  borderRadius: 12.r,
                   onChanged: (_) => controller.resetErrorMessage(),
-                  validator: (value) => value == null || value.isEmpty ? "Position required" : null,
+                  validator: (v) => v?.isEmpty ?? true ? "Position required" : null,
                 ),
 
                 SizedBox(height: 16.h),
@@ -173,11 +91,9 @@ class CompleteProfileInfoScreen extends ConsumerWidget {
                     "Appetizers", "Main Course", "Desserts",
                     "Bakery", "Dairy", "Frozen Food", "Meat & Poultry"
                   ],
-                  // Use the list from your state
                   initialSelectedItems: state.foodCategory,
                   onChanged: (values) {
                     controller.resetErrorMessage();
-                    // CRITICAL: Update the state with the new values
                     if (values is List<String>) {
                       controller.updateFoodCategories(values);
                     }
@@ -193,213 +109,35 @@ class CompleteProfileInfoScreen extends ConsumerWidget {
                   },
                 ),
 
-
                 SizedBox(height: 16.h),
                 _buildSectionTitle("Years of Operation"),
                 CustomTextFormField(
                   controller: controller.yearsOfOperationController,
-                  hintText: "5",
-                  hintTextColor: AppColor.grey400,
-                  textColor: Colors.black,
-                  borderRadius: 12.r,
-                  keyboardType: TextInputType.number, // Added for better UX
-                  onChanged: (_) => controller.resetErrorMessage(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Years of operation required";
-                    }
-
-                    final years = int.tryParse(value);
-                    if (years == null) {
-                      return "Invalid years of operation";
-                    }
-
-                    if (years <= 0) {
-                      return "Years cannot be negative";
-                    }
-
-                    if (years > 100) {
-                      return "Must be less than 100";
-                    }
-
-                    return null;
-                  },
+                  hintText: "Ex. 5",
+                  keyboardType: TextInputType.number,
+                  validator: (v) => v?.isEmpty ?? true ? "Required" : null,
                 ),
 
                 SizedBox(height: 16.h),
                 _buildSectionTitle("Business Location"),
-                FormField<String>(
-                  initialValue: state.businessAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty || value == "Select Location") {
-                      return "Business location is required";
-                    }
-                    return null;
-                  },
-                  builder: (FormFieldState<String> fieldState) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            controller.resetErrorMessage();
-                            context.push('/businessLocation');
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                            decoration: BoxDecoration(
-                              color: AppColor.white,
-                              borderRadius: BorderRadius.circular(12.r),
-                              // Border turns red if there is a validation error
-                              border: Border.all(
-                                color: fieldState.hasError ? Colors.red : AppColor.primary,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: CustomText(
-                                    text: state.businessAddress ?? "Select Location",
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: state.businessAddress == null ? AppColor.grey400 : Colors.black,
-                                  ),
-                                ),
-                                Icon(
-                                    Icons.location_on_outlined,
-                                    color: fieldState.hasError ? Colors.red : AppColor.primary,
-                                    size: 20.sp
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (fieldState.hasError)
-                          Padding(
-                            padding: EdgeInsets.only(top: 8.h, left: 4.w),
-                            child: CustomText(
-                              text: fieldState.errorText ?? "",
-                              color: Colors.red,
-                              fontSize: 12.sp,
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
+                _buildLocationPicker(context, state, controller),
 
-                SizedBox(height: 16.h),
-                _buildSectionTitle("Profile image"),
-                FormField<String>(
-                  validator: (value) => state.profileImage == null ? "Please upload a profile image" : null,
-                  builder: (fieldState) {
-                    return CustomImagePickerCard(
-                      title: "Profile Image",
-                      imagePath: state.profileImage,
-                      errorText: fieldState.errorText,
-                      onPickImage: () => _showImageSourceSheet(
-                        context,
-                            (source) async {
-                          await controller.pickProfileImage(source);
-                          fieldState.didChange(state.profileImage);
-                        },
-                      ),
-                    );
-                  },
-                ),
-
-                SizedBox(height: 16.h),
-                _buildSectionTitle("Upload business image"),
-                FormField<String>(
-                  validator: (value) => state.businessImage == null ? "Please upload a business image" : null,
-                  builder: (fieldState) {
-                    return CustomImagePickerCard(
-                      title: "Business image",
-                      imagePath: state.businessImage,
-                      errorText: fieldState.errorText,
-                      onPickImage: () => _showImageSourceSheet(
-                        context,
-                            (source) async {
-                          await controller.pickBusinessImage(source);
-                          fieldState.didChange(state.businessImage);
-                        },
-                      ),
-                    );
-                  },
-                ),
-
-
-                // --- Error Message Display ---
-                if (state.errorMessage != null) ...[
-                  SizedBox(height: 20.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red, size: 20.sp),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: CustomText(
-                            text: state.errorMessage!,
-                            fontSize: 13.sp,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
+                // --- Image Uploads ---
                 SizedBox(height: 24.h),
+                _buildImageSection(context, state, controller),
 
-                // --- Submit Button ---
+                SizedBox(height: 32.h),
+
+                // --- Submission ---
                 CustomButton(
                   backgroundColor: AppColor.primary,
-                  borderRadius: 16.r,
                   text: state.isLoading ? "Please Wait..." : "Submit",
-                  textColor: Colors.black,
-                  onPressed: state.isLoading
-                      ? null
-                      : () async {
-                    if (_formKey.currentState!.validate()) {
-                      final success = await controller.signup();
-                      if (success && context.mounted) {
-                        controller.resetErrorMessage();
-                        ref.read(selectedIndexProvider.notifier).state = 0;
-                        context.pushReplacement('/nav');
-                      }
-                    } else {
-                      _showValidationErrorSnackbar(context);
-                    }
-                  },
+                  onPressed: state.isLoading ? null : () => _handleEntry(context, controller, ref),
                 ),
 
-                SizedBox(height: 12.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CustomText(
-                      text: "Already have an account?",
-                      fontSize: 14.sp,
-                      color: AppColor.grey400,
-                    ),
-                    SizedBox(width: 8.w),
-                    GestureDetector(
-                      onTap: () => context.push("/loginScreen"),
-                      child: CustomText(
-                          text: "Sign in", fontSize: 14.sp, color: AppColor.secondary),
-                    )
-                  ],
-                ),
-                SizedBox(height: 48.h),
+                SizedBox(height: 16.h),
+                _buildFooter(context),
+                SizedBox(height: 40.h),
               ],
             ),
           ),
@@ -408,84 +146,160 @@ class CompleteProfileInfoScreen extends ConsumerWidget {
     );
   }
 
-  // --- Helper Widget for Titles ---
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: CustomText(
-        text: title,
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        color: Colors.black,
-      ),
+  // --- Sub-Widgets ---
+
+  Widget _buildHeader(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => context.pop(),
+          child: Image.asset(IconPath.arrowLeft, height: 24.h, width: 24.w),
+        ),
+        SizedBox(height: 16.h),
+        CustomText(text: "Complete profile info", fontSize: 24.sp, fontWeight: FontWeight.w600),
+        SizedBox(height: 8.h),
+        CustomText(text: "Connect. Trade. Grow. It starts here.", fontSize: 14.sp, color: AppColor.grey400),
+      ],
     );
   }
-  void _showValidationErrorSnackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text("Please fix the errors in the form before saving."),
-        backgroundColor: Colors.orange.shade800,
-        behavior: SnackBarBehavior.floating,
+
+  Widget _buildReadOnlyField(TextEditingController controller, String placeholder) {
+    return ValueListenableBuilder(
+      valueListenable: controller,
+      builder: (context, value, _) => Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: AppColor.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: CustomText(
+          text: value.text.isEmpty ? placeholder : value.text,
+          color: AppColor.primary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  void _showImageSourceSheet(
-      BuildContext context, Function(ImageSource) onSourceSelected) {
+  Widget _buildLocationPicker(BuildContext context, CompleteProfileState state, var controller) {
+    return FormField<String>(
+      validator: (_) => (state.businessAddress?.isEmpty ?? true) ? "Location required" : null,
+      builder: (field) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => context.push('/businessLocation'),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: field.hasError ? Colors.red : AppColor.primary),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(state.businessAddress ?? "Select Location",
+                        style: TextStyle(color: state.businessAddress == null ? AppColor.grey400 : Colors.black)),
+                  ),
+                  Icon(Icons.location_on_outlined, color: field.hasError ? Colors.red : AppColor.primary),
+                ],
+              ),
+            ),
+          ),
+          if (field.hasError) Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 4.w),
+            child: Text(field.errorText!, style: TextStyle(color: Colors.red, fontSize: 12.sp)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageSection(BuildContext context, CompleteProfileState state, var controller) {
+    return Column(
+      children: [
+        CustomImagePickerCard(
+          title: "Profile Image",
+          imagePath: state.profileImage,
+          onPickImage: () => _pickImageWrapper(context, (s) => controller.pickProfileImage(s)),
+        ),
+        SizedBox(height: 16.h),
+        CustomImagePickerCard(
+          title: "Business Image",
+          imagePath: state.businessImage,
+          onPickImage: () => _pickImageWrapper(context, (s) => controller.pickBusinessImage(s)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CustomText(text: "Already have an account?", fontSize: 14.sp, color: AppColor.grey400),
+        TextButton(
+          onPressed: () => context.push("/loginScreen"),
+          child: CustomText(text: "Sign in", fontSize: 14.sp, color: AppColor.secondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: CustomText(text: title, fontSize: 16.sp, fontWeight: FontWeight.w600),
+    );
+  }
+
+  // --- Logic Wrappers ---
+
+  void _pickImageWrapper(BuildContext context, Function(ImageSource) onSelect) {
+    _showImageSourceSheet(context, onSelect);
+  }
+
+  Future<void> _handleEntry(BuildContext context, var controller, WidgetRef ref) async {
+    if (_formKey.currentState!.validate()) {
+      final success = await controller.completeProfile();
+      if (success && context.mounted) {
+        ref.read(selectedIndexProvider.notifier).state = 0;
+        context.pushReplacement('/nav');
+      }
+    } else {
+      _showStatusSnackBar(context, "Please fix the errors in the form.", isError: true);
+    }
+  }
+
+  void _showStatusSnackBar(BuildContext context, String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(20.w),
+      ),
+    );
+  }
+
+  void _showImageSourceSheet(BuildContext context, Function(ImageSource) onSelect) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      builder: (context) => Container(
-        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 40.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.r))),
+      builder: (context) => Padding(
+        padding: EdgeInsets.all(24.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CustomText(
-                  text: "Select Image Source",
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18.sp,
-                  color: const Color(0xFF1E293B),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: EdgeInsets.all(4.w),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close, size: 20, color: Colors.red),
-                  ),
-                )
-              ],
-            ),
-            SizedBox(height: 32.h),
+            CustomText(text: "Select Source", fontSize: 18.sp, fontWeight: FontWeight.bold),
+            SizedBox(height: 24.h),
             Row(
               children: [
-                Expanded(
-                  child: _buildSourceCard(
-                    context,
-                    icon: Icons.camera_alt_rounded,
-                    label: "Camera",
-                    onTap: () => onSourceSelected(ImageSource.camera),
-                  ),
-                ),
+                _sourceTile(context, Icons.camera, "Camera", () => onSelect(ImageSource.camera)),
                 SizedBox(width: 16.w),
-                Expanded(
-                  child: _buildSourceCard(
-                    context,
-                    icon: Icons.photo_library_rounded,
-                    label: "Gallery",
-                    onTap: () => onSourceSelected(ImageSource.gallery),
-                  ),
-                ),
+                _sourceTile(context, Icons.image, "Gallery", () => onSelect(ImageSource.gallery)),
               ],
             ),
           ],
@@ -494,33 +308,18 @@ class CompleteProfileInfoScreen extends ConsumerWidget {
     );
   }
 
-
-  Widget _buildSourceCard(BuildContext context,
-      {required IconData icon, required String label, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(16.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.h),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 32.sp, color: AppColor.primary),
-            SizedBox(height: 10.h),
-            CustomText(
-              text: label,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-            )
-          ],
+  Widget _sourceTile(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: () { Navigator.pop(context); onTap(); },
+        child: Container(
+          padding: EdgeInsets.all(16.h),
+          decoration: BoxDecoration(
+            color: Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Color(0xFFE2E8F0)),
+          ),
+          child: Column(children: [Icon(icon, color: AppColor.primary), Text(label)]),
         ),
       ),
     );

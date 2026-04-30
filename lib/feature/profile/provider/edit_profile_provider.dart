@@ -43,23 +43,24 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
 
   void _initializeFields() {
     if (_currentUser != null) {
-      fullNameController.text = _currentUser!.fullName;
-      legalNameController.text = _currentUser!.legalName;
-      businessNameController.text = _currentUser!.businessName;
-      positionController.text = _currentUser!.position;
-      operationYearsController.text = _currentUser!.operationYears.toString();
-      businessLatitude.text = _currentUser!.businessLatitude?.toString() ?? "";
-      businessLongitude.text = _currentUser!.businessLongitude?.toString() ?? "";
+      fullNameController.text = _currentUser.fullName ?? "";
+      legalNameController.text = _currentUser.legalName ?? "";
+      businessNameController.text = _currentUser.businessName ?? "";
+      positionController.text = _currentUser.position ?? "";
 
-      final List<String> initialCategories = _currentUser!.businessCategory ?? [];
+      operationYearsController.text = _currentUser.operationYears?.toString() ?? "0";
+
+      businessLatitude.text = _currentUser.businessLatitude?.toString() ?? "";
+      businessLongitude.text = _currentUser.businessLongitude?.toString() ?? "";
+
+      final List<String> initialCategories = _currentUser.businessCategory ?? [];
 
       state = state.copyWith(
-        latitude: _currentUser!.businessLatitude,
-        longitude: _currentUser!.businessLongitude,
+        latitude: _currentUser.businessLatitude,
+        longitude: _currentUser.businessLongitude,
         businessCategories: initialCategories,
       );
 
-      // Visual only
       businessCategoryController.text = initialCategories.join(', ');
     }
   }
@@ -194,9 +195,10 @@ class EditProfileNotifier extends StateNotifier<ProfileEditStateModel> {
 
     List<String> finalCategories = [];
     if (businessCategoryController.text.trim().isNotEmpty) {
-      finalCategories = [businessCategoryController.text.trim()];
-    } else if (_currentUser?.businessCategory != null) {
-      finalCategories = _currentUser!.businessCategory;
+      finalCategories = state.businessCategories;
+    } else {
+      // Fallback to existing categories or empty list
+      finalCategories = _currentUser?.businessCategory ?? [];
     }
 
     int opYears = int.tryParse(operationYearsController.text) ?? _currentUser?.operationYears ?? 0;

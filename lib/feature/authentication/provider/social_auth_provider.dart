@@ -8,13 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-// ❌ REMOVE: import 'package:http/http.dart' as ref;  ← this was the root cause
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../core/service/app_url.dart';
 import '../../../core/service/auth_service.dart';
 import '../../../core/service/network_caller.dart';
 import '../../../core/service/push_notification_service.dart';
+import '../../navigation/presentation/screen.dart';
 
 
 
@@ -84,9 +84,21 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
   }
 }
 
-String _resolveNextRoute() {
-  final isSetUp = AuthService.hasToken();
-  return isSetUp ? '/nav' : '/loginScreen';
+String _resolveNextRoute(Ref ref) {
+  final hasToken = AuthService.hasToken();
+  final isProfileSetup = AuthService.isProfileSetup;
+
+  if (hasToken && isProfileSetup!) {
+    ref.read(selectedIndexProvider.notifier).state = 0;
+    return '/nav';
+  }
+
+  if (hasToken && !isProfileSetup!) {
+
+    return '/completeProfileInfoScreen';
+  }
+
+  return '/loginScreen';
 }
 
 // ─────────────────────────────────────────────
@@ -139,6 +151,7 @@ class SocialAuthNotifier extends StateNotifier<SocialAuthState> {
           response.responseData as Map<String, dynamic>,
         );
 
+
         if (!saved) {
           state = state.copyWith(
             isGoogleLoading: false,
@@ -154,7 +167,7 @@ class SocialAuthNotifier extends StateNotifier<SocialAuthState> {
           clearErrorMessage: true,
         );
 
-        if (context.mounted) context.go(_resolveNextRoute());
+        if (context.mounted) context.go(_resolveNextRoute(ref));
       } else {
         state = state.copyWith(
           isGoogleLoading: false,
@@ -262,7 +275,7 @@ class SocialAuthNotifier extends StateNotifier<SocialAuthState> {
           clearErrorMessage: true,
         );
 
-        if (context.mounted) context.go(_resolveNextRoute());
+        if (context.mounted) context.go(_resolveNextRoute(ref));
       } else {
         state = state.copyWith(
           isAppleLoading: false,

@@ -72,9 +72,9 @@ class _TopSectionState extends ConsumerState<TopSection> {
                     backgroundImage: (user?.profileImage != null && user!.profileImage.isNotEmpty)
                         ? NetworkImage(user!.profileImage.toString())
                         : null,
-                    child: (user?.profileImage == null || user!.profileImage.isEmpty)
+                    child: (user?.profileImage == null || user!.profileImage!.isEmpty)
                         ? Icon(Icons.person, size: 30.r, color: Colors.grey)
-                        :null
+                        : null
                 ),
               ),
 

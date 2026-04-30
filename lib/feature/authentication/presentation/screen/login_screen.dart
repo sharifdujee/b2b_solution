@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:b2b_solution/core/design_system/app_color.dart';
 import 'package:b2b_solution/core/gloabal/custom_button.dart';
 import 'package:b2b_solution/core/gloabal/custom_text.dart';
@@ -212,7 +215,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               : "Continue with Google",
           assetPath: IconPath.googleIcon,
           onTap: () {
-            context.push("/completeProfileInfoScreen");
             if (!socialState.isGoogleLoading &&
                 !socialState.isAppleLoading) {
               socialNotifier.signInWithGoogle(context);
@@ -223,19 +225,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         SizedBox(height: 16.h),
 
         /// 🍎 Apple Login
-        SocialLoginButton(
-          text: socialState.isAppleLoading
-              ? "Signing in with Apple..."
-              : "Continue with Apple",
-          icon: Icons.apple_sharp,
-          onTap: () {
-            context.push("/completeProfileInfoScreen");
-            if (!socialState.isGoogleLoading &&
-                !socialState.isAppleLoading) {
-              socialNotifier.signInWithApple(context);
-            }
-          },
-        ),
+        if (Platform.isIOS)
+          SocialLoginButton(
+            text: socialState.isAppleLoading
+                ? "Signing in with Apple..."
+                : "Continue with Apple",
+            icon: Icons.apple_sharp,
+            onTap: () {
+              if (!socialState.isGoogleLoading && !socialState.isAppleLoading) {
+                socialNotifier.signInWithApple(context);
+              }
+            },
+          ),
 
         SizedBox(height: 32.h),
 
