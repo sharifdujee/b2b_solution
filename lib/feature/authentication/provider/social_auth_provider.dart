@@ -15,6 +15,8 @@ import '../../../core/service/auth_service.dart';
 import '../../../core/service/network_caller.dart';
 import '../../../core/service/push_notification_service.dart';
 import '../../navigation/presentation/screen.dart';
+import '../../profile/model/profile_state_model.dart';
+import '../../profile/provider/profile_provider.dart';
 
 
 
@@ -152,6 +154,24 @@ class SocialAuthNotifier extends StateNotifier<SocialAuthState> {
         final saved = await _saveAuthData(
           response.responseData as Map<String, dynamic>,
         );
+
+        if (saved && context.mounted) {
+          final profileNotifier = ref.read(profileProvider);
+
+          profileNotifier.userModel = UserModel(
+            fullName: userName,
+            email: email,
+            id: '',
+            role: '',
+          );
+
+          profileNotifier.notifyListeners();
+
+          state = state.copyWith(isGoogleLoading: false);
+
+          // Navigate to the next screen
+          context.go(_resolveNextRoute(ref));
+        }
 
 
         if (!saved) {
