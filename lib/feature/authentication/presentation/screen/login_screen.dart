@@ -212,6 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               : "Continue with Google",
           assetPath: IconPath.googleIcon,
           onTap: () {
+            context.push("/completeProfileInfoScreen");
             if (!socialState.isGoogleLoading &&
                 !socialState.isAppleLoading) {
               socialNotifier.signInWithGoogle(context);
@@ -228,6 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               : "Continue with Apple",
           icon: Icons.apple_sharp,
           onTap: () {
+            context.push("/completeProfileInfoScreen");
             if (!socialState.isGoogleLoading &&
                 !socialState.isAppleLoading) {
               socialNotifier.signInWithApple(context);
