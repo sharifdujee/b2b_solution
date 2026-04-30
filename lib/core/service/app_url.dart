@@ -24,6 +24,9 @@ class AppUrl {
   static const String getMe = "$_baseUrl/auth/me";
   static const String updateProfile = "$_baseUrl/auth/me/update";
   static const String deleteUser = "$_baseUrl/auth/delete-account";
+  static const String socialLogin = "$_baseUrl/auth/social-login";
+  static const String googleLogin = "$_baseUrl/auth/google";
+  static const String appleLogin = "$_baseUrl/auth/apple";
 
   static String nearbyPings(double lat, double lng) {
     return "$_baseUrl/ping?latitude=$lat&longitude=$lng";
@@ -60,7 +63,11 @@ class AppUrl {
 
   static String myConnections(int page, String search,int limit) =>
       "$_baseUrl/connection/my-connection?page=$page&limit=$limit&searchTerm=$search";
-  static String findUsers(int page, String search,int limit) => "$_baseUrl/connection/find?searchTerm=$search&page=$page&limit=$limit";
+
+
+  static String findUsers(int page, String search,int limit) =>
+      "$_baseUrl/connection/find?searchTerm=$search&page=$page&limit=$limit";
+
   static String pendingConnections(int page, int limit) => "$_baseUrl/connection/pending-request?page=$page&limit=$limit";
 
   static String notifications (int page, int limit,String isRead) => "$_baseUrl/notify/my?limit=$limit&page=$page&isRead=$isRead";

@@ -202,8 +202,8 @@ class SocketService {
     _lastJoinedBookingId = connectedUserId;
 
     final message = jsonEncode({
-      "type": "subscribe-room",
-      "roomId": connectedUserId,
+      "type": "start-conversation",
+      "targetUserId": connectedUserId,
     });
 
     try {
@@ -213,6 +213,40 @@ class SocketService {
       log("Error joining room: $e");
     }
   }
+
+  final Set<String> _activeSubscriptions = {};
+  void subscribeToRoom(String roomId) {
+    if (_socket == null || !isConnected) return;
+
+    // Logic: If already subscribed, don't send the message again
+    if (_activeSubscriptions.contains(roomId)) {
+      log("ℹ️ Already subscribed to room $roomId. Skipping...");
+      return;
+    }
+
+    final message = jsonEncode({
+      "type": "subscribe-room",
+      "roomId": roomId,
+    });
+
+    if (_sendMessage(message)) {
+      _activeSubscriptions.add(roomId);
+    }
+  }
+
+  bool _sendMessage(String message) {
+    try {
+      _socket?.add(message);
+      log("📤 Sent: $message");
+      return true;
+    } catch (e) {
+      log("❌ Error sending message: $e");
+      return false;
+    }
+  }
+
+  void clearSubscriptions() => _activeSubscriptions.clear();
+
 
   void resetReconnection() {
     _reconnectAttempts = 0;

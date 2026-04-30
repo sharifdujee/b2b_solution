@@ -1,3 +1,5 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 class ProfileEditStateModel {
   final String legalName;
   final String businessName;
@@ -5,7 +7,8 @@ class ProfileEditStateModel {
   final String email;
   final String verificationCode;
   final String position;
-  final String foodCategory;
+  // CHANGED: Changed from String to List<String> for multi-select
+  final List<String> businessCategories;
   final String yearsOfOperation;
   final String businessImage;
   final String profileImage;
@@ -13,11 +16,17 @@ class ProfileEditStateModel {
   final String password;
   final String confirmPassword;
 
-  // --- Added Location Fields ---
+  // --- Location Fields ---
   final double? latitude;
   final double? longitude;
   final String businessAddress;
-  // ----------------------------
+
+  // --- Map & Search UI State ---
+  final String searchQuery;
+  final List<dynamic> suggestions;
+  final dynamic selectedLocation;
+  final bool isSearching;
+  final LatLng cameraPosition;
 
   final bool isLoading;
   final bool obscurePassword;
@@ -33,16 +42,22 @@ class ProfileEditStateModel {
     this.email = '',
     this.verificationCode = '',
     this.position = '',
-    this.foodCategory = '',
+    // CHANGED: Initialized as empty list
+    this.businessCategories = const [],
     this.yearsOfOperation = '',
     this.businessImage = '',
     this.profileImage = '',
     this.businessLicenseImage = '',
     this.password = '',
     this.confirmPassword = '',
-    this.latitude, // Default null
-    this.longitude, // Default null
+    this.latitude,
+    this.longitude,
     this.businessAddress = '',
+    this.searchQuery = '',
+    this.suggestions = const [],
+    this.selectedLocation,
+    this.isSearching = false,
+    this.cameraPosition = const LatLng(0.0, 0.0),
     this.isLoading = false,
     this.obscurePassword = true,
     this.obscureConfirmPassword = true,
@@ -58,16 +73,22 @@ class ProfileEditStateModel {
     String? email,
     String? verificationCode,
     String? position,
-    String? foodCategory,
+    // CHANGED: Updated type to List<String>
+    List<String>? businessCategories,
     String? yearsOfOperation,
     String? businessImage,
     String? profileImage,
     String? businessLicenseImage,
     String? password,
     String? confirmPassword,
-    double? latitude, // Added
-    double? longitude, // Added
-    String? businessAddress, // Added
+    double? latitude,
+    double? longitude,
+    String? businessAddress,
+    String? searchQuery,
+    List<dynamic>? suggestions,
+    dynamic selectedLocation,
+    bool? isSearching,
+    LatLng? cameraPosition,
     bool? isLoading,
     bool? obscurePassword,
     bool? obscureConfirmPassword,
@@ -83,16 +104,22 @@ class ProfileEditStateModel {
       email: email ?? this.email,
       verificationCode: verificationCode ?? this.verificationCode,
       position: position ?? this.position,
-      foodCategory: foodCategory ?? this.foodCategory,
+      // CHANGED: Mapping the new list
+      businessCategories: businessCategories ?? this.businessCategories,
       yearsOfOperation: yearsOfOperation ?? this.yearsOfOperation,
       businessImage: businessImage ?? this.businessImage,
       profileImage: profileImage ?? this.profileImage,
       businessLicenseImage: businessLicenseImage ?? this.businessLicenseImage,
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
-      latitude: latitude ?? this.latitude, // Added
-      longitude: longitude ?? this.longitude, // Added
-      businessAddress: businessAddress ?? this.businessAddress, // Added
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      businessAddress: businessAddress ?? this.businessAddress,
+      searchQuery: searchQuery ?? this.searchQuery,
+      suggestions: suggestions ?? this.suggestions,
+      selectedLocation: selectedLocation ?? this.selectedLocation,
+      isSearching: isSearching ?? this.isSearching,
+      cameraPosition: cameraPosition ?? this.cameraPosition,
       isLoading: isLoading ?? this.isLoading,
       obscurePassword: obscurePassword ?? this.obscurePassword,
       obscureConfirmPassword: obscureConfirmPassword ?? this.obscureConfirmPassword,

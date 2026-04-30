@@ -1,42 +1,54 @@
-import 'dart:developer';
-import 'package:b2b_solution/core/design_system/app_color.dart';
-import 'package:b2b_solution/core/gloabal/custom_text.dart';
-import 'package:b2b_solution/core/utils/local_assets/icon_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../../../core/design_system/app_color.dart';
+import '../../../../core/gloabal/custom_text.dart';
 import '../../../../core/service/auth_service.dart';
-import '../../model/connected_state_model.dart';
+import '../../../../core/service/map_service.dart';
+import '../../../../core/utils/local_assets/icon_path.dart';
+import '../../../ping/model/connection_model.dart';
+import '../../model/connected_state_model.dart' hide ConnectionUser;
 import '../../model/find_connecion_state_model.dart';
 import '../../model/my_connection_state_model.dart';
+import '../../model/pending_connection_state_model.dart' hide ConnectionUser;
 import '../../model/send_request_state_model.dart';
-import '../../model/pending_connection_state_model.dart';
 import '../../provider/my_connection_filter_provider.dart';
 
 class MyConnectionCard extends ConsumerWidget {
   final dynamic connectionData;
   final String currentUserId;
 
-  const MyConnectionCard({
+  MyConnectionCard({
     super.key,
     required this.connectionData,
-    required this.currentUserId,
+    required this.currentUserId, required void Function() onTap,
+  });
+
+  final addressFromLatLngProvider = FutureProvider.family<String, LatLng>((ref, latLng) async {
+    final mapService = ref.read(mapServiceProvider);
+    final suggestion = await mapService.getAddressFromLatLng(latLng);
+    return suggestion?.secondaryText ?? "Unknown Location";
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentFilter = ref.watch(connectionFilterProvider);
 
-    // --- Data Extraction Logic ---
+    // --- Type Check Flags ---
     final bool isFindModel = connectionData is FindDatum;
     final bool isRequestModel = connectionData is SendRequestResultDatum;
     final bool isPendingModel = connectionData is PendingConnection;
-    final bool isConnectedModel = connectionData is ConnectedConnection; // Added this
+    final bool isConnectedModel = connectionData is ConnectedConnection;
+    final bool isSearchModel = connectionData is ConnectionModel;
 
+    // --- Resolve Display User ---
     final dynamic displayUser;
-
-    if (isFindModel) {
+    if (isSearchModel) {
+      displayUser = (connectionData as ConnectionModel).getDisplayUser(currentUserId);
+    } else if (isFindModel) {
       displayUser = connectionData;
     } else if (isRequestModel) {
       displayUser = (connectionData as SendRequestResultDatum).receiver;
@@ -51,7 +63,19 @@ class MyConnectionCard extends ConsumerWidget {
     final String fullName = displayUser?.fullName ?? "Unknown";
     final String businessName = displayUser?.businessName ?? "No Business Name";
     final String? profileImage = displayUser?.profileImage;
-    final String position = displayUser?.position ?? "Business Member";
+    final String position = displayUser?.position ?? "Business Professional";
+    final double? lat = displayUser?.businessLatitude;
+    final double? lng = displayUser?.businessLongitude;
+
+    final addressAsync = (lat != null && lng != null)
+        ? ref.watch(addressFromLatLngProvider(LatLng(lat, lng)))
+        : null;
+
+    final String address = addressAsync?.when(
+      data: (val) => val,
+      loading: () => "Loading address...",
+      error: (err, _) => "Location not available",
+    ) ?? displayUser?.businessAddress ?? "No address listed";
 
     final String categories = (displayUser?.businessCategory is List)
         ? (displayUser.businessCategory as List).join(", ")
@@ -91,16 +115,14 @@ class MyConnectionCard extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    _buildTopAction(currentFilter, context, ref),
+                    _buildTopAction(context),
                   ],
                 ),
                 SizedBox(height: 6.h),
-                _buildInfoRow(IconPath.location05, position),
+                _buildInfoRow(IconPath.location05, address),
                 SizedBox(height: 8.h),
                 CustomText(text: categories, fontSize: 12.sp, color: AppColor.grey800, maxLines: 2),
-
-                if (isPendingModel && currentFilter == ConnectionFilterOption.Pending)
-                  _buildPendingActions(ref, context),
+                if (isPendingModel && currentFilter == ConnectionFilterOption.Pending) _buildPendingActions(ref, context),
               ],
             ),
           ),
@@ -109,45 +131,46 @@ class MyConnectionCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopAction(ConnectionFilterOption filter, BuildContext context, WidgetRef ref) {
+  Widget _buildTopAction(BuildContext context) {
     return _actionButton(
       text: "Details",
       bg: AppColor.primary,
       txtColor: AppColor.white,
       onTap: () {
-        String statusHint = 'CONNECTED';
-        String partnerId = "";
-
-        switch (filter) {
-          case ConnectionFilterOption.Find: statusHint = 'FIND'; break;
-          case ConnectionFilterOption.Pending: statusHint = 'PENDING'; break;
-          case ConnectionFilterOption.Connected: statusHint = 'CONNECTED'; break;
-          case ConnectionFilterOption.Requests: statusHint = 'REQUEST'; break;
-        }
-
+        // --- NEW NAVIGATION LOGIC ---
         if (connectionData is FindDatum) {
-          partnerId = (connectionData as FindDatum).id;
-        } else if (connectionData is PendingConnection) {
-          final data = connectionData as PendingConnection;
-          partnerId = AuthService.id == data.senderId ? data.receiverId : data.senderId;
-        } else if (connectionData is SendRequestResultDatum) {
-          partnerId = (connectionData as SendRequestResultDatum).receiver.id;
-        } else if (connectionData is ConnectedConnection) {
-          final data = connectionData as ConnectedConnection;
-          partnerId = AuthService.id.toString();
+          context.push('/findBusinessCard', extra: connectionData);
         }
-
-        log("Navigating with partnerId: $partnerId");
-
-        context.push(
-          "/businessCardScreen",
-          extra: {
-            'connectionData': connectionData,
+        else if (connectionData is SendRequestResultDatum) {
+          context.push('/requestBusinessCard', extra: connectionData);
+        }
+        else if (connectionData is PendingConnection) {
+          context.push('/pendingBusinessCard', extra: {
+            'connection': connectionData,
             'currentUserId': currentUserId,
-            'status': statusHint,
-            'connectedUserId': partnerId,
-          },
-        );
+          });
+        }
+        else if (connectionData is ConnectedConnection) {
+          context.push('/connectedBusinessCard', extra: {
+            'connection': connectionData,
+            'currentUserId': currentUserId,
+          });
+        }
+        else if (connectionData is ConnectionModel) {
+          // Logic for general Search Model mapping
+          final searchModel = connectionData as ConnectionModel;
+          if (searchModel.senderId.isEmpty) {
+            // If sender is empty, treat as a "Find" result
+            // Note: You may need to map ConnectionModel to FindDatum if types don't match
+            context.push('/findBusinessCard', extra: searchModel);
+          } else {
+            // Treat as connected
+            context.push('/connectedBusinessCard', extra: {
+              'connection': searchModel,
+              'currentUserId': currentUserId,
+            });
+          }
+        }
       },
     );
   }
@@ -155,8 +178,6 @@ class MyConnectionCard extends ConsumerWidget {
   Widget _buildPendingActions(WidgetRef ref, BuildContext context) {
     final notifier = ref.read(myConnectionListProvider.notifier);
     final connection = connectionData as PendingConnection;
-
-    // Use string IDs directly to avoid null check errors
     final partnerUserId = AuthService.id == connection.sender?.id ? connection.receiver?.id : connection.sender?.id;
 
     if (AuthService.id == connection.senderId) {

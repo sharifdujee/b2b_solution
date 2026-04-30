@@ -2,18 +2,20 @@ import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import '../../../core/service/app_url.dart';
 import '../../../core/service/auth_service.dart';
-import '../../../core/service/model/response_data.dart';
 import '../../../core/service/network_caller.dart';
+import '../../../core/service/map_service.dart'; // Import MapService
 import '../../profile/provider/profile_provider.dart';
 import '../data/place_location.dart';
+import '../../authentication/models/location_suggestion_data_model.dart';
 
 // --- State Model ---
 class FilterState {
   final FoodCategory? selectedCategory;
   final RadiusOption? selectedRadius;
-  final LatLng? searchLocation; // The LatLng from Google Search
+  final LatLng? searchLocation;
 
   const FilterState({this.selectedCategory, this.selectedRadius, this.searchLocation});
 
@@ -35,11 +37,15 @@ class FilterNotifier extends StateNotifier<FilterState> {
   FilterNotifier() : super(const FilterState());
 
   void setCategory(FoodCategory cat) {
-    state = state.selectedCategory == cat ? state.copyWith(clearCategory: true) : state.copyWith(selectedCategory: cat);
+    state = state.selectedCategory == cat
+        ? state.copyWith(clearCategory: true)
+        : state.copyWith(selectedCategory: cat);
   }
 
   void setRadius(RadiusOption rad) {
-    state = state.selectedRadius == rad ? state.copyWith(clearRadius: true) : state.copyWith(selectedRadius: rad);
+    state = state.selectedRadius == rad
+        ? state.copyWith(clearRadius: true)
+        : state.copyWith(selectedRadius: rad);
   }
 
   void setSearchLocation(LatLng loc) => state = state.copyWith(searchLocation: loc);
@@ -52,24 +58,14 @@ final pendingFilterProvider = StateNotifierProvider<FilterNotifier, FilterState>
 final searchQueryProvider = StateProvider<String>((ref) => '');
 final networkCallerProvider = Provider((ref) => NetworkCaller());
 
-// 2. GOOGLE SEARCH SUGGESTIONS
-final searchSuggestionsProvider = FutureProvider<List<SearchSuggestion>>((ref) async {
+// 2. GOOGLE SEARCH SUGGESTIONS (Updated to use MapService)
+final searchSuggestionsProvider = FutureProvider<List<LocationSuggestion>>((ref) async {
   final query = ref.watch(searchQueryProvider);
   if (query.length < 3) return [];
 
-  const apiKey = "AIzaSyDMkcsHpM8saNMpVoHVxh5ryFYUiWnkxsA";
-  final url = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey";
-
-  final response = await ref.read(networkCallerProvider).getRequest(url);
-  if (response.isSuccess && response.responseData != null) {
-    final List predictions = response.responseData['predictions'] ?? [];
-    return predictions.map((p) => SearchSuggestion(
-      placeId: p['place_id'],
-      mainText: p['structured_formatting']['main_text'],
-      secondaryText: p['structured_formatting']['secondary_text'] ?? '',
-    )).toList();
-  }
-  return [];
+  // Use the map service instead of manual HTTP requests
+  final mapService = ref.read(mapServiceProvider);
+  return await mapService.fetchSuggestions(query);
 });
 
 // 3. FETCH PINGS (YOUR BACKEND)
@@ -77,7 +73,6 @@ final filteredPlacesProvider = FutureProvider<List<PlaceLocation>>((ref) async {
   final filter = ref.watch(filterProvider);
   final profile = ref.watch(profileProvider);
 
-  // Use searched coordinates if available, otherwise fallback to user profile
   final double lat = filter.searchLocation?.latitude ?? profile.latitude ?? 0.0;
   final double lng = filter.searchLocation?.longitude ?? profile.longitude ?? 0.0;
 
@@ -96,7 +91,14 @@ final filteredPlacesProvider = FutureProvider<List<PlaceLocation>>((ref) async {
   if (response.isSuccess && response.responseData != null) {
     final result = response.responseData['result'];
     if (result != null && result['data'] is List) {
-      return (result['data'] as List).map((j) => PlaceLocation.fromJson(j)).toList();
+      return (result['data'] as List).map((j) {
+        try {
+          return PlaceLocation.fromJson(j);
+        } catch (e) {
+          log("Error parsing individual item: $e");
+          return null;
+        }
+      }).whereType<PlaceLocation>().toList();
     }
   }
   return [];

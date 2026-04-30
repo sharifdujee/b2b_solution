@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -23,6 +24,9 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
   MessagesNotifier() : super(const MessagesState(conversations: [])) {
     _connectAndLoad();
   }
+
+
+
 
   /// image upload functionality
   Future<void> uploadChatImage() async {
@@ -265,7 +269,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
   }
 
   void joinRoom(String roomId) {
-    _socketService.joinRoom(roomId);
+    _socketService.subscribeToRoom(roomId);
     loadRoomMessages(roomId, page: 1);
   }
 
@@ -277,7 +281,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
     try {
       final response = await networkCaller.getRequest(
         '${AppUrl.baseUrl}/chat/messages/$roomId?limit=20&sortOrder=desc&sortBy=createdAt&page=$page',
-        token: 'Bearer ${AuthService.token}',
+        token: '${AuthService.token}',
       );
 
       if (response.isSuccess) {
@@ -373,6 +377,17 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 
     // Image upload via HTTP multipart happens here before sending URL via socket
   }*/
+
+
+  /// Connects socket and triggers the conversation list load
+  Future<void> initSocket() async {
+    state = state.copyWith(isLoading: true);
+    final token = AuthService.token ?? '';
+
+    await _socketService.connect(AppUrl.socketUrl, token);
+
+    state = state.copyWith(isLoading: false);
+  }
 
   void markAsRead(String roomId) {
     final currentUserId = AuthService.id ?? '';

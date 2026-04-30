@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:b2b_solution/core/service/push_notification_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -26,8 +27,6 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
-    if (!mounted) return false;
-
     // 1. Reset state before validation
     state = state.copyWith(errorMessage: null, isLoading: false);
 
@@ -50,6 +49,7 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
     }
 
     state = state.copyWith(isLoading: true);
+    final fcmToken = ref.read(fcmTokenProvider);
 
     try {
       final response = await NetworkCaller().postRequest(
@@ -57,6 +57,7 @@ class LoginNotifier extends StateNotifier<LoginStateModel> {
         body: {
           'email': email,
           'password': password,
+          'fcmToken' : fcmToken ?? '',
         },
       );
 

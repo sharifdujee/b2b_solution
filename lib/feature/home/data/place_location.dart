@@ -86,13 +86,14 @@ class PlaceLocation {
     double jitter() => (random.nextDouble() - 0.5) * 0.0001;
 
     return PlaceLocation(
-      id: json['id'] ?? json['_id'] ?? '',
-      name: json['itemName'] ?? 'Unknown Item',
+      id: json['id']?.toString() ?? '',
+      name: json['itemName'] ?? '',
       address: userMap?['businessName'] ?? '',
-      category: FoodCategoryX.fromString(json['category'] ?? ''),
+      category: FoodCategory.snacks,
+
       position: LatLng(
-        (userMap?['businessLatitude'] ?? 0.0).toDouble() + jitter(),
-        (userMap?['businessLongitude'] ?? 0.0).toDouble() + jitter(),
+        (userMap?['businessLatitude'] as num?)?.toDouble() ?? 0.0,
+        (userMap?['businessLongitude'] as num?)?.toDouble() ?? 0.0,
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:b2b_solution/feature/authentication/presentation/screen/business_location_map_view.dart';
 import 'package:b2b_solution/feature/authentication/presentation/screen/signup_screen.dart';
 import 'package:b2b_solution/feature/home/presentation/screen/map_view_screen.dart';
+import 'package:b2b_solution/feature/profile/presentation/screen/edit_profile_business_loation_screen.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/privacy_policy.dart';
 import 'package:b2b_solution/feature/profile/presentation/screen/terms_conditions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,15 +15,22 @@ import '../authentication/presentation/screen/reset_password.dart';
 import '../authentication/presentation/screen/reset_verification_code_screen.dart';
 import '../authentication/presentation/screen/role_selection_screen.dart';
 import '../authentication/presentation/screen/signup_verification_code_screen.dart';
-import '../home/model/my_connection_state_model.dart';
-import '../home/presentation/screen/business_card_details_screen.dart';
+import '../home/model/connected_state_model.dart';
+import '../home/model/find_connecion_state_model.dart' show FindDatum;
+import '../home/model/pending_connection_state_model.dart';
+import '../home/model/send_request_state_model.dart';
+import '../home/presentation/screen/connected_business_card.dart';
+import '../home/presentation/screen/find_business_card_screen.dart';
 import '../home/presentation/screen/my_connection_screen.dart';
 import '../home/presentation/screen/notification_screen.dart';
+import '../home/presentation/screen/pending_business_card.dart';
+import '../home/presentation/screen/request_business_card_screen.dart';
 import '../home/presentation/screen/vendors_screen.dart';
 import '../message/presentation/screen/chat_screen.dart';
 import '../navigation/presentation/screen.dart';
 import '../onboarding/presentation/screen/onboarding_screen.dart';
 import '../ping/model/ping_model.dart';
+import '../ping/presentation/screen/create_ping_by_id.dart';
 import '../ping/presentation/screen/create_ping_screen.dart';
 import '../ping/presentation/screen/ping_details.dart';
 import '../ping/presentation/screen/ping_screen.dart';
@@ -92,6 +100,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: "/roleSelectionScreen", builder: (context, state)=> RoleSelectionScreen()),
 
       GoRoute(path: "/editProfile",builder: (context, state)=> EditProfile()),
+      GoRoute(path: "/editProfileBusinessLocation", builder: (context, state)=> EditProfileBusinessLocationScreen()),
       GoRoute(path: "/changePasswordScreen", builder: (context, state)=> ChangePasswordScreen()),
       GoRoute(path: "/helpCenterScreen", builder: (context, state)=> HelpCenterScreen()),
       GoRoute(path: "/privacyPolicy", builder: (context, state)=> PrivacyPolicy()),
@@ -105,6 +114,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           return PingDetails(ping: datum);
         },
       ),
+
+      GoRoute(
+        path: '/createPingForUser/:targetPartnerId',
+        name: 'createPingForUser',
+        builder: (context, state) {
+          final String userId = state.pathParameters['targetPartnerId'] ?? '';
+
+          return CreatePingForUserScreen(
+            targetPartnerId: userId,
+          );
+        },
+      ),
+
+
       GoRoute(path: "/createPingScreen",builder: (context,state)=> CreatePingScreen()),
 
       GoRoute(path: "/notificationScreen", builder: (context,state) => NotificationScreen()),
@@ -115,27 +138,52 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       GoRoute(path: "/pingScreen" ,builder: (context, state) => const PingScreen()),
 
-      GoRoute(path: "/chatScreen", builder: (context, state) => const ChatScreen(roomId: '',)),
-
+      GoRoute(
+          path: "/chatScreen",
+          builder: (context, state) {
+            final roomId = state.extra as String;
+            return ChatScreen(roomId: roomId);
+          }
+      ),
 
       GoRoute(
-        path: '/businessCardScreen',
+        path: '/findBusinessCard',
         builder: (context, state) {
-          final extraData = state.extra as Map<String, dynamic>;
+          final data = state.extra as FindDatum;
+          return FindBusinessCardScreen(user: data);
+        },
+      ),
 
-          // REMOVE THE CAST HERE. Keep it as dynamic/Object.
-          final connectionData = extraData['connectionData'] ?? extraData['connection'];
-          final String currentUserId = extraData['currentUserId'] as String;
-          final status = extraData['status'] as String;
+      GoRoute(
+        path: '/requestBusinessCard',
+        builder: (context, state) {
+          final data = state.extra as SendRequestResultDatum;
+          return RequestBusinessCardScreen(request: data);
+        },
+      ),
 
-          return BusinessCardScreen(
-            connectionData: connectionData,
-            currentUserId: currentUserId,
-            status: status,
-            connectedUserId: extraData['connectedUserId'],
+// 3. Pending (Incoming) Business Card Route
+      GoRoute(
+        path: '/pendingBusinessCard',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return PendingBusinessCardScreen(
+            connection: extra['connection'] as PendingConnection,
+            currentUserId: extra['currentUserId'] as String,
           );
         },
-      )
+      ),
+
+      GoRoute(
+        path: '/connectedBusinessCard',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ConnectedBusinessCardScreen(
+            connection: extra['connection'] as ConnectedConnection,
+            currentUserId: extra['currentUserId'] as String,
+          );
+        },
+      ),
     ],
   );
 });

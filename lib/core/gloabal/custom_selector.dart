@@ -15,8 +15,7 @@ class CustomSelectField<T> extends StatelessWidget {
   final bool showActionButtons;
   final TextEditingController? controller;
   final void Function(dynamic)? onChanged;
-
-  // Added validator parameter
+  final void Function(String)? onSearch; // New Optional Parameter
   final String? Function(dynamic)? validator;
 
   const CustomSelectField({
@@ -32,6 +31,7 @@ class CustomSelectField<T> extends StatelessWidget {
     this.showActionButtons = true,
     this.controller,
     this.onChanged,
+    this.onSearch, // Added here
     this.validator,
   });
 
@@ -41,7 +41,6 @@ class CustomSelectField<T> extends StatelessWidget {
       initialValue: isMultiSelect ? initialSelectedItems : value,
       validator: validator,
       builder: (FormFieldState<dynamic> fieldState) {
-        // Source of truth for display is either the state value or the initial value
         final effectiveValue = fieldState.value;
 
         String displayText = hintText;
@@ -89,7 +88,6 @@ class CustomSelectField<T> extends StatelessWidget {
                 ),
               ),
             ),
-            // Display error text if validation fails
             if (fieldState.hasError)
               Padding(
                 padding: EdgeInsets.only(top: 6.h, left: 4.w),
@@ -110,7 +108,6 @@ class CustomSelectField<T> extends StatelessWidget {
       context: context,
       builder: (context) => _SelectDialog<T>(
         items: items,
-        // Ensure the dialog starts with the current form field state
         initialValue: isMultiSelect ? null : fieldState.value,
         initialSelectedItems: isMultiSelect ? List<T>.from(fieldState.value ?? []) : null,
         title: hintText,
@@ -118,14 +115,12 @@ class CustomSelectField<T> extends StatelessWidget {
         isMultiSelect: isMultiSelect,
         showSearchBar: showSearchBar,
         showActionButtons: showActionButtons,
+        onSearch: onSearch, // Passed down to internal dialog
       ),
     );
 
     if (result != null) {
-      // 1. Update FormField internal state
       fieldState.didChange(result);
-
-      // 2. Update external Controller
       if (controller != null) {
         if (isMultiSelect && result is List) {
           controller!.text = (result as List).map((e) => itemLabelBuilder(e as T)).join(", ");
@@ -133,8 +128,6 @@ class CustomSelectField<T> extends StatelessWidget {
           controller!.text = itemLabelBuilder(result as T);
         }
       }
-
-      // 3. Trigger external callback
       if (onChanged != null) {
         onChanged!(result);
       }
@@ -142,7 +135,6 @@ class CustomSelectField<T> extends StatelessWidget {
   }
 }
 
-// Internal Dialog Implementation
 class _SelectDialog<T> extends StatefulWidget {
   final List<T> items;
   final T? initialValue;
@@ -152,6 +144,7 @@ class _SelectDialog<T> extends StatefulWidget {
   final bool isMultiSelect;
   final bool showSearchBar;
   final bool showActionButtons;
+  final void Function(String)? onSearch; // New Parameter
 
   const _SelectDialog({
     required this.items,
@@ -162,6 +155,7 @@ class _SelectDialog<T> extends StatefulWidget {
     required this.isMultiSelect,
     required this.showSearchBar,
     required this.showActionButtons,
+    this.onSearch, // Added here
   });
 
   @override
@@ -181,6 +175,17 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
       selectedItems = List.from(widget.initialSelectedItems ?? []);
     } else if (widget.initialValue != null) {
       selectedItems = [widget.initialValue!];
+    }
+  }
+
+  // CRITICAL: Update the dialog list when external data changes
+  @override
+  void didUpdateWidget(covariant _SelectDialog<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.items != oldWidget.items) {
+      setState(() {
+        filteredItems = widget.items;
+      });
     }
   }
 
@@ -205,7 +210,7 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
 
   @override
   Widget build(BuildContext context) {
-    bool isAllSelected = selectedItems.length == widget.items.length;
+    bool isAllSelected = selectedItems.length == widget.items.length && widget.items.isNotEmpty;
 
     return AlertDialog(
       backgroundColor: Colors.white,
@@ -224,14 +229,20 @@ class _SelectDialogState<T> extends State<_SelectDialog<T>> {
             SizedBox(height: 16.h),
             TextField(
               controller: _searchController,
-              onChanged: (val) => setState(() {
-                filteredItems = widget.items
-                    .where((i) => widget
-                    .itemLabelBuilder(i)
-                    .toLowerCase()
-                    .contains(val.toLowerCase()))
-                    .toList();
-              }),
+              onChanged: (val) {
+                if (widget.onSearch != null) {
+                  widget.onSearch!(val); // Use External Search
+                } else {
+                  setState(() { // Use Local Search
+                    filteredItems = widget.items
+                        .where((i) => widget
+                        .itemLabelBuilder(i)
+                        .toLowerCase()
+                        .contains(val.toLowerCase()))
+                        .toList();
+                  });
+                }
+              },
               decoration: InputDecoration(
                 hintText: "Search",
                 hintStyle: TextStyle(color: AppColor.grey400, fontSize: 14.sp),

@@ -14,7 +14,6 @@ class PingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the filter to pass it to the 'loadMore' logic
     final currentFilter = ref.watch(pingFilterProvider);
     final pingsAsync = ref.watch(pingListProvider);
 

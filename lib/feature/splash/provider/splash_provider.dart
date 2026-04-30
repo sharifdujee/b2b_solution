@@ -11,9 +11,6 @@ class AppStartupNotifier extends StateNotifier<AppStartupState> {
 
   final minimumWait = Future.delayed(const Duration(seconds: 2));
 
-  void setUnauthenticated() {
-    state = AppStartupState.unauthenticated;
-  }
 
   Future<void> _init() async {
 

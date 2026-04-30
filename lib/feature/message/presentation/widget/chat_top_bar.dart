@@ -1,6 +1,9 @@
+import 'package:b2b_solution/core/service/map_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_color.dart';
+import '../../../ping/presentation/screen/create_ping_by_id.dart';
 import '../../model/conversation_data_model.dart';
 
 class ChatTopBar extends StatelessWidget {
@@ -80,10 +83,12 @@ class ChatTopBar extends StatelessWidget {
 
           SizedBox(width: 10.w),
 
-          // PING button
           InkWell(
             onTap: () {
-              // Handle Ping action
+              log("partner ID: ${conversation.partner.id}");
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context)=> CreatePingForUserScreen(targetPartnerId: conversation.partner.id,))
+              );
             },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),

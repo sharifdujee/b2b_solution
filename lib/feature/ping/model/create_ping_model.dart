@@ -15,6 +15,7 @@ class CreatePingState {
   final UrgencyLevel urgencyLevel;
   final bool isLoading;
   final List<String> categories;
+  final String? errorMessage;
 
   CreatePingState({
     this.connectedIds = const [],
@@ -29,6 +30,7 @@ class CreatePingState {
     this.unit,
     this.urgencyLevel = UrgencyLevel.GENERAL,
     this.isLoading = false,
+    this.errorMessage = ''
   });
 
   Map<String, dynamic> toJson() => {
@@ -59,6 +61,7 @@ class CreatePingState {
     Unit? unit,
     UrgencyLevel? urgencyLevel,
     bool? isLoading,
+    String? errorMessage,
   }) {
     return CreatePingState(
       connectedIds: connectedIds ?? this.connectedIds,
@@ -73,6 +76,7 @@ class CreatePingState {
       unit: unit ?? this.unit,
       urgencyLevel: urgencyLevel ?? this.urgencyLevel,
       isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage
     );
   }
 }

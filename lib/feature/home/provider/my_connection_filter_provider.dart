@@ -9,7 +9,6 @@ import '../../../core/service/auth_service.dart';
 import '../model/connected_state_model.dart';
 import '../model/connection_state_model.dart';
 import '../model/find_connecion_state_model.dart';
-import '../model/my_connection_api_response.dart';
 import '../model/my_connection_state_model.dart';
 import '../model/pending_connection_state_model.dart';
 import '../model/send_request_state_model.dart';

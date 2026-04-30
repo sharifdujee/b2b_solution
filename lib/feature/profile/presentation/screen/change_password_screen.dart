@@ -75,12 +75,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     obscureText: state.obscureNewPassword,
                     textColor: AppColor.black,
 
-                    // Validation for New Password
                     validator: (value) {
                       if (value == null || value.isEmpty) return "Please enter new password";
                       if (value.length < 8) return "Password must be at least 8 characters";
                       if (!RegExp(r'[0-9]').hasMatch(value)) return "Must contain at least one number";
                       if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) return "Must contain a symbol";
+
+                      if (value == state.oldPassword) {
+                        return "New password cannot be the same as old password";
+                      }
+
                       return null;
                     },
                     suffixIcon: IconButton(

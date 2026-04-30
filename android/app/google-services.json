@@ -12,7 +12,20 @@
           "package_name": "com.sagar.b2b.solution"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "863480582421-apt8ia431r4ls65g8g0mfemm9n27lqql.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sagar.b2b.solution",
+            "certificate_hash": "1eed7045df8311bcf9a645d000ae545da00f15c3"
+          }
+        },
+        {
+          "client_id": "863480582421-pjptlic11b18ift176ihs0f1g4nk5njl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCwTBsjP9qQsEK5xBi6-8LofPQjQ8Q0B68"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863480582421-pjptlic11b18ift176ihs0f1g4nk5njl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "863480582421-04jj2hb5enmor0nprp82ljlqq3p9hgg2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.sagar.b2b.solution"
+              }
+            }
+          ]
         }
       }
     }

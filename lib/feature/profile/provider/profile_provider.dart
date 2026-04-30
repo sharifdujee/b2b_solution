@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
+import 'package:b2b_solution/feature/authentication/provider/login_provider.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -150,18 +152,16 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   /// delete account
-   Future<void> deleteAccount(BuildContext context)async{
+   Future<void> deleteAccount(BuildContext context, WidgetRef ref)async{
     _isLoading = true;
     try{
       var response = await networkCaller.deleteRequest(AppUrl.deleteUser, body: {},  AuthService.token);
       if(response.isSuccess){
         log("the api response is ${response.responseData}");
-        AuthService.logoutUser(context);
+        AuthService.logoutUser(context,ref);
       }
-      
 
     }
-    
     catch(e){
       log("the exception is Z${e.toString()}");
       _errorMessage = "$e";
@@ -177,7 +177,10 @@ class ProfileProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+
+
 }
+
 
 final profileProvider = ChangeNotifierProvider<ProfileProvider>((ref) {
   return ProfileProvider();

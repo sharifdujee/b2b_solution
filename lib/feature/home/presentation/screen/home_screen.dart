@@ -8,50 +8,41 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../ping/model/ping_pagination_state_model.dart';
 import '../../../ping/presentation/widgets/ping_card.dart';
 import '../../../ping/provider/ping_provider.dart';
-import '../../../profile/provider/profile_provider.dart';
-import '../../provider/map_filter_provider.dart';
-import '../../provider/nearby_ping_provider.dart';
-import '../widget/map_filter.dart';
+
 import '../widget/map_section.dart';
 import '../widget/top_section.dart';
 import '../widget/quick_action.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileWatcher = ref.watch(profileProvider);
-    final pingState = ref.watch(nearbyPingProvider);
-    final currentType = ref.watch(mapFilterProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Use Future.microtask to ensure the provider is called after the first build cycle starts
+    Future.microtask(() => _fetchInitialPings());
+  }
+
+  void _fetchInitialPings() {
+    final currentFilter = ref.read(pingFilterProvider);
+    ref.read(pingListProvider.notifier).fetchPingsByFilter(currentFilter);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final pingListAsync = ref.watch(pingListProvider);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!profileWatcher.isLoading && profileWatcher.userModel != null) {
-        final user = profileWatcher.userModel!;
-
-        // Logic to fetch pings if the nearby list is currently empty
-        if (pingState.pings.isEmpty && !pingState.isLoading && pingState.errorMessage == null) {
-          ref.read(nearbyPingProvider.notifier).fetchPings(
-            user.latitude,
-            user.longitude,
-          );
-        }
-      }
-    });
 
     return Scaffold(
       backgroundColor: AppColor.white,
       body: RefreshIndicator(
         onRefresh: () async {
-          final user = ref.read(profileProvider).userModel;
-          if (user != null) {
-            await ref.read(nearbyPingProvider.notifier).fetchPings(
-              user.latitude,
-              user.longitude,
-            );
-          }
+          final currentFilter = ref.read(pingFilterProvider);
+          await ref.read(pingListProvider.notifier).fetchPingsByFilter(currentFilter);
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -59,20 +50,12 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 48.h),
-
               const TopSection(),
               SizedBox(height: 8.h),
-
-              Divider(thickness: 1,color: AppColor.grey200),
-              SizedBox(height: 16.h,),
-
-
-              // MapFilter(),
-              // SizedBox(height: 16.h,),
-
+              Divider(thickness: 1, color: AppColor.grey200),
+              SizedBox(height: 16.h),
               const MapSection(),
               SizedBox(height: 24.h),
-
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: CustomText(
@@ -84,12 +67,9 @@ class HomeScreen extends ConsumerWidget {
               SizedBox(height: 12.h),
               const QuickActions(),
               SizedBox(height: 24.h),
-
-              _buildHeader(ref),
+              _buildHeader(),
               SizedBox(height: 12.h),
-
               _buildPingListContent(pingListAsync),
-
               SizedBox(height: 32.h),
             ],
           ),
@@ -98,26 +78,25 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+
   Widget _buildPingListContent(AsyncValue<PingPaginationState> pingsAsync) {
     return pingsAsync.when(
       loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(color: AppColor.primary,),
         ),
       ),
       error: (err, stack) => _buildErrorState(err.toString()),
       data: (paginationState) {
         final pings = paginationState.pings;
-
-        if (pings.isEmpty) {
-          return _buildEmptyState();
-        }
+        if (pings.isEmpty) return _buildEmptyState();
 
         return ListView.builder(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          // Limiting to top 3 for the home screen
           itemCount: pings.length > 3 ? 3 : pings.length,
           itemBuilder: (context, index) {
             final ping = pings[index];
@@ -131,26 +110,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.red),
-            SizedBox(height: 8.h),
-            CustomText(
-              text: "Failed to load pings",
-              color: Colors.red,
-              fontSize: 14.sp,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(WidgetRef ref) {
+  Widget _buildHeader() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Row(
@@ -182,6 +142,21 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(height: 8.h),
+            CustomText(text: "Failed to load pings", color: Colors.red, fontSize: 14.sp),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -189,11 +164,7 @@ class HomeScreen extends ConsumerWidget {
           SizedBox(height: 20.h),
           Icon(Icons.notifications_off_outlined, size: 48.sp, color: AppColor.grey400),
           SizedBox(height: 12.h),
-          CustomText(
-            text: "No pings found in your area",
-            fontSize: 14.sp,
-            color: AppColor.grey500,
-          ),
+          CustomText(text: "No pings found in your area", fontSize: 14.sp, color: AppColor.grey500),
         ],
       ),
     );

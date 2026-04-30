@@ -1,8 +1,10 @@
 import 'dart:convert';
 
-PingModel pingModelFromJson(String str) => PingModel.fromJson(json.decode(str));
+PingModel pingModelFromJson(String str) =>
+    PingModel.fromJson(json.decode(str));
 
-String pingModelToJson(PingModel data) => json.encode(data.toJson());
+String pingModelToJson(PingModel data) =>
+    json.encode(data.toJson());
 
 class PingModel {
   final bool success;
@@ -18,7 +20,9 @@ class PingModel {
   factory PingModel.fromJson(Map<String, dynamic> json) => PingModel(
     success: json["success"] ?? false,
     message: json["message"] ?? "",
-    result: json["result"] == null ? null : Result.fromJson(json["result"]),
+    result: json["result"] == null
+        ? null
+        : Result.fromJson(json["result"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -38,15 +42,21 @@ class Result {
   });
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(
-    meta: json["meta"] == null ? null : Meta.fromJson(json["meta"]),
+    meta: json["meta"] == null
+        ? null
+        : Meta.fromJson(json["meta"]),
     data: json["data"] == null
         ? []
-        : List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
+        : List<Datum>.from(
+      json["data"].map((x) => Datum.fromJson(x)),
+    ),
   );
 
   Map<String, dynamic> toJson() => {
     "meta": meta?.toJson(),
-    "data": List<dynamic>.from(data.map((x) => x.toJson())),
+    "data": List<dynamic>.from(
+      data.map((x) => x.toJson()),
+    ),
   };
 }
 
@@ -59,7 +69,7 @@ class Datum {
   final String urgencyLevel;
   final int neededWithin;
   final User? user;
-  final int distanceKm;
+  final double distanceKm;
 
   Datum({
     required this.id,
@@ -74,15 +84,19 @@ class Datum {
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-    id: json["id"] ?? "",
-    userId: json["userId"] ?? "",
+    id: json["id"]?.toString() ?? "",
+    userId: json["userId"]?.toString() ?? "",
     itemName: json["itemName"] ?? "Unknown Item",
-    quantity: json["quantity"] ?? 0,
+    quantity: (json["quantity"] as num?)?.toInt() ?? 0,
     unit: json["unit"] ?? "",
     urgencyLevel: json["urgencyLevel"] ?? "GENERAL",
-    neededWithin: json["neededWithin"] ?? 0,
-    user: json["user"] == null ? null : User.fromJson(json["user"]),
-    distanceKm: json["distanceKm"] ?? 0,
+    neededWithin:
+    (json["neededWithin"] as num?)?.toInt() ?? 0,
+    user: json["user"] == null
+        ? null
+        : User.fromJson(json["user"]),
+    distanceKm:
+    (json["distanceKm"] as num?)?.toDouble() ?? 0.0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -117,11 +131,18 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     legalName: json["legalName"] ?? "",
-    businessName: json["businessName"] ?? "Unknown Shop",
+    businessName:
+    json["businessName"] ?? "Unknown Shop",
     fullName: json["fullName"] ?? "",
     profileImage: json["profileImage"] ?? "",
-    businessLatitude: (json["businessLatitude"] ?? 0.0).toDouble(),
-    businessLongitude: (json["businessLongitude"] ?? 0.0).toDouble(),
+    businessLatitude:
+    (json["businessLatitude"] as num?)
+        ?.toDouble() ??
+        0.0,
+    businessLongitude:
+    (json["businessLongitude"] as num?)
+        ?.toDouble() ??
+        0.0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -148,10 +169,11 @@ class Meta {
   });
 
   factory Meta.fromJson(Map<String, dynamic> json) => Meta(
-    page: json["page"] ?? 1,
-    limit: json["limit"] ?? 10,
-    total: json["total"] ?? 0,
-    totalPages: json["totalPages"] ?? 1,
+    page: (json["page"] as num?)?.toInt() ?? 1,
+    limit: (json["limit"] as num?)?.toInt() ?? 20,
+    total: (json["total"] as num?)?.toInt() ?? 0,
+    totalPages:
+    (json["totalPages"] as num?)?.toInt() ?? 1,
   );
 
   Map<String, dynamic> toJson() => {

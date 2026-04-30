@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
+import '../../feature/profile/provider/edit_profile_provider.dart';
 import '../../feature/profile/provider/profile_provider.dart';
 import '../../feature/splash/provider/splash_provider.dart';
 
@@ -95,16 +96,17 @@ class AuthService {
 
   static Future<void> logoutUser(BuildContext context, WidgetRef ref) async {
     try {
-      // 1. Clear physical storage
       await deleteTokenRole();
 
-      // 2. Update the Startup State so the router reacts
-      // This transitions the app state globally
-      ref.read(splashProvider.notifier).setUnauthenticated();
-
       if (context.mounted) {
-        // 3. Navigate to login
+
         context.go("/loginScreen");
+
+
+        Future.microtask(() {
+          ref.invalidate(profileProvider);
+          ref.invalidate(editProfileProvider);
+        });
       }
     } catch (e) {
       log('Error during logout: $e');
