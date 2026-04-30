@@ -116,6 +116,7 @@ class CompleteProfileNotifier extends StateNotifier<CompleteProfileState> {
       Map<String, dynamic> data = {
         'legalName': legalNameController.text.trim(),
         'businessName': businessNameController.text.trim(),
+        'role': 'USER',
         //'fullName': nameController.text.trim(),
         'position': positionController.text.trim(),
         'businessCategory': state.foodCategory,
@@ -180,13 +181,13 @@ class CompleteProfileNotifier extends StateNotifier<CompleteProfileState> {
 
   @override
   void dispose() {
-    legalNameController.dispose();
-    businessNameController.dispose();
-    positionController.dispose();
-    yearsOfOperationController.dispose();
-    foodCategoryController.dispose();
-    nameController.dispose();
-    emailController.dispose();
+    legalNameController.clear();
+    businessNameController.clear();
+    positionController.clear();
+    yearsOfOperationController.clear();
+    foodCategoryController.clear();
+    nameController.clear();
+    emailController.clear();
     super.dispose();
   }
 }
