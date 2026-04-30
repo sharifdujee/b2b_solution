@@ -64,17 +64,19 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
     if (result == null) return false;
 
     final String? token = result['accessToken'] as String?;
-    final bool isSetup = result['isSetup'] as bool? ?? false;
-    final String? userId =
-        result['_id'] as String? ?? result['id'] as String?;
+
+    final bool isSetup = result['isProfileComplete'] as bool? ?? false;
+
+    final String? userId = result['userId'] as String?;
+
     final String? role = result['role'] as String?;
 
     if (token == null || token.isEmpty) return false;
 
     await AuthService.saveToken(token);
     await AuthService.saveStatus(isSetup);
-    if (userId != null && userId.isNotEmpty) await AuthService.saveId(userId);
-    if (role != null && role.isNotEmpty) await AuthService.saveRole(role);
+    if (userId != null) await AuthService.saveId(userId);
+    if (role != null) await AuthService.saveRole(role);
 
     log("✅ Auth data saved — isSetup: $isSetup, userId: $userId, role: $role");
     return true;
@@ -84,17 +86,17 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
   }
 }
 
+
 String _resolveNextRoute(Ref ref) {
   final hasToken = AuthService.hasToken();
-  final isProfileSetup = AuthService.isProfileSetup;
+  final isProfileSetup = AuthService.isProfileSetup ?? false;
 
-  if (hasToken && isProfileSetup!) {
+  if (hasToken && isProfileSetup) {
     ref.read(selectedIndexProvider.notifier).state = 0;
     return '/nav';
   }
 
-  if (hasToken && !isProfileSetup!) {
-
+  if (hasToken && !isProfileSetup) {
     return '/completeProfileInfoScreen';
   }
 
