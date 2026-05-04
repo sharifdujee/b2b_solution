@@ -15,12 +15,9 @@ import '../../../core/service/auth_service.dart';
 import '../../../core/service/network_caller.dart';
 import '../../../core/service/push_notification_service.dart';
 import '../../navigation/presentation/screen.dart';
+import '../../profile/model/profile_state_model.dart';
+import '../../profile/provider/profile_provider.dart';
 
-
-
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
 
 class SocialAuthState {
   final bool isGoogleLoading;
@@ -64,19 +61,21 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
     if (result == null) return false;
 
     final String? token = result['accessToken'] as String?;
-    final bool isSetup = result['isSetup'] as bool? ?? false;
-    final String? userId =
-        result['_id'] as String? ?? result['id'] as String?;
+
+    final bool isProfileSetup = result['isProfileComplete'] as bool? ?? false;
+
+    final String? userId = result['userId'] as String?;
+
     final String? role = result['role'] as String?;
 
     if (token == null || token.isEmpty) return false;
 
     await AuthService.saveToken(token);
-    await AuthService.saveStatus(isSetup);
-    if (userId != null && userId.isNotEmpty) await AuthService.saveId(userId);
-    if (role != null && role.isNotEmpty) await AuthService.saveRole(role);
+    await AuthService.saveProfileSetup(isProfileSetup);
+    if (userId != null) await AuthService.saveId(userId);
+    if (role != null) await AuthService.saveRole(role);
 
-    log("✅ Auth data saved — isSetup: $isSetup, userId: $userId, role: $role");
+    log("✅ Auth data saved — isSetup: $isProfileSetup, userId: $userId, role: $role");
     return true;
   } catch (e) {
     log("❌ Error saving auth data: $e");
@@ -84,17 +83,17 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
   }
 }
 
+
 String _resolveNextRoute(Ref ref) {
   final hasToken = AuthService.hasToken();
-  final isProfileSetup = AuthService.isProfileSetup;
+  final isProfileSetup = AuthService.isProfileSetup ?? false;
 
-  if (hasToken && isProfileSetup!) {
+  if (hasToken && isProfileSetup) {
     ref.read(selectedIndexProvider.notifier).state = 0;
     return '/nav';
   }
 
-  if (hasToken && !isProfileSetup!) {
-
+  if (hasToken && !isProfileSetup) {
     return '/completeProfileInfoScreen';
   }
 
@@ -150,6 +149,24 @@ class SocialAuthNotifier extends StateNotifier<SocialAuthState> {
         final saved = await _saveAuthData(
           response.responseData as Map<String, dynamic>,
         );
+
+        if (saved && context.mounted) {
+          final profileNotifier = ref.read(profileProvider);
+
+          profileNotifier.userModel = UserModel(
+            fullName: userName,
+            email: email,
+            id: '',
+            role: '',
+          );
+
+          profileNotifier.notifyListeners();
+
+          state = state.copyWith(isGoogleLoading: false);
+
+          // Navigate to the next screen
+          context.go(_resolveNextRoute(ref));
+        }
 
 
         if (!saved) {
