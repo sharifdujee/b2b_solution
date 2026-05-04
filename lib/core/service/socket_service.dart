@@ -73,15 +73,23 @@ class SocketService {
 
 
   Future<void> connect(String socketUrl, String authToken) async {
+    if (isConnected && _socketUrl == socketUrl) {
+      log("✅ Socket already connected to $socketUrl. Skipping redundant connection attempt.");
+      return;
+    }
+
     _socketUrl = socketUrl;
     _authToken = authToken;
-    _reconnectAttempts = 0;
     _isManualDisconnect = false;
 
     if(_connectionCompleter != null){
       _connectionCompleter = null;
     }
     try{
+      if (_socket != null) {
+        log("Closing previous socket before new connection...");
+        await _socket?.close();
+      }
       await _socket?.close();
       _reconnectTimer?.cancel();
 
@@ -107,27 +115,25 @@ class SocketService {
       _socket?.listen(
             (message) {
           log("WebSocket message received: $message");
-
           try {
             final decoded = jsonDecode(message);
             if (decoded['type'] == 'connected' || decoded['type'] == 'authenticated') {
               log("WebSocket authenticated successfully");
-            } else if (decoded['type'] == 'error') {
-              log("Server error: ${decoded['message']}");
+            }
+
+            if (onMessageReceived != null) {
+              onMessageReceived!(message);
             }
           } catch (e) {
-            // Not JSON – ignore
+            log("❌ Error processing specific message: $e");
           }
-
-          // FIX 1: use corrected name
-          onMessageReceived?.call(message);
         },
         onError: (error) {
-          log("WebSocket error: $error");
+          log("🌐 Network Error: $error");
           if (!_isManualDisconnect) _handleDisconnect();
         },
         onDone: () {
-          log("WebSocket connection closed");
+          log("🔌 Server closed connection");
           if (!_isManualDisconnect) _handleDisconnect();
         },
         cancelOnError: false,

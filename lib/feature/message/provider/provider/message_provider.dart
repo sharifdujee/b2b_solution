@@ -26,6 +26,27 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
   }
 
 
+  Future<void> initSocket() async {
+    if (_socketService.isConnected) {
+      log("Socket already active, no need to reconnect.");
+      return;
+    }
+
+    state = state.copyWith(isLoading: true);
+    final token = AuthService.token ?? '';
+
+    try {
+      await _socketService.connect(AppUrl.socketUrl, token);
+    } catch (e) {
+      log("Socket connection failed: $e");
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+
+
+
 
 
   /// image upload functionality
@@ -380,14 +401,7 @@ class MessagesNotifier extends StateNotifier<MessagesState> {
 
 
   /// Connects socket and triggers the conversation list load
-  Future<void> initSocket() async {
-    state = state.copyWith(isLoading: true);
-    final token = AuthService.token ?? '';
 
-    await _socketService.connect(AppUrl.socketUrl, token);
-
-    state = state.copyWith(isLoading: false);
-  }
 
   void markAsRead(String roomId) {
     final currentUserId = AuthService.id ?? '';
