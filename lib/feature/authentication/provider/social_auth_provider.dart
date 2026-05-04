@@ -62,7 +62,7 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
 
     final String? token = result['accessToken'] as String?;
 
-    final bool isSetup = result['isProfileComplete'] as bool? ?? false;
+    final bool isProfileSetup = result['isProfileComplete'] as bool? ?? false;
 
     final String? userId = result['userId'] as String?;
 
@@ -71,11 +71,11 @@ Future<bool> _saveAuthData(Map<String, dynamic> responseData) async {
     if (token == null || token.isEmpty) return false;
 
     await AuthService.saveToken(token);
-    await AuthService.saveStatus(isSetup);
+    await AuthService.saveProfileSetup(isProfileSetup);
     if (userId != null) await AuthService.saveId(userId);
     if (role != null) await AuthService.saveRole(role);
 
-    log("✅ Auth data saved — isSetup: $isSetup, userId: $userId, role: $role");
+    log("✅ Auth data saved — isSetup: $isProfileSetup, userId: $userId, role: $role");
     return true;
   } catch (e) {
     log("❌ Error saving auth data: $e");
