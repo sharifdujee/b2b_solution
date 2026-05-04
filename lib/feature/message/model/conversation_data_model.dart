@@ -1,14 +1,15 @@
-
 import 'dart:convert';
 
-ConversationDataModel conversationDataModelFromJson(String str) => ConversationDataModel.fromJson(json.decode(str));
+ConversationDataModel conversationDataModelFromJson(String str) =>
+    ConversationDataModel.fromJson(json.decode(str));
 
-String conversationDataModelToJson(ConversationDataModel data) => json.encode(data.toJson());
+String conversationDataModelToJson(ConversationDataModel data) =>
+    json.encode(data.toJson());
 
 class ConversationDataModel {
-  bool success;
-  String message;
-  List<ConversationResult> result;
+  final bool success;
+  final String message;
+  final List<ConversationResult> result;
 
   ConversationDataModel({
     required this.success,
@@ -17,9 +18,11 @@ class ConversationDataModel {
   });
 
   factory ConversationDataModel.fromJson(Map<String, dynamic> json) => ConversationDataModel(
-    success: json["success"],
-    message: json["message"],
-    result: List<ConversationResult>.from(json["result"].map((x) => ConversationResult.fromJson(x))),
+    success: json["success"] ?? false,
+    message: json["message"] ?? "",
+    result: json["result"] == null
+        ? []
+        : List<ConversationResult>.from(json["result"].map((x) => ConversationResult.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -30,31 +33,33 @@ class ConversationDataModel {
 }
 
 class ConversationResult {
-  String roomId;
-  String roomType;
-  Partner partner;
-  LastMessage? lastMessage; // ← nullable
-  int unreadCount;
-  DateTime updatedAt;
+  final String roomId;
+  final String roomType;
+  final Partner partner;
+  final LastMessage? lastMessage;
+  final int unreadCount;
+  final DateTime updatedAt;
 
   ConversationResult({
     required this.roomId,
     required this.roomType,
     required this.partner,
-    this.lastMessage, // ← optional
+    this.lastMessage,
     required this.unreadCount,
     required this.updatedAt,
   });
 
   factory ConversationResult.fromJson(Map<String, dynamic> json) => ConversationResult(
-    roomId: json["roomId"],
-    roomType: json["roomType"],
-    partner: Partner.fromJson(json["partner"]),
-    lastMessage: json["lastMessage"] != null
+    roomId: json["roomId"] ?? "",
+    roomType: json["roomType"] ?? "",
+    partner: Partner.fromJson(json["partner"] ?? {}),
+    // Null-safe check for lastMessage
+    lastMessage: (json["lastMessage"] != null && json["lastMessage"] is Map)
         ? LastMessage.fromJson(json["lastMessage"])
-        : null, // ← null-safe parse
-    unreadCount: json["unreadCount"],
-    updatedAt: DateTime.parse(json["updatedAt"]),
+        : null,
+    unreadCount: json["unreadCount"] ?? 0,
+    // Defensive date parsing
+    updatedAt: DateTime.tryParse(json["updatedAt"] ?? "") ?? DateTime.now(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -68,10 +73,10 @@ class ConversationResult {
 }
 
 class LastMessage {
-  String content;
-  DateTime createdAt;
-  String type;
-  String senderId;
+  final String content;
+  final DateTime createdAt;
+  final String type;
+  final String senderId;
 
   LastMessage({
     required this.content,
@@ -81,10 +86,10 @@ class LastMessage {
   });
 
   factory LastMessage.fromJson(Map<String, dynamic> json) => LastMessage(
-    content: json["content"],
-    createdAt: DateTime.parse(json["createdAt"]),
-    type: json["type"],
-    senderId: json["senderId"],
+    content: json["content"] ?? "",
+    createdAt: DateTime.tryParse(json["createdAt"] ?? "") ?? DateTime.now(),
+    type: json["type"] ?? "TEXT",
+    senderId: json["senderId"] ?? "",
   );
 
   Map<String, dynamic> toJson() => {
@@ -96,23 +101,23 @@ class LastMessage {
 }
 
 class Partner {
-  String id;
-  String fullName;
-  dynamic businessName;
-  dynamic profileImage;
+  final String id;
+  final String fullName;
+  final String? businessName; // Changed dynamic to String? for safety
+  final String? profileImage; // Changed dynamic to String? for safety
 
   Partner({
     required this.id,
     required this.fullName,
-    required this.businessName,
-    required this.profileImage,
+    this.businessName,
+    this.profileImage,
   });
 
   factory Partner.fromJson(Map<String, dynamic> json) => Partner(
-    id: json["id"],
-    fullName: json["fullName"],
-    businessName: json["businessName"],
-    profileImage: json["profileImage"],
+    id: json["id"] ?? "",
+    fullName: json["fullName"] ?? "Unknown",
+    businessName: json["businessName"]?.toString(),
+    profileImage: json["profileImage"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
